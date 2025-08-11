@@ -8,6 +8,7 @@ import Dashboard from "@/pages/dashboard";
 import Inventory from "@/pages/inventory";
 import Employees from "@/pages/employees";
 import Labels from "@/pages/labels";
+import Reports from "@/pages/reports";
 import Sidebar from "@/components/layout/sidebar";
 import Topbar from "@/components/layout/topbar";
 
@@ -18,6 +19,7 @@ function Router() {
       <Route path="/inventory" component={Inventory} />
       <Route path="/employees" component={Employees} />
       <Route path="/labels" component={Labels} />
+      <Route path="/reports" component={Reports} />
       <Route component={NotFound} />
     </Switch>
   );

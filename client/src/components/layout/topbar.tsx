@@ -1,6 +1,7 @@
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
+import NotificationBell from "@/components/notification-bell";
 
 export default function Topbar() {
   const userName = "Mario Rossi";
@@ -18,6 +19,8 @@ export default function Topbar() {
         return { title: "Dipendenti", subtitle: "Gestione personale aziendale" };
       case "/labels":
         return { title: "Etichette PC", subtitle: "Genera e stampa etichette di riconoscimento" };
+      case "/reports":
+        return { title: "Report e Analisi", subtitle: "Analisi dettagliate dell'inventario IT aziendale" };
       default:
         return { title: "PC Manager", subtitle: "Sistema di gestione IT aziendale" };
     }
@@ -34,9 +37,7 @@ export default function Topbar() {
         </div>
         
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-            <Bell className="h-5 w-5" />
-          </Button>
+          <NotificationBell />
           
           <div className="flex items-center space-x-3">
             <div className="text-right">

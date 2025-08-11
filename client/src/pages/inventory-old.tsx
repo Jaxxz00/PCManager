@@ -1,16 +1,18 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Edit, Trash2, Monitor, User, Calendar } from "lucide-react";
+import { Plus, Search, Filter, MoreHorizontal, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PcForm from "@/components/pc-form";
 import AdvancedFilters, { type FilterState } from "@/components/advanced-filters";
 import DataExport from "@/components/data-export";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import type { PcWithEmployee, Employee } from "@shared/schema";
 
 export default function Inventory() {
@@ -102,15 +104,29 @@ export default function Inventory() {
   }, [pcs, filters]);
 
   const getStatusBadge = (status: string) => {
+    const baseClasses = "status-badge";
     switch (status) {
       case "active":
-        return <Badge variant="default">Attivo</Badge>;
+        return cn(baseClasses, "status-active");
       case "maintenance":
-        return <Badge variant="secondary">Manutenzione</Badge>;
+        return cn(baseClasses, "status-maintenance");
       case "retired":
-        return <Badge variant="destructive">Dismesso</Badge>;
+        return cn(baseClasses, "status-retired");
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return baseClasses;
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case "active":
+        return "Attivo";
+      case "maintenance":
+        return "Manutenzione";
+      case "retired":
+        return "Dismesso";
+      default:
+        return status;
     }
   };
 
@@ -120,143 +136,128 @@ export default function Inventory() {
     }
   };
 
-  const handleExport = () => {
-    // Gestito dal componente DataExport
-  };
-
-  const getWarrantyStatus = (warrantyExpiry: string) => {
-    const now = new Date();
-    const warrantyDate = new Date(warrantyExpiry);
-    const daysUntilExpiry = Math.ceil((warrantyDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    
-    if (daysUntilExpiry < 0) return { text: "Scaduta", variant: "destructive" as const };
-    if (daysUntilExpiry <= 30) return { text: "In scadenza", variant: "destructive" as const };
-    if (daysUntilExpiry <= 90) return { text: "Attenzione", variant: "secondary" as const };
-    return { text: "Valida", variant: "default" as const };
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-medium text-foreground">Inventario PC</h1>
-          <p className="text-muted-foreground">
-            {filteredPcs.length} di {pcs.length} PC visualizzati
-          </p>
+          <p className="text-muted-foreground">Gestisci tutti i computer aziendali</p>
         </div>
-        <div className="flex items-center gap-2">
-          <DataExport pcs={pcs} employees={employees} filteredPcs={filteredPcs} />
-          <Button onClick={() => setShowPcForm(true)} className="flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            Nuovo PC
-          </Button>
-        </div>
+        <Button 
+          onClick={() => setShowPcForm(true)}
+          className="bg-primary hover:bg-primary/90"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Aggiungi PC
+        </Button>
       </div>
 
-      <AdvancedFilters 
-        filters={filters}
-        onFiltersChange={setFilters}
-        onExport={handleExport}
-      />
+      {/* Filters */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  placeholder="Cerca per ID, marca, modello o dipendente..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <div className="sm:w-48">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <Filter className="mr-2 h-4 w-4" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tutti gli stati</SelectItem>
+                  <SelectItem value="active">Attivo</SelectItem>
+                  <SelectItem value="maintenance">Manutenzione</SelectItem>
+                  <SelectItem value="retired">Dismesso</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
+      {/* PC Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <Monitor className="mr-2 h-5 w-5" />
-            Elenco PC ({filteredPcs.length})
+          <CardTitle className="text-lg font-medium">
+            Computer ({filteredPcs.length})
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Caricamento inventario...</p>
-            </div>
-          ) : filteredPcs.length === 0 ? (
-            <div className="text-center py-8">
-              <Monitor className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-lg font-medium text-foreground mb-2">Nessun PC trovato</p>
-              <p className="text-sm text-muted-foreground">
-                {pcs.length === 0 
-                  ? "Inizia aggiungendo il primo PC al sistema"
-                  : "Prova a modificare i filtri di ricerca"
-                }
-              </p>
-            </div>
-          ) : (
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>ID PC</TableHead>
-                  <TableHead>Specifiche</TableHead>
-                  <TableHead>Assegnazione</TableHead>
-                  <TableHead>Stato</TableHead>
-                  <TableHead>Garanzia</TableHead>
-                  <TableHead>Azioni</TableHead>
+                <TableRow className="bg-muted/50">
+                  <TableHead className="font-medium">PC ID</TableHead>
+                  <TableHead className="font-medium">Dipendente</TableHead>
+                  <TableHead className="font-medium">Marca/Modello</TableHead>
+                  <TableHead className="font-medium">CPU</TableHead>
+                  <TableHead className="font-medium">RAM</TableHead>
+                  <TableHead className="font-medium">Storage</TableHead>
+                  <TableHead className="font-medium">OS</TableHead>
+                  <TableHead className="font-medium">Status</TableHead>
+                  <TableHead className="font-medium">Garanzia</TableHead>
+                  <TableHead className="w-12"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredPcs.map((pc) => {
-                  const warrantyStatus = getWarrantyStatus(pc.warrantyExpiry);
-                  return (
-                    <TableRow key={pc.id}>
-                      <TableCell className="font-medium">
-                        <div>
-                          <p className="font-medium">{pc.pcId}</p>
-                          <p className="text-sm text-muted-foreground">{pc.serialNumber}</p>
-                        </div>
-                      </TableCell>
+                {isLoading ? (
+                  [...Array(5)].map((_, i) => (
+                    <TableRow key={i}>
+                      {[...Array(10)].map((_, j) => (
+                        <TableCell key={j} className="animate-pulse">
+                          <div className="h-4 bg-muted rounded w-20"></div>
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : filteredPcs.length > 0 ? (
+                  filteredPcs.map((pc: PcWithEmployee) => (
+                    <TableRow key={pc.id} className="table-row-hover">
+                      <TableCell className="font-medium">{pc.pcId}</TableCell>
+                      <TableCell>{pc.employee?.name || "Non assegnato"}</TableCell>
                       <TableCell>
                         <div>
-                          <p className="font-medium">{pc.brand} {pc.model}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {pc.cpu} • {pc.ram}GB RAM • {pc.storage}
-                          </p>
+                          <div className="font-medium">{pc.brand}</div>
+                          <div className="text-sm text-muted-foreground">{pc.model}</div>
                         </div>
                       </TableCell>
+                      <TableCell className="text-sm">{pc.cpu}</TableCell>
+                      <TableCell className="text-sm">{pc.ram} GB</TableCell>
+                      <TableCell className="text-sm">{pc.storage}</TableCell>
+                      <TableCell className="text-sm">{pc.operatingSystem}</TableCell>
                       <TableCell>
-                        {pc.employee ? (
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                            <div>
-                              <p className="font-medium">{pc.employee.name}</p>
-                              <p className="text-sm text-muted-foreground">{pc.employee.email}</p>
-                            </div>
-                          </div>
-                        ) : (
-                          <p className="text-muted-foreground">Non assegnato</p>
-                        )}
+                        <span className={getStatusBadge(pc.status)}>
+                          {getStatusText(pc.status)}
+                        </span>
                       </TableCell>
-                      <TableCell>
-                        {getStatusBadge(pc.status)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <div>
-                            <Badge variant={warrantyStatus.variant}>
-                              {warrantyStatus.text}
-                            </Badge>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {new Date(pc.warrantyExpiry).toLocaleDateString('it-IT')}
-                            </p>
-                          </div>
-                        </div>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {new Date(pc.warrantyExpiry).toLocaleDateString('it-IT')}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              Azioni
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => console.log('Edit', pc.id)}>
+                            <DropdownMenuItem>
                               <Edit className="mr-2 h-4 w-4" />
                               Modifica
                             </DropdownMenuItem>
                             <DropdownMenuItem 
-                              onClick={() => handleDeletePc(pc.id)}
                               className="text-destructive"
+                              onClick={() => handleDeletePc(pc.id)}
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Elimina
@@ -265,24 +266,23 @@ export default function Inventory() {
                         </DropdownMenu>
                       </TableCell>
                     </TableRow>
-                  );
-                })}
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
+                      {searchTerm || statusFilter !== "all" 
+                        ? "Nessun PC corrisponde ai filtri selezionati" 
+                        : "Nessun PC trovato"}
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
-          )}
+          </div>
         </CardContent>
       </Card>
 
-      {showPcForm && (
-        <PcForm 
-          onClose={() => setShowPcForm(false)}
-          onSuccess={() => {
-            setShowPcForm(false);
-            queryClient.invalidateQueries({ queryKey: ["/api/pcs"] });
-            queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-          }}
-        />
-      )}
+      <PcForm open={showPcForm} onOpenChange={setShowPcForm} />
     </div>
   );
 }

@@ -15,8 +15,8 @@ const navigation = [
   { name: "Inventario PC", href: "/inventory", icon: Monitor },
   { name: "Dipendenti", href: "/employees", icon: Users },
   { name: "Etichette", href: "/labels", icon: Tags },
-  { name: "Manutenzione", href: "/maintenance", icon: Wrench },
   { name: "Report", href: "/reports", icon: FileText },
+  { name: "Manutenzione", href: "/maintenance", icon: Wrench },
 ];
 
 const settings = [
