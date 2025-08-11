@@ -33,8 +33,10 @@ function App() {
           <Sidebar />
           <div className="flex-1 flex flex-col overflow-hidden">
             <Topbar />
-            <main className="flex-1 overflow-auto p-6">
-              <Router />
+            <main className="flex-1 overflow-auto p-8 bg-muted/10">
+              <div className="max-w-7xl mx-auto">
+                <Router />
+              </div>
             </main>
           </div>
         </div>
