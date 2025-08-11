@@ -9,6 +9,7 @@ import Inventory from "@/pages/inventory";
 import Employees from "@/pages/employees";
 import Labels from "@/pages/labels";
 import Reports from "@/pages/reports";
+import Documents from "@/pages/documents";
 import Sidebar from "@/components/layout/sidebar";
 import Topbar from "@/components/layout/topbar";
 
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/employees" component={Employees} />
       <Route path="/labels" component={Labels} />
       <Route path="/reports" component={Reports} />
+      <Route path="/documents" component={Documents} />
       <Route component={NotFound} />
     </Switch>
   );

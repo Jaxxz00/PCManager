@@ -8,7 +8,8 @@ import {
   Settings,
   Tags,
   Building2,
-  ChevronRight
+  ChevronRight,
+  Shield
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,7 @@ const navigation = [
   { name: "Dashboard", href: "/", icon: BarChart3, description: "Panoramica generale" },
   { name: "Inventario PC", href: "/inventory", icon: Monitor, description: "Gestione computer" },
   { name: "Dipendenti", href: "/employees", icon: Users, description: "Personale aziendale" },
+  { name: "Documenti", href: "/documents", icon: Shield, description: "Manleva e contratti" },
   { name: "Etichette", href: "/labels", icon: Tags, description: "Stampa etichette" },
   { name: "Report", href: "/reports", icon: FileText, description: "Analisi e statistiche" },
   { name: "Manutenzione", href: "/maintenance", icon: Wrench, description: "Prossimamente", badge: "Presto" },
