@@ -40,8 +40,13 @@ export default function Sidebar() {
       {/* Professional Header */}
       <div className="p-8 border-b border-border/50 bg-gradient-to-br from-primary/5 to-primary/10">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-            <span className="text-white text-2xl font-bold">M</span>
+          <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
+            <svg width="32" height="24" viewBox="0 0 100 60">
+              <path d="M10 45 L25 15 L40 45 M25 35 L35 35" stroke="white" strokeWidth="4" fill="none"/>
+              <path d="M50 45 L50 15 M50 30 Q60 20 70 30 Q80 40 90 30" stroke="white" strokeWidth="4" fill="none"/>
+              <circle cx="25" cy="50" r="2.5" fill="white"/>
+              <circle cx="70" cy="50" r="2.5" fill="white"/>
+            </svg>
           </div>
           <div>
             <h1 className="text-2xl font-bold text-foreground">MAORI GROUP</h1>

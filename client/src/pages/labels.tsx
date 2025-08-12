@@ -131,23 +131,30 @@ export default function Labels() {
             gap: 2mm;
           ">
             <div style="
-              width: 4mm;
-              height: 4mm;
-              background: #2563eb;
-              border-radius: 1mm;
               display: flex;
               align-items: center;
-              justify-content: center;
+              gap: 1mm;
             ">
-              <span style="color: white; font-size: 6pt; font-weight: bold;">M</span>
-            </div>
-            <div style="
-              font-weight: 700; 
-              font-size: 8pt; 
-              color: #2563eb;
-              letter-spacing: 0.5px;
-            ">
-              MAORI GROUP
+              <svg width="8mm" height="6mm" viewBox="0 0 100 60" style="margin-right: 1mm;">
+                <defs>
+                  <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#1e40af;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+                  </linearGradient>
+                </defs>
+                <path d="M10 45 L25 15 L40 45 M25 35 L35 35" stroke="url(#logoGradient)" stroke-width="3" fill="none"/>
+                <path d="M50 45 L50 15 M50 30 Q60 20 70 30 Q80 40 90 30" stroke="url(#logoGradient)" stroke-width="3" fill="none"/>
+                <circle cx="25" cy="50" r="2" fill="url(#logoGradient)"/>
+                <circle cx="70" cy="50" r="2" fill="url(#logoGradient)"/>
+              </svg>
+              <div style="
+                font-weight: 700; 
+                font-size: 8pt; 
+                color: #1e40af;
+                letter-spacing: 0.3px;
+              ">
+                MAORI GROUP
+              </div>
             </div>
           </div>
           
@@ -414,10 +421,19 @@ export default function Labels() {
                     <div className="flex justify-between items-start p-3 pb-1">
                       {includeLogo && (
                         <div className="flex items-center gap-2">
-                          <div className="w-4 h-4 bg-blue-600 rounded flex items-center justify-center">
-                            <span className="text-white text-xs font-bold">M</span>
-                          </div>
-                          <div className="font-bold text-sm text-blue-600 tracking-wide">
+                          <svg width="24" height="16" viewBox="0 0 100 60" className="mr-1">
+                            <defs>
+                              <linearGradient id="logoGradientPreview" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style={{stopColor:"#1e40af", stopOpacity:1}} />
+                                <stop offset="100%" style={{stopColor:"#3b82f6", stopOpacity:1}} />
+                              </linearGradient>
+                            </defs>
+                            <path d="M10 45 L25 15 L40 45 M25 35 L35 35" stroke="url(#logoGradientPreview)" strokeWidth="3" fill="none"/>
+                            <path d="M50 45 L50 15 M50 30 Q60 20 70 30 Q80 40 90 30" stroke="url(#logoGradientPreview)" strokeWidth="3" fill="none"/>
+                            <circle cx="25" cy="50" r="2" fill="url(#logoGradientPreview)"/>
+                            <circle cx="70" cy="50" r="2" fill="url(#logoGradientPreview)"/>
+                          </svg>
+                          <div className="font-bold text-sm text-blue-700 tracking-wide">
                             MAORI GROUP
                           </div>
                         </div>
