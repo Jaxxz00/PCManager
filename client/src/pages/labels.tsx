@@ -139,7 +139,7 @@ export default function Labels() {
               align-items: center;
               justify-content: center;
             ">
-              <span style="color: white; font-size: 6pt; font-weight: bold;">B</span>
+              <span style="color: white; font-size: 6pt; font-weight: bold;">M</span>
             </div>
             <div style="
               font-weight: 700; 
@@ -147,7 +147,7 @@ export default function Labels() {
               color: #2563eb;
               letter-spacing: 0.5px;
             ">
-              BLUDATA
+              MAORI GROUP
             </div>
           </div>
           
@@ -225,7 +225,7 @@ export default function Labels() {
           border-top: 1px solid #e2e8f0;
           padding-top: 1mm;
         ">
-          <span>Bludata S.r.l.</span>
+          <span>Maori Group S.r.l.</span>
           <span>${new Date().toLocaleDateString('it-IT')}</span>
         </div>
       </div>
@@ -371,7 +371,7 @@ export default function Labels() {
                   onCheckedChange={(checked) => setIncludeLogo(checked as boolean)}
                 />
                 <Label htmlFor="include-logo">
-                  Includi Logo Bludata
+                  Includi Logo Maori Group
                 </Label>
               </div>
             </div>
@@ -415,10 +415,10 @@ export default function Labels() {
                       {includeLogo && (
                         <div className="flex items-center gap-2">
                           <div className="w-4 h-4 bg-blue-600 rounded flex items-center justify-center">
-                            <span className="text-white text-xs font-bold">B</span>
+                            <span className="text-white text-xs font-bold">M</span>
                           </div>
                           <div className="font-bold text-sm text-blue-600 tracking-wide">
-                            BLUDATA
+                            MAORI GROUP
                           </div>
                         </div>
                       )}
@@ -454,7 +454,7 @@ export default function Labels() {
                     {/* Footer */}
                     <div className="flex justify-between items-center px-3 pb-2 border-t border-gray-200 pt-1">
                       <div className="text-gray-400 text-xs">
-                        Bludata S.r.l.
+                        Maori Group S.r.l.
                       </div>
                       <div className="text-gray-400 text-xs">
                         {new Date().toLocaleDateString('it-IT')}
