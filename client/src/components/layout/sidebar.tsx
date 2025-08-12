@@ -40,11 +40,11 @@ export default function Sidebar() {
       {/* Professional Header */}
       <div className="p-8 border-b border-border/50 bg-gradient-to-br from-primary/5 to-primary/10">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center shadow-lg">
-            <Building2 className="w-8 h-8 text-primary-foreground" />
+          <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+            <span className="text-white text-2xl font-bold">B</span>
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">PC Manager</h1>
+            <h1 className="text-2xl font-bold text-foreground">BLUDATA</h1>
             <p className="text-sm text-muted-foreground font-medium">Sistema IT Aziendale</p>
           </div>
         </div>
