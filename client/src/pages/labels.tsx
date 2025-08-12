@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Printer, Download, Eye, QrCode, Settings } from "lucide-react";
+import { Printer, Download, Eye, QrCode, Settings, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import QRCodeLib from "qrcode";
 import type { PcWithEmployee } from "@shared/schema";
 
 export default function Labels() {
@@ -42,40 +43,51 @@ export default function Labels() {
     }
   };
 
-  const generateQRCode = (pcId: string) => {
-    // In una implementazione reale, qui genereresti un QR code
-    return `data:image/svg+xml,${encodeURIComponent(`
-      <svg width="60" height="60" xmlns="http://www.w3.org/2000/svg">
-        <rect width="60" height="60" fill="white"/>
-        <rect x="10" y="10" width="40" height="40" fill="black"/>
-        <rect x="15" y="15" width="30" height="30" fill="white"/>
-        <text x="30" y="35" text-anchor="middle" font-size="8" fill="black">${pcId}</text>
-      </svg>
-    `)}`;
+  const generateQRCode = async (data: string): Promise<string> => {
+    try {
+      return await QRCodeLib.toDataURL(data, {
+        width: 200,
+        margin: 1,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      });
+    } catch (error) {
+      console.error('Errore generazione QR Code:', error);
+      return '';
+    }
   };
 
-  const printLabel = () => {
+  const printLabel = async () => {
     if (!selectedPcData) return;
     
-    const printWindow = window.open('', '_blank');
-    const labelContent = generateLabelHTML();
+    const qrCodeDataUrl = await generateQRCode(`PC-${selectedPcData.pcId}`);
+    const labelContent = generateProfessionalLabel(qrCodeDataUrl);
     
+    const printWindow = window.open('', '_blank');
     printWindow?.document.write(`
       <html>
         <head>
-          <title>Stampa Etichetta - ${selectedPcData.pcId}</title>
+          <title>Etichetta PC - ${selectedPcData.pcId}</title>
           <style>
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
             body { 
               margin: 0; 
               padding: 20px; 
-              font-family: Arial, sans-serif; 
+              font-family: 'Inter', 'Segoe UI', sans-serif; 
+              background: white;
             }
             .label { 
               page-break-after: always; 
               margin-bottom: 20px;
             }
             @media print {
-              body { margin: 0; padding: 0; }
+              body { margin: 0; padding: 5mm; }
               .label { margin: 0; }
             }
           </style>
@@ -88,6 +100,136 @@ export default function Labels() {
     
     printWindow?.document.close();
     printWindow?.print();
+  };
+
+  const generateProfessionalLabel = (qrCodeUrl: string) => {
+    if (!selectedPcData) return "";
+
+    return `
+      <div class="label" style="
+        width: 62mm; 
+        height: 29mm; 
+        border: 1px solid #e0e0e0; 
+        padding: 3mm; 
+        display: flex; 
+        flex-direction: column;
+        background: white;
+        font-family: 'Inter', sans-serif;
+        position: relative;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      ">
+        <!-- Header con QR Code -->
+        <div style="
+          display: flex; 
+          justify-content: space-between; 
+          align-items: flex-start;
+          margin-bottom: 2mm;
+        ">
+          <div style="
+            display: flex;
+            align-items: center;
+            gap: 2mm;
+          ">
+            <div style="
+              width: 4mm;
+              height: 4mm;
+              background: #2563eb;
+              border-radius: 1mm;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            ">
+              <span style="color: white; font-size: 6pt; font-weight: bold;">P</span>
+            </div>
+            <div style="
+              font-weight: 700; 
+              font-size: 8pt; 
+              color: #1e293b;
+              letter-spacing: 0.5px;
+            ">
+              PC MANAGER
+            </div>
+          </div>
+          
+          ${qrCodeUrl ? `
+            <img src="${qrCodeUrl}" style="
+              width: 12mm; 
+              height: 12mm; 
+              border: 1px solid #e0e0e0;
+              border-radius: 1mm;
+            " />
+          ` : ''}
+        </div>
+        
+        <!-- Informazioni Principali -->
+        <div style="
+          flex-grow: 1; 
+          display: flex; 
+          flex-direction: column; 
+          justify-content: center;
+          text-align: center;
+          background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+          border-radius: 2mm;
+          padding: 2mm;
+          margin: 1mm 0;
+        ">
+          <div style="
+            font-weight: 800; 
+            font-size: 11pt; 
+            color: #0f172a;
+            margin-bottom: 1mm;
+            letter-spacing: 0.3px;
+          ">
+            ${selectedPcData.pcId}
+          </div>
+          
+          <div style="
+            font-size: 7pt; 
+            color: #475569;
+            font-weight: 500;
+            margin-bottom: 1mm;
+          ">
+            ${selectedPcData.brand?.toUpperCase()} ${selectedPcData.model}
+          </div>
+          
+          ${selectedPcData.employee?.name ? `
+            <div style="
+              font-size: 6pt; 
+              color: #64748b;
+              font-weight: 400;
+            ">
+              ${selectedPcData.employee.name}
+            </div>
+          ` : ''}
+          
+          ${customText ? `
+            <div style="
+              font-size: 6pt; 
+              color: #475569;
+              font-weight: 500;
+              margin-top: 1mm;
+              font-style: italic;
+            ">
+              ${customText}
+            </div>
+          ` : ''}
+        </div>
+        
+        <!-- Footer -->
+        <div style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 5pt; 
+          color: #94a3b8;
+          border-top: 1px solid #e2e8f0;
+          padding-top: 1mm;
+        ">
+          <span>Sistema IT Aziendale</span>
+          <span>${new Date().toLocaleDateString('it-IT')}</span>
+        </div>
+      </div>
+    `;
   };
 
   const generateLabelHTML = () => {
@@ -261,47 +403,62 @@ export default function Labels() {
                 {/* Anteprima */}
                 <div className="border-2 border-dashed border-border p-4 rounded-lg bg-muted/30">
                   <div 
-                    className="bg-white border-2 border-gray-800 p-3 mx-auto"
+                    className="bg-white border border-gray-300 mx-auto relative shadow-sm"
                     style={{
-                      width: labelType === 'small' ? '190px' : labelType === 'large' ? '280px' : '240px',
-                      height: labelType === 'small' ? '100px' : labelType === 'large' ? '140px' : '120px',
-                      fontSize: labelType === 'small' ? '10px' : '12px'
+                      width: '240px',
+                      height: '120px',
+                      fontFamily: 'Inter, sans-serif'
                     }}
                   >
-                    <div className="flex justify-between items-start mb-2">
+                    {/* Header con Logo e QR */}
+                    <div className="flex justify-between items-start p-3 pb-1">
                       {includeLogo && (
-                        <div className="font-bold text-primary text-sm">
-                          PC MANAGER
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 bg-primary rounded flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">P</span>
+                          </div>
+                          <div className="font-bold text-sm text-gray-900 tracking-wide">
+                            PC MANAGER
+                          </div>
                         </div>
                       )}
                       {includeQR && (
-                        <div className="w-8 h-8 bg-gray-900 flex items-center justify-center text-white text-xs">
+                        <div className="w-12 h-12 bg-gray-900 flex items-center justify-center text-white text-xs rounded border shadow-sm">
                           QR
                         </div>
                       )}
                     </div>
                     
-                    <div className="text-center flex-grow flex flex-col justify-center">
-                      <div className="font-bold text-lg mb-1">
-                        {selectedPcData.pcId}
-                      </div>
-                      <div className="text-gray-600 text-sm">
-                        {selectedPcData.brand} {selectedPcData.model}
-                      </div>
-                      {selectedPcData.employee?.name && (
-                        <div className="text-gray-500 text-xs mt-1">
-                          {selectedPcData.employee.name}
+                    {/* Area centrale con info PC */}
+                    <div className="px-3 py-2 flex-grow flex flex-col justify-center">
+                      <div className="text-center bg-gradient-to-br from-gray-50 to-gray-100 rounded p-2 mx-1">
+                        <div className="font-bold text-lg text-gray-900 mb-1 tracking-wide">
+                          {selectedPcData.pcId}
                         </div>
-                      )}
-                      {customText && (
-                        <div className="text-gray-700 text-xs mt-1">
-                          {customText}
+                        <div className="text-gray-600 text-sm font-medium">
+                          {selectedPcData.brand?.toUpperCase()} {selectedPcData.model}
                         </div>
-                      )}
+                        {selectedPcData.employee?.name && (
+                          <div className="text-gray-500 text-xs mt-1">
+                            {selectedPcData.employee.name}
+                          </div>
+                        )}
+                        {customText && (
+                          <div className="text-gray-600 text-xs mt-1 italic">
+                            {customText}
+                          </div>
+                        )}
+                      </div>
                     </div>
                     
-                    <div className="text-gray-400 text-xs text-center mt-2">
-                      {new Date().toLocaleDateString('it-IT')}
+                    {/* Footer */}
+                    <div className="flex justify-between items-center px-3 pb-2 border-t border-gray-200 pt-1">
+                      <div className="text-gray-400 text-xs">
+                        Sistema IT Aziendale
+                      </div>
+                      <div className="text-gray-400 text-xs">
+                        {new Date().toLocaleDateString('it-IT')}
+                      </div>
                     </div>
                   </div>
                 </div>
