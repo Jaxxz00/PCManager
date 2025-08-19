@@ -1,11 +1,84 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertEmployeeSchema, insertPcSchema } from "@shared/schema";
 import { z } from "zod";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+import { ObjectPermission } from "./objectAcl";
+import rateLimit from "express-rate-limit";
+import helmet from "helmet";
+
+// Estendo il tipo Request per includere la sessione
+declare module 'express-serve-static-core' {
+  interface Request {
+    session?: {
+      id?: string;
+      userId?: string;
+    };
+  }
+}
+
+// Middleware di sicurezza per rate limiting
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minuti
+  max: 100, // Max 100 richieste per IP ogni 15 minuti
+  message: { error: "Troppe richieste. Riprova più tardi." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Middleware di autenticazione basilare (da espandere con Replit Auth)
+const authenticateRequest = (req: Request, res: Response, next: NextFunction) => {
+  // Per ora controllo base - da implementare con sistema auth completo
+  const apiKey = req.headers['x-api-key'] as string;
+  const sessionId = req.session?.id;
+  
+  if (!apiKey && !sessionId) {
+    return res.status(401).json({ error: "Autenticazione richiesta" });
+  }
+  
+  // TODO: Implementare controlli auth più robusti
+  next();
+};
+
+// Middleware per validazione input
+const validateInput = (schema: z.ZodSchema) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    try {
+      req.body = schema.parse(req.body);
+      next();
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: "Dati non validi",
+          details: error.errors.map(e => ({
+            field: e.path.join('.'),
+            message: e.message
+          }))
+        });
+      }
+      next(error);
+    }
+  };
+};
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // Sicurezza: Helmet per headers sicuri
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", "data:", "https:"],
+        connectSrc: ["'self'"],
+      },
+    },
+  }));
+  
+  // Rate limiting per API pubbliche
+  app.use('/api/', apiLimiter);
   
   // Dashboard stats
   app.get("/api/dashboard/stats", async (req, res) => {
@@ -168,13 +241,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Endpoint per servire documenti privati
-  app.get("/objects/:objectPath(*)", async (req, res) => {
+  // Endpoint per servire documenti privati - RICHIEDE AUTENTICAZIONE
+  app.get("/objects/:objectPath(*)", authenticateRequest, async (req, res) => {
     const objectStorageService = new ObjectStorageService();
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(
         req.path,
       );
+      
+      // Controllo ACL - solo utenti autorizzati possono accedere
+      const canAccess = await objectStorageService.canAccessObjectEntity({
+        objectFile,
+        userId: req.session?.userId || 'anonymous',
+        requestedPermission: ObjectPermission.READ,
+      });
+      
+      if (!canAccess) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
       objectStorageService.downloadObject(objectFile, res);
     } catch (error) {
       console.error("Error accessing object:", error);
@@ -185,8 +270,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Endpoint per ottenere URL di upload
-  app.post("/api/objects/upload", async (req, res) => {
+  // Endpoint per ottenere URL di upload - RICHIEDE AUTENTICAZIONE
+  app.post("/api/objects/upload", authenticateRequest, async (req, res) => {
     const objectStorageService = new ObjectStorageService();
     try {
       const uploadURL = await objectStorageService.getObjectEntityUploadURL();
@@ -197,8 +282,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Endpoint per salvare i metadati del documento dopo upload
-  app.post("/api/documents", async (req, res) => {
+  // Endpoint per salvare i metadati del documento dopo upload - PROTETTO
+  app.post("/api/documents", authenticateRequest, validateInput(z.object({
+    documentURL: z.string().url(),
+    filename: z.string().min(1).max(255),
+    type: z.enum(['manleva', 'contratto', 'documento', 'altro'])
+  })), async (req, res) => {
     if (!req.body.documentURL || !req.body.filename || !req.body.type) {
       return res.status(400).json({ error: "documentURL, filename, and type are required" });
     }
