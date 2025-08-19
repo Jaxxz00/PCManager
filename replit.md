@@ -2,7 +2,13 @@
 
 ## Overview
 
-Sistema di gestione completo per computer e dipendenti aziendali di Maori Group. L'applicazione fornisce una dashboard centralizzata per il monitoraggio dell'inventario PC, assegnazioni dipendenti, gestione documenti e statistiche del sistema. Include interfaccia React moderna, backend Node.js/Express e database PostgreSQL con cloud storage per documenti.
+Sistema di gestione completo per computer e dipendenti aziendali di Maori Group. L'applicazione fornisce una dashboard centralizzata per il monitoraggio dell'inventario PC, assegnazioni dipendenti, gestione documenti e statistiche del sistema. Include interfaccia React moderna, backend Node.js/Express e **database PostgreSQL completamente integrato** per persistenza dati con cloud storage per documenti.
+
+## Recent Changes (19/08/2025)
+- ✅ **MIGRAZIONE POSTGRESQL COMPLETATA**: Sistema ora usa DatabaseStorage con PostgreSQL per persistenza completa
+- ✅ **AUTO-INIZIALIZZAZIONE**: Dati test automaticamente creati al primo avvio
+- ✅ **SICUREZZA RINFORZATA**: CSP configurato per sviluppo, autenticazione e rate limiting attivi
+- ✅ **PERFORMANCE OTTIMIZZATE**: Query JOIN per dati correlati PC-Dipendenti
 
 ## User Preferences
 

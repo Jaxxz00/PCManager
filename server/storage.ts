@@ -323,26 +323,52 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getDashboardStats() {
-    const [stats] = await db.execute(sql`
-      SELECT 
-        COUNT(*) as total_pcs,
-        COUNT(CASE WHEN status = 'active' THEN 1 END) as active_pcs,
-        COUNT(CASE WHEN status = 'maintenance' THEN 1 END) as maintenance_pcs,
-        COUNT(CASE WHEN status = 'retired' THEN 1 END) as retired_pcs,
-        COUNT(CASE 
-          WHEN warranty_expiry BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '30 days' 
-          THEN 1 
-        END) as expiring_warranties
-      FROM pcs
-    `);
+    try {
+      const [stats] = await db.execute(sql`
+        SELECT 
+          COUNT(*) as total_pcs,
+          COUNT(CASE WHEN status = 'active' THEN 1 END) as active_pcs,
+          COUNT(CASE WHEN status = 'maintenance' THEN 1 END) as maintenance_pcs,
+          COUNT(CASE WHEN status = 'retired' THEN 1 END) as retired_pcs,
+          COUNT(CASE 
+            WHEN warranty_expiry BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '30 days' 
+            THEN 1 
+          END) as expiring_warranties
+        FROM pcs
+      `);
 
-    return {
-      totalPCs: Number(stats.total_pcs),
-      activePCs: Number(stats.active_pcs),
-      maintenancePCs: Number(stats.maintenance_pcs),
-      retiredPCs: Number(stats.retired_pcs),
-      expiringWarranties: Number(stats.expiring_warranties),
-    };
+      return {
+        totalPCs: Number(stats.total_pcs || 0),
+        activePCs: Number(stats.active_pcs || 0),
+        maintenancePCs: Number(stats.maintenance_pcs || 0),
+        retiredPCs: Number(stats.retired_pcs || 0),
+        expiringWarranties: Number(stats.expiring_warranties || 0),
+      };
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+      // Fallback to basic count queries
+      const allPcs = await db.select().from(pcs);
+      const totalPCs = allPcs.length;
+      const activePCs = allPcs.filter(pc => pc.status === 'active').length;
+      const maintenancePCs = allPcs.filter(pc => pc.status === 'maintenance').length;
+      const retiredPCs = allPcs.filter(pc => pc.status === 'retired').length;
+      
+      // Calculate expiring warranties
+      const thirtyDaysFromNow = new Date();
+      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+      const expiringWarranties = allPcs.filter(pc => {
+        const warrantyDate = new Date(pc.warrantyExpiry);
+        return warrantyDate <= thirtyDaysFromNow && warrantyDate >= new Date();
+      }).length;
+
+      return {
+        totalPCs,
+        activePCs,
+        maintenancePCs,
+        retiredPCs,
+        expiringWarranties,
+      };
+    }
   }
 
   // Method to initialize with test data (run once)
