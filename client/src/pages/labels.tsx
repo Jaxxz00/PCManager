@@ -205,6 +205,15 @@ export default function Labels() {
             ${selectedPcData.brand?.toUpperCase()} ${selectedPcData.model}
           </div>
           
+          <div style="
+            font-size: 6pt; 
+            color: #64748b;
+            font-weight: 500;
+            margin-bottom: 1mm;
+          ">
+            S/N: ${selectedPcData.serialNumber || 'N/A'}
+          </div>
+          
           ${selectedPcData.employee?.name ? `
             <div style="
               font-size: 6pt; 
@@ -286,6 +295,9 @@ export default function Labels() {
           </div>
           <div style="font-size: 12px; color: #666;">
             ${selectedPcData.brand} ${selectedPcData.model}
+          </div>
+          <div style="font-size: 10px; color: #888; margin-top: 2px;">
+            S/N: ${selectedPcData.serialNumber || 'N/A'}
           </div>
           ${selectedPcData.employee?.name ? `
             <div style="font-size: 10px; color: #888; margin-top: 2px;">
@@ -496,6 +508,9 @@ export default function Labels() {
                         <div className="text-gray-600 text-sm font-medium">
                           {selectedPcData.brand?.toUpperCase()} {selectedPcData.model}
                         </div>
+                        <div className="text-gray-500 text-xs font-medium mt-1">
+                          S/N: {selectedPcData.serialNumber || 'N/A'}
+                        </div>
                         {selectedPcData.employee?.name ? (
                           <div className="text-green-600 text-xs mt-1 font-medium">
                             ASSEGNATO
@@ -547,6 +562,10 @@ export default function Labels() {
                     <div>
                       <span className="text-muted-foreground">Modello:</span>
                       <span className="ml-2">{selectedPcData.model}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">S/N:</span>
+                      <span className="ml-2 font-mono text-xs">{selectedPcData.serialNumber || 'N/A'}</span>
                     </div>
                     {selectedPcData.employee && (
                       <>
