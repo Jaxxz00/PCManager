@@ -50,13 +50,13 @@ export default function Labels() {
       
       JsBarcode(canvas, pcData.pcId, {
         format: "CODE128",
-        width: 3,
-        height: 80,
+        width: 4,
+        height: 100,
         displayValue: true,
-        fontSize: 16,
+        fontSize: 18,
         textAlign: "center",
         textPosition: "bottom",
-        textMargin: 3,
+        textMargin: 4,
         fontOptions: "bold",
         font: "Arial",
         background: "#ffffff",
@@ -163,27 +163,27 @@ export default function Labels() {
             S/N: ${selectedPcData.serialNumber || 'N/A'}
           </div>
           
-          ${selectedPcData.employee?.name ? `
+          <div style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1mm;
+            margin-bottom: 2mm;
+          ">
+            <img src="/assets/maori-logo.jpeg" alt="Maori Group Logo" style="
+              height: 6mm;
+              width: auto;
+              object-fit: contain;
+            "/>
             <div style="
-              font-size: 7pt; 
-              color: #16a34a;
+              font-size: 6pt; 
+              color: #475569;
               font-weight: 500;
               text-align: center;
-              margin-bottom: 2mm;
             ">
-              ASSEGNATO
+              info@maorigroup.it
             </div>
-          ` : `
-            <div style="
-              font-size: 7pt; 
-              color: #94a3b8;
-              font-weight: 500;
-              text-align: center;
-              margin-bottom: 2mm;
-            ">
-              DISPONIBILE
-            </div>
-          `}
+          </div>
           
           ${customText ? `
             <div style="
@@ -206,8 +206,8 @@ export default function Labels() {
               margin-top: 1mm;
             ">
               <img src="${barcodeUrl}" style="
-                width: 35mm; 
-                height: 12mm; 
+                width: 45mm; 
+                height: 15mm; 
                 border: 1px solid #e0e0e0;
                 border-radius: 1mm;
                 object-fit: contain;
@@ -242,15 +242,12 @@ export default function Labels() {
           <div style="font-size: 12px; color: #666; margin-bottom: 8px;">
             S/N: ${selectedPcData.serialNumber || 'N/A'}
           </div>
-          ${selectedPcData.employee?.name ? `
-            <div style="font-size: 12px; color: #16a34a; font-weight: bold; margin-bottom: 8px;">
-              ASSEGNATO
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin-bottom: 8px;">
+            <img src="/assets/maori-logo.jpeg" alt="Logo" style="height: 16px; width: auto; object-fit: contain;">
+            <div style="font-size: 10px; color: #666;">
+              info@maorigroup.it
             </div>
-          ` : `
-            <div style="font-size: 12px; color: #999; margin-bottom: 8px;">
-              DISPONIBILE
-            </div>
-          `}
+          </div>
           ${customText ? `
             <div style="font-size: 10px; color: #333; margin-bottom: 8px;">
               ${customText}
@@ -258,7 +255,7 @@ export default function Labels() {
           ` : ''}
           ${includeBarcode ? `
             <div style="display: flex; justify-content: center;">
-              <div style="width: 80px; height: 25px; background: #333; color: white; display: flex; align-items: center; justify-content: center; font-size: 8px; border-radius: 2px;">||||||||||||</div>
+              <div style="width: 100px; height: 30px; background: #333; color: white; display: flex; align-items: center; justify-content: center; font-size: 8px; border-radius: 2px;">||||||||||||||||</div>
             </div>
           ` : ''}
         </div>
@@ -435,15 +432,16 @@ export default function Labels() {
                         <div className="text-gray-500 text-xs font-medium mb-2">
                           S/N: {selectedPcData.serialNumber || 'N/A'}
                         </div>
-                        {selectedPcData.employee?.name ? (
-                          <div className="text-green-600 text-sm font-medium mb-2">
-                            ASSEGNATO
+                        <div className="flex flex-col items-center gap-1 mb-2">
+                          <img 
+                            src="/assets/maori-logo.jpeg" 
+                            alt="Maori Group Logo" 
+                            className="h-4 w-auto object-contain"
+                          />
+                          <div className="text-gray-600 text-xs font-medium">
+                            info@maorigroup.it
                           </div>
-                        ) : (
-                          <div className="text-gray-400 text-sm mb-2">
-                            DISPONIBILE
-                          </div>
-                        )}
+                        </div>
                         {customText && (
                           <div className="text-gray-600 text-xs mb-2 italic">
                             {customText}
@@ -451,8 +449,8 @@ export default function Labels() {
                         )}
                         {includeBarcode && (
                           <div className="flex justify-center mt-2">
-                            <div className="w-28 h-8 bg-gray-900 flex items-center justify-center text-white text-xs rounded border shadow-sm">
-                              ||||||||||||
+                            <div className="w-36 h-10 bg-gray-900 flex items-center justify-center text-white text-xs rounded border shadow-sm">
+                              ||||||||||||||||
                             </div>
                           </div>
                         )}
