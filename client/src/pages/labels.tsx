@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Printer, Download, Eye, QrCode, Settings, Building2 } from "lucide-react";
+import { Printer, Download, Eye, Barcode, Settings, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,13 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import QRCodeLib from "qrcode";
+import JsBarcode from "jsbarcode";
 import type { PcWithEmployee } from "@shared/schema";
 
 export default function Labels() {
   const [selectedPc, setSelectedPc] = useState<string>("");
   const [labelType, setLabelType] = useState<string>("standard");
-  const [includeQR, setIncludeQR] = useState(true);
+  const [includeBarcode, setIncludeBarcode] = useState(true);
   const [includeLogo, setIncludeLogo] = useState(true);
   const [customText, setCustomText] = useState("");
 
@@ -43,29 +43,29 @@ export default function Labels() {
     }
   };
 
-  const generateQRCode = async (pcData: PcWithEmployee): Promise<string> => {
+  const generateBarcode = async (pcData: PcWithEmployee): Promise<string> => {
     try {
-      // QR contiene JSON con info complete per ricerca database
-      const qrData = JSON.stringify({
-        pcId: pcData.pcId,
-        id: pcData.id,
-        brand: pcData.brand,
-        model: pcData.model,
-        serialNumber: pcData.serialNumber,
-        hasEmployee: !!pcData.employee?.id,
-        lastUpdate: new Date().toISOString()
+      // Genera un codice a barre usando l'ID del PC (più semplice e leggibile)
+      const canvas = document.createElement('canvas');
+      
+      JsBarcode(canvas, pcData.pcId, {
+        format: "CODE128",
+        width: 2,
+        height: 60,
+        displayValue: true,
+        fontSize: 14,
+        textAlign: "center",
+        textPosition: "bottom",
+        textMargin: 2,
+        fontOptions: "bold",
+        font: "Arial",
+        background: "#ffffff",
+        lineColor: "#000000"
       });
       
-      return await QRCodeLib.toDataURL(qrData, {
-        width: 200,
-        margin: 1,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        }
-      });
+      return canvas.toDataURL();
     } catch (error) {
-      console.error('Errore generazione QR Code:', error);
+      console.error('Errore generazione codice a barre:', error);
       return '';
     }
   };
@@ -73,8 +73,8 @@ export default function Labels() {
   const printLabel = async () => {
     if (!selectedPcData) return;
     
-    const qrCodeDataUrl = await generateQRCode(selectedPcData);
-    const labelContent = generateProfessionalLabel(qrCodeDataUrl);
+    const barcodeDataUrl = await generateBarcode(selectedPcData);
+    const labelContent = generateProfessionalLabel(barcodeDataUrl);
     
     const printWindow = window.open('', '_blank');
     printWindow?.document.write(`
@@ -113,7 +113,7 @@ export default function Labels() {
     printWindow?.print();
   };
 
-  const generateProfessionalLabel = (qrCodeUrl: string) => {
+  const generateProfessionalLabel = (barcodeUrl: string) => {
     if (!selectedPcData) return "";
 
     return `
@@ -129,7 +129,7 @@ export default function Labels() {
         position: relative;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
       ">
-        <!-- Header con QR Code -->
+        <!-- Header con Codice a Barre -->
         <div style="
           display: flex; 
           justify-content: space-between; 
@@ -163,12 +163,13 @@ export default function Labels() {
             </div>
           </div>
           
-          ${qrCodeUrl ? `
-            <img src="${qrCodeUrl}" style="
-              width: 12mm; 
-              height: 12mm; 
+          ${barcodeUrl ? `
+            <img src="${barcodeUrl}" style="
+              width: 25mm; 
+              height: 8mm; 
               border: 1px solid #e0e0e0;
               border-radius: 1mm;
+              object-fit: contain;
             " />
           ` : ''}
         </div>
@@ -274,8 +275,8 @@ export default function Labels() {
               PC MANAGER
             </div>
           ` : ''}
-          ${includeQR ? `
-            <div style="width: 40px; height: 40px; background: #333; color: white; display: flex; align-items: center; justify-content: center; font-size: 8px; border-radius: 2px;">QR</div>
+          ${includeBarcode ? `
+            <div style="width: 60px; height: 20px; background: #333; color: white; display: flex; align-items: center; justify-content: center; font-size: 8px; border-radius: 2px;">||||</div>
           ` : ''}
         </div>
         
@@ -378,13 +379,13 @@ export default function Labels() {
               
               <div className="flex items-center space-x-2">
                 <Checkbox
-                  id="include-qr"
-                  checked={includeQR}
-                  onCheckedChange={(checked) => setIncludeQR(checked as boolean)}
+                  id="include-barcode"
+                  checked={includeBarcode}
+                  onCheckedChange={(checked) => setIncludeBarcode(checked as boolean)}
                 />
-                <Label htmlFor="include-qr" className="flex items-center">
-                  <QrCode className="mr-2 h-4 w-4" />
-                  Includi QR Code
+                <Label htmlFor="include-barcode" className="flex items-center">
+                  <Barcode className="mr-2 h-4 w-4" />
+                  Includi Codice a Barre
                 </Label>
               </div>
 
@@ -420,7 +421,7 @@ export default function Labels() {
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex items-start space-x-3">
                   <div className="flex-shrink-0">
-                    <QrCode className="h-5 w-5 text-blue-600 mt-0.5" />
+                    <Barcode className="h-5 w-5 text-blue-600 mt-0.5" />
                   </div>
                   <div className="flex-1">
                     <h4 className="text-sm font-medium text-blue-900 mb-1">
@@ -428,7 +429,7 @@ export default function Labels() {
                     </h4>
                     <p className="text-sm text-blue-700">
                       Il nome del dipendente non appare sull'etichetta per privacy. 
-                      Il QR code contiene dati tecnici e ID univoco che permettono di risalire 
+                      Il codice a barre contiene l'ID univoco del PC che permette di risalire 
                       all'assegnazione tramite il database aziendale.
                     </p>
                   </div>
@@ -437,7 +438,7 @@ export default function Labels() {
 
               <div className="text-sm text-muted-foreground space-y-1">
                 <p><strong>Sull'etichetta:</strong> Solo ID PC e stato assegnazione (ASSEGNATO/DISPONIBILE)</p>
-                <p><strong>Nel QR Code:</strong> ID, Brand, Modello, Serial Number, Stato assegnazione</p>
+                <p><strong>Nel Codice a Barre:</strong> ID univoco del PC per ricerca rapida nel database</p>
                 <p><strong>Nel Sistema:</strong> Collegamento completo PC → Dipendente consultabile</p>
               </div>
             </div>
@@ -479,9 +480,9 @@ export default function Labels() {
                           </div>
                         </div>
                       )}
-                      {includeQR && (
-                        <div className="w-12 h-12 bg-gray-900 flex items-center justify-center text-white text-xs rounded border shadow-sm">
-                          QR
+                      {includeBarcode && (
+                        <div className="w-16 h-8 bg-gray-900 flex items-center justify-center text-white text-xs rounded border shadow-sm">
+                          ||||||
                         </div>
                       )}
                     </div>
