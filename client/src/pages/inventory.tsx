@@ -81,20 +81,31 @@ export default function Inventory() {
       if (filters.ramMin && pc.ram < parseInt(filters.ramMin)) return false;
       if (filters.ramMax && pc.ram > parseInt(filters.ramMax)) return false;
 
-      // Filtro assegnazione
-      if (filters.assignmentStatus === 'assigned' && !pc.employeeId) return false;
-      if (filters.assignmentStatus === 'unassigned' && pc.employeeId) return false;
+      // Filtro garanzia in scadenza (prossimi 30 giorni)
+      if (filters.warrantyExpiring) {
+        const today = new Date();
+        const warrantyDate = new Date(pc.warrantyExpiry);
+        const diffTime = warrantyDate.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays > 30 || diffDays < 0) return false;
+      }
+
+      // Filtro stato assegnazione
+      if (filters.assignmentStatus) {
+        if (filters.assignmentStatus === 'assigned' && !pc.employee) return false;
+        if (filters.assignmentStatus === 'unassigned' && pc.employee) return false;
+      }
 
       // Filtro data acquisto
-      if (filters.purchaseDateFrom && pc.purchaseDate < filters.purchaseDateFrom) return false;
-      if (filters.purchaseDateTo && pc.purchaseDate > filters.purchaseDateTo) return false;
-
-      // Filtro garanzia in scadenza
-      if (filters.warrantyExpiring) {
-        const now = new Date();
-        const warrantyDate = new Date(pc.warrantyExpiry);
-        const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-        if (warrantyDate > thirtyDaysFromNow || warrantyDate <= now) return false;
+      if (filters.purchaseDateFrom) {
+        const fromDate = new Date(filters.purchaseDateFrom);
+        const purchaseDate = new Date(pc.purchaseDate);
+        if (purchaseDate < fromDate) return false;
+      }
+      if (filters.purchaseDateTo) {
+        const toDate = new Date(filters.purchaseDateTo);
+        const purchaseDate = new Date(pc.purchaseDate);
+        if (purchaseDate > toDate) return false;
       }
 
       return true;
@@ -104,13 +115,28 @@ export default function Inventory() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "active":
-        return <Badge variant="default">Attivo</Badge>;
+        return <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100">Attivo</Badge>;
       case "maintenance":
-        return <Badge variant="secondary">Manutenzione</Badge>;
+        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Manutenzione</Badge>;
       case "retired":
         return <Badge variant="destructive">Dismesso</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const getWarrantyStatus = (warrantyExpiry: string) => {
+    const today = new Date();
+    const warrantyDate = new Date(warrantyExpiry);
+    const diffTime = warrantyDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) {
+      return { text: "Scaduta", variant: "destructive" as const };
+    } else if (diffDays <= 30) {
+      return { text: "In scadenza", variant: "secondary" as const };
+    } else {
+      return { text: "Valida", variant: "default" as const };
     }
   };
 
@@ -121,27 +147,16 @@ export default function Inventory() {
   };
 
   const handleExport = () => {
-    // Gestito dal componente DataExport
-  };
-
-  const getWarrantyStatus = (warrantyExpiry: string) => {
-    const now = new Date();
-    const warrantyDate = new Date(warrantyExpiry);
-    const daysUntilExpiry = Math.ceil((warrantyDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    
-    if (daysUntilExpiry < 0) return { text: "Scaduta", variant: "destructive" as const };
-    if (daysUntilExpiry <= 30) return { text: "In scadenza", variant: "destructive" as const };
-    if (daysUntilExpiry <= 90) return { text: "Attenzione", variant: "secondary" as const };
-    return { text: "Valida", variant: "default" as const };
+    // Funzione implementata nel componente DataExport
   };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-medium text-foreground">Inventario PC</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Inventario PC</h1>
           <p className="text-muted-foreground">
-            {filteredPcs.length} di {pcs.length} PC visualizzati
+            Gestisci l'inventario hardware aziendale - {pcs.length} dispositivi totali
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -183,100 +198,102 @@ export default function Inventory() {
               </p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID PC</TableHead>
-                  <TableHead>Specifiche</TableHead>
-                  <TableHead>Assegnazione</TableHead>
-                  <TableHead>Stato</TableHead>
-                  <TableHead>Garanzia</TableHead>
-                  <TableHead>Azioni</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPcs.map((pc) => {
-                  const warrantyStatus = getWarrantyStatus(pc.warrantyExpiry);
-                  return (
-                    <TableRow key={pc.id}>
-                      <TableCell className="font-medium">
-                        <div>
-                          <p className="font-medium">{pc.pcId}</p>
-                          <p className="text-sm text-muted-foreground">{pc.serialNumber}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{pc.brand} {pc.model}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {pc.cpu} • {pc.ram}GB RAM • {pc.storage}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {pc.employee ? (
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                            <div>
-                              <p className="font-medium">{pc.employee.name}</p>
-                              <p className="text-sm text-muted-foreground">{pc.employee.email}</p>
-                            </div>
-                          </div>
-                        ) : (
-                          <p className="text-muted-foreground">Non assegnato</p>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(pc.status)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="min-w-[120px]">ID PC</TableHead>
+                    <TableHead className="min-w-[200px]">Specifiche</TableHead>
+                    <TableHead className="min-w-[180px]">Assegnazione</TableHead>
+                    <TableHead className="min-w-[100px]">Stato</TableHead>
+                    <TableHead className="min-w-[140px]">Garanzia</TableHead>
+                    <TableHead className="min-w-[100px]">Azioni</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredPcs.map((pc) => {
+                    const warrantyStatus = getWarrantyStatus(pc.warrantyExpiry);
+                    return (
+                      <TableRow key={pc.id}>
+                        <TableCell className="font-medium">
                           <div>
-                            <Badge variant={warrantyStatus.variant}>
-                              {warrantyStatus.text}
-                            </Badge>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {new Date(pc.warrantyExpiry).toLocaleDateString('it-IT')}
+                            <p className="font-medium">{pc.pcId}</p>
+                            <p className="text-sm text-muted-foreground">{pc.serialNumber}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{pc.brand} {pc.model}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {pc.cpu} • {pc.ram}GB RAM • {pc.storage}
                             </p>
                           </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              Azioni
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem 
-                              onClick={() => {
-                                // TODO: Implementare modifica PC
-                                toast({
-                                  title: "Funzione in sviluppo",
-                                  description: "La modifica PC sarà disponibile prossimamente.",
-                                });
-                              }}
-                            >
-                              <Edit className="mr-2 h-4 w-4" />
-                              Modifica
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleDeletePc(pc.id)}
-                              className="text-destructive"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Elimina
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                        </TableCell>
+                        <TableCell>
+                          {pc.employee ? (
+                            <div className="flex items-center gap-2">
+                              <User className="h-4 w-4 text-muted-foreground" />
+                              <div>
+                                <p className="font-medium">{pc.employee.name}</p>
+                                <p className="text-sm text-muted-foreground">{pc.employee.email}</p>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="text-muted-foreground">Non assegnato</p>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {getStatusBadge(pc.status)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <Badge variant={warrantyStatus.variant}>
+                                {warrantyStatus.text}
+                              </Badge>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {new Date(pc.warrantyExpiry).toLocaleDateString('it-IT')}
+                              </p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                Azioni
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem 
+                                onClick={() => {
+                                  // TODO: Implementare modifica PC
+                                  toast({
+                                    title: "Funzione in sviluppo",
+                                    description: "La modifica PC sarà disponibile prossimamente.",
+                                  });
+                                }}
+                              >
+                                <Edit className="mr-2 h-4 w-4" />
+                                Modifica
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleDeletePc(pc.id)}
+                                className="text-destructive"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Elimina
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
