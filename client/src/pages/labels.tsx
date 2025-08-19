@@ -450,9 +450,9 @@ export default function Labels() {
                     
                     {/* Codice a barre in fondo */}
                     {includeBarcode && (
-                      <div className="flex justify-center pb-4">
-                        <div className="w-48 h-12 bg-gray-900 flex items-center justify-center text-white text-xs rounded-sm border shadow-sm">
-                          <span className="font-mono tracking-wider">||||||||||||||||||||</span>
+                      <div className="flex justify-center pb-3 px-4">
+                        <div className="w-40 h-10 bg-gray-900 flex items-center justify-center text-white text-xs rounded-sm border shadow-sm">
+                          <span className="font-mono tracking-wide">||||||||||||||||</span>
                         </div>
                       </div>
                     )}
