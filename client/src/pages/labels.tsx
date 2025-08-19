@@ -50,13 +50,13 @@ export default function Labels() {
       
       JsBarcode(canvas, pcData.serialNumber || pcData.pcId, {
         format: "CODE128",
-        width: 4,
-        height: 100,
+        width: 2,
+        height: 40,
         displayValue: true,
-        fontSize: 18,
+        fontSize: 10,
         textAlign: "center",
         textPosition: "bottom",
-        textMargin: 4,
+        textMargin: 2,
         fontOptions: "bold",
         font: "Arial",
         background: "#ffffff",
@@ -205,8 +205,8 @@ export default function Labels() {
               margin-top: 1mm;
             ">
               <img src="${barcodeUrl}" style="
-                width: 45mm; 
-                height: 15mm; 
+                width: 30mm; 
+                height: 10mm; 
                 border: 1px solid #e0e0e0;
                 border-radius: 1mm;
                 object-fit: contain;
@@ -254,7 +254,7 @@ export default function Labels() {
           ` : ''}
           ${includeBarcode ? `
             <div style="display: flex; justify-content: center;">
-              <div style="width: 100px; height: 30px; background: #333; color: white; display: flex; align-items: center; justify-content: center; font-size: 8px; border-radius: 2px;">||||||||||||||||</div>
+              <div style="width: 70px; height: 20px; background: #333; color: white; display: flex; align-items: center; justify-content: center; font-size: 8px; border-radius: 2px;">||||||||||||</div>
             </div>
           ` : ''}
         </div>
