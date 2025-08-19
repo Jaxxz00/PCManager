@@ -132,37 +132,10 @@ export default function Labels() {
         <!-- Header con Codice a Barre -->
         <div style="
           display: flex; 
-          justify-content: space-between; 
+          justify-content: flex-end; 
           align-items: flex-start;
           margin-bottom: 2mm;
         ">
-          <div style="
-            display: flex;
-            align-items: center;
-            gap: 2mm;
-          ">
-            <div style="
-              display: flex;
-              align-items: center;
-              gap: 1mm;
-            ">
-              <img src="/assets/maori-logo.jpeg" alt="Maori Group Logo" style="
-                height: 6mm;
-                width: auto;
-                object-fit: contain;
-                margin-right: 1mm;
-              "/>
-              <div style="
-                font-weight: 700; 
-                font-size: 8pt; 
-                color: #1e40af;
-                letter-spacing: 0.3px;
-              ">
-                MAORI GROUP
-              </div>
-            </div>
-          </div>
-          
           ${barcodeUrl ? `
             <img src="${barcodeUrl}" style="
               width: 25mm; 
@@ -245,7 +218,7 @@ export default function Labels() {
           ` : ''}
         </div>
         
-        <!-- Footer -->
+        <!-- Footer con Logo -->
         <div style="
           display: flex;
           justify-content: space-between;
@@ -255,7 +228,14 @@ export default function Labels() {
           border-top: 1px solid #e2e8f0;
           padding-top: 1mm;
         ">
-          <span>Maori Group S.r.l.</span>
+          <div style="display: flex; align-items: center; gap: 1mm;">
+            <img src="/assets/maori-logo.jpeg" alt="Maori Group Logo" style="
+              height: 4mm;
+              width: auto;
+              object-fit: contain;
+            "/>
+            <span>Maori Group S.r.l.</span>
+          </div>
           <span>${new Date().toLocaleDateString('it-IT')}</span>
         </div>
       </div>
@@ -278,12 +258,7 @@ export default function Labels() {
         justify-content: space-between;
         background: white;
       ">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-          ${includeLogo ? `
-            <div style="font-weight: bold; font-size: 14px; color: #2563eb;">
-              PC MANAGER
-            </div>
-          ` : ''}
+        <div style="display: flex; justify-content: flex-end; align-items: flex-start;">
           ${includeBarcode ? `
             <div style="width: 60px; height: 20px; background: #333; color: white; display: flex; align-items: center; justify-content: center; font-size: 8px; border-radius: 2px;">||||</div>
           ` : ''}
@@ -315,8 +290,14 @@ export default function Labels() {
           ` : ''}
         </div>
         
-        <div style="font-size: 8px; color: #999; text-align: center;">
-          ${new Date().toLocaleDateString('it-IT')}
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 8px; color: #999; border-top: 1px solid #ddd; padding-top: 4px;">
+          <div style="display: flex; align-items: center; gap: 4px;">
+            ${includeLogo ? `
+              <img src="/assets/maori-logo.jpeg" alt="Logo" style="height: 12px; width: auto; object-fit: contain;">
+            ` : ''}
+            <span>Maori Group S.r.l.</span>
+          </div>
+          <span>${new Date().toLocaleDateString('it-IT')}</span>
         </div>
       </div>
     `;
@@ -478,20 +459,8 @@ export default function Labels() {
                       fontFamily: 'Inter, sans-serif'
                     }}
                   >
-                    {/* Header con Logo e QR */}
-                    <div className="flex justify-between items-start p-3 pb-1">
-                      {includeLogo && (
-                        <div className="flex items-center gap-2">
-                          <img 
-                            src="/assets/maori-logo.jpeg" 
-                            alt="Maori Group Logo" 
-                            className="h-4 w-auto object-contain"
-                          />
-                          <div className="font-bold text-sm text-blue-700 tracking-wide">
-                            MAORI GROUP
-                          </div>
-                        </div>
-                      )}
+                    {/* Header con Codice a Barre */}
+                    <div className="flex justify-end items-start p-3 pb-1">
                       {includeBarcode && (
                         <div className="w-16 h-8 bg-gray-900 flex items-center justify-center text-white text-xs rounded border shadow-sm">
                           ||||||
@@ -528,10 +497,17 @@ export default function Labels() {
                       </div>
                     </div>
                     
-                    {/* Footer */}
+                    {/* Footer con Logo */}
                     <div className="flex justify-between items-center px-3 pb-2 border-t border-gray-200 pt-1">
-                      <div className="text-gray-400 text-xs">
-                        Maori Group S.r.l.
+                      <div className="flex items-center gap-1 text-gray-400 text-xs">
+                        {includeLogo && (
+                          <img 
+                            src="/assets/maori-logo.jpeg" 
+                            alt="Maori Group Logo" 
+                            className="h-2 w-auto object-contain"
+                          />
+                        )}
+                        <span>Maori Group S.r.l.</span>
                       </div>
                       <div className="text-gray-400 text-xs">
                         {new Date().toLocaleDateString('it-IT')}
