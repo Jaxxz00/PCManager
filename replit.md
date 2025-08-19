@@ -9,6 +9,9 @@ Sistema di gestione completo per computer e dipendenti aziendali di Maori Group.
 - ✅ **AUTO-INIZIALIZZAZIONE**: Dati test automaticamente creati al primo avvio
 - ✅ **SICUREZZA RINFORZATA**: CSP configurato per sviluppo, autenticazione e rate limiting attivi
 - ✅ **PERFORMANCE OTTIMIZZATE**: Query JOIN per dati correlati PC-Dipendenti
+- ✅ **ETICHETTE PRIVACY-COMPLIANT**: Sistema stampa etichette senza dati personali, solo QR per lookup database
+- ✅ **FRONTEND UX MIGLIORATO**: Check usabilità completato, errori TypeScript risolti, interfaccia professionalizzata
+- ✅ **PAGINA MANUTENZIONE COMPLETA**: Centro manutenzione PC con gestione interventi, priorità, costi e tracking tecnici
 
 ## User Preferences
 

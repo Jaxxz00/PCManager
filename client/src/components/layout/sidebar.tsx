@@ -21,7 +21,7 @@ const navigation = [
   { name: "Documenti", href: "/documents", icon: Shield, description: "Manleva e contratti" },
   { name: "Etichette", href: "/labels", icon: Tags, description: "Stampa etichette" },
   { name: "Report", href: "/reports", icon: FileText, description: "Analisi e statistiche" },
-  { name: "Manutenzione", href: "/maintenance", icon: Wrench, description: "Prossimamente", badge: "Presto" },
+  { name: "Manutenzione", href: "/maintenance", icon: Wrench, description: "Gestione interventi" },
 ];
 
 const settings = [
