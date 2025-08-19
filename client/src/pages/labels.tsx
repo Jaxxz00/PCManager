@@ -409,56 +409,53 @@ export default function Labels() {
             {selectedPcData ? (
               <>
                 {/* Anteprima */}
-                <div className="border-2 border-dashed border-border p-4 rounded-lg bg-muted/30">
+                <div className="border-2 border-dashed border-border p-6 rounded-lg bg-muted/30">
                   <div 
-                    className="bg-white border border-gray-300 mx-auto relative shadow-sm"
+                    className="bg-white border-2 border-gray-300 mx-auto relative shadow-lg rounded-sm"
                     style={{
-                      width: '240px',
-                      height: '120px',
-                      fontFamily: 'Inter, sans-serif'
+                      width: '300px',
+                      height: '140px',
+                      fontFamily: 'Inter, sans-serif',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between'
                     }}
                   >
-                    {/* Header vuoto */}
-                    <div className="p-3 pb-1">
-                    </div>
-                    
                     {/* Area centrale con info PC */}
-                    <div className="px-3 py-2 flex-grow flex flex-col justify-center">
-                      <div className="text-center bg-gradient-to-br from-gray-50 to-gray-100 rounded p-2 mx-1">
-                        <div className="text-gray-700 text-lg font-semibold mb-1">
+                    <div className="flex-1 flex flex-col justify-center items-center p-4">
+                      <div className="text-center w-full">
+                        <div className="text-gray-800 text-xl font-bold mb-2 tracking-wide">
                           {selectedPcData.brand?.toUpperCase()} {selectedPcData.model}
                         </div>
-                        <div className="text-gray-500 text-xs font-medium mb-2">
+                        <div className="text-gray-600 text-sm font-medium mb-3">
                           S/N: {selectedPcData.serialNumber || 'N/A'}
                         </div>
-                        <div className="flex items-center justify-center gap-2 mb-2">
+                        <div className="flex items-center justify-center gap-2 mb-3">
                           <img 
                             src="/assets/maori-logo.jpeg" 
                             alt="Maori Group Logo" 
-                            className="h-3 w-auto object-contain"
+                            className="h-4 w-auto object-contain"
                           />
-                          <div className="text-gray-600 text-xs font-medium">
+                          <div className="text-gray-700 text-sm font-medium">
                             info@maorigroup.it
                           </div>
                         </div>
                         {customText && (
-                          <div className="text-gray-600 text-xs mb-2 italic">
+                          <div className="text-gray-600 text-xs mb-3 italic">
                             {customText}
-                          </div>
-                        )}
-                        {includeBarcode && (
-                          <div className="flex justify-center mt-2">
-                            <div className="w-36 h-10 bg-gray-900 flex items-center justify-center text-white text-xs rounded border shadow-sm">
-                              ||||||||||||||||
-                            </div>
                           </div>
                         )}
                       </div>
                     </div>
                     
-                    {/* Footer vuoto */}
-                    <div className="px-3 pb-2">
-                    </div>
+                    {/* Codice a barre in fondo */}
+                    {includeBarcode && (
+                      <div className="flex justify-center pb-4">
+                        <div className="w-48 h-12 bg-gray-900 flex items-center justify-center text-white text-xs rounded-sm border shadow-sm">
+                          <span className="font-mono tracking-wider">||||||||||||||||||||</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
