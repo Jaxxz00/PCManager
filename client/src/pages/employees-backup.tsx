@@ -85,7 +85,7 @@ export default function Employees() {
     },
   });
 
-  const filteredEmployees = employees.filter(employee =>
+  const filteredEmployees = employees.filter((employee) =>
     employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     employee.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -134,121 +134,10 @@ export default function Employees() {
                 Aggiungi Dipendente
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-slate-900/95 backdrop-blur-md border-slate-800/50">
-              <DialogHeader>
-                <DialogTitle className="text-white text-xl">Aggiungi Nuovo Dipendente</DialogTitle>
-              </DialogHeader>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-slate-200">Nome Completo</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Mario Rossi" 
-                            className="bg-slate-800/50 border-slate-700/50 text-slate-200 placeholder:text-slate-400"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-slate-200">Email</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="email" 
-                            placeholder="mario.rossi@company.com"
-                            className="bg-slate-800/50 border-slate-700/50 text-slate-200 placeholder:text-slate-400"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="department"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-slate-200">Dipartimento</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="IT, Marketing, Sales..."
-                            className="bg-slate-800/50 border-slate-700/50 text-slate-200 placeholder:text-slate-400"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="position"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-slate-200">Posizione</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Developer, Manager..."
-                            className="bg-slate-800/50 border-slate-700/50 text-slate-200 placeholder:text-slate-400"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="flex justify-end space-x-3 pt-6">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setShowEmployeeForm(false)}
-                      className="border-slate-700 text-slate-300 hover:bg-slate-800"
-                    >
-                      Annulla
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={createEmployeeMutation.isPending}
-                      className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
-                    >
-                      {createEmployeeMutation.isPending ? "Salvataggio..." : "Salva"}
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </DialogContent>
           </Dialog>
         </div>
       </div>
 
-      {/* Search */}
-      <Card className="bg-slate-900/70 backdrop-blur-md border-slate-800/50 shadow-xl">
-        <CardContent className="p-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
-            <Input
-              placeholder="Cerca per nome, email, dipartimento o posizione..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-slate-800/50 border-slate-700/50 text-slate-200 placeholder:text-slate-400 focus:border-purple-500/50"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Employees Table */}
       <Card className="bg-slate-900/70 backdrop-blur-md border-slate-800/50 shadow-2xl">
         <CardHeader className="border-b border-slate-800/50 bg-gradient-to-r from-slate-900/50 to-purple-900/30">
           <CardTitle className="flex items-center text-white text-xl font-semibold">
@@ -256,66 +145,63 @@ export default function Employees() {
             Lista Dipendenti ({filteredEmployees.length})
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent>
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="border-slate-800/30 hover:bg-slate-800/30">
-                  <TableHead className="text-slate-300 font-semibold">Nome</TableHead>
-                  <TableHead className="text-slate-300 font-semibold">Email</TableHead>
-                  <TableHead className="text-slate-300 font-semibold">Dipartimento</TableHead>
-                  <TableHead className="text-slate-300 font-semibold">Posizione</TableHead>
-                  <TableHead className="text-slate-300 font-semibold">PC Assegnati</TableHead>
-                  <TableHead className="text-slate-300 font-semibold">Data Inserimento</TableHead>
+                <TableRow className="bg-muted/50">
+                  <TableHead className="font-medium">Nome</TableHead>
+                  <TableHead className="font-medium">Email</TableHead>
+                  <TableHead className="font-medium">Dipartimento</TableHead>
+                  <TableHead className="font-medium">Posizione</TableHead>
+                  <TableHead className="font-medium">PC Assegnati</TableHead>
+                  <TableHead className="font-medium">Data Inserimento</TableHead>
                   <TableHead className="w-12"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   [...Array(5)].map((_, i) => (
-                    <TableRow key={i} className="border-slate-800/30">
+                    <TableRow key={i}>
                       {[...Array(7)].map((_, j) => (
                         <TableCell key={j} className="animate-pulse">
-                          <div className="h-4 bg-slate-700 rounded w-20"></div>
+                          <div className="h-4 bg-muted rounded w-20"></div>
                         </TableCell>
                       ))}
                     </TableRow>
                   ))
                 ) : filteredEmployees.length > 0 ? (
                   filteredEmployees.map((employee: Employee) => (
-                    <TableRow 
-                      key={employee.id} 
-                      className="border-slate-800/30 hover:bg-slate-800/50 transition-all duration-300 hover:scale-[1.01] hover:shadow-lg"
-                    >
+                    <TableRow key={employee.id} className="table-row-hover">
                       <TableCell>
                         <div className="flex items-center space-x-3">
-                          <div className="p-2 bg-gradient-to-br from-purple-600/20 to-indigo-600/20 rounded-lg border border-purple-500/30">
-                            <User className="h-4 w-4 text-purple-400" />
+                          <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                            <User className="h-4 w-4 text-primary" />
                           </div>
-                          <span className="font-semibold text-white">{employee.name}</span>
+                          <span className="font-medium">{employee.name}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-slate-300">{employee.email}</TableCell>
+                      <TableCell className="text-muted-foreground">{employee.email}</TableCell>
                       <TableCell>
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-purple-600/20 to-indigo-600/20 text-purple-300 border border-purple-500/30">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
                           {employee.department}
                         </span>
                       </TableCell>
-                      <TableCell className="text-slate-300">{employee.position}</TableCell>
+                      <TableCell className="text-muted-foreground">{employee.position}</TableCell>
                       <TableCell>
-                        <span className="font-semibold text-white">{getEmployeePcCount(employee.id)}</span>
+                        <span className="font-medium">{getEmployeePcCount(employee.id)}</span>
                       </TableCell>
-                      <TableCell className="text-slate-400">
+                      <TableCell className="text-muted-foreground">
                         {employee.createdAt ? new Date(employee.createdAt).toLocaleDateString('it-IT') : 'N/A'}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800">
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="bg-slate-900/95 backdrop-blur-md border-slate-800/50">
+                          <DropdownMenuContent align="end">
                             <DropdownMenuItem 
                               onClick={() => {
                                 toast({
@@ -323,14 +209,13 @@ export default function Employees() {
                                   description: "La modifica dipendente sarà disponibile prossimamente.",
                                 });
                               }}
-                              className="text-slate-300 hover:bg-slate-800/50"
                             >
                               <Edit className="mr-2 h-4 w-4" />
                               Modifica
                             </DropdownMenuItem>
-                            <DropdownMenuItem
+                            <DropdownMenuItem 
+                              className="text-destructive"
                               onClick={() => handleDeleteEmployee(employee.id)}
-                              className="text-red-400 hover:bg-red-900/20"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Elimina
@@ -342,17 +227,8 @@ export default function Employees() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
-                      <div className="w-16 h-16 bg-gradient-to-br from-slate-800 to-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <User className="h-8 w-8 text-slate-400" />
-                      </div>
-                      <p className="text-slate-400 text-lg mb-2">Nessun dipendente trovato</p>
-                      <p className="text-slate-500 text-sm">
-                        {employees.length === 0 
-                          ? "Inizia aggiungendo il primo dipendente al sistema"
-                          : "Prova a modificare i criteri di ricerca"
-                        }
-                      </p>
+                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                      {searchTerm ? "Nessun dipendente corrisponde alla ricerca" : "Nessun dipendente trovato"}
                     </TableCell>
                   </TableRow>
                 )}

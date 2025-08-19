@@ -74,23 +74,48 @@ export default function StatsCards() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      {cards.map((card) => {
+      {cards.map((card, index) => {
         const Icon = card.icon;
         return (
-          <Card key={card.title} className="stats-card">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">{card.title}</p>
-                  <p className="text-3xl font-bold text-foreground">{card.value}</p>
+          <Card key={card.title} className="border-0 shadow-2xl bg-gradient-to-br from-slate-900/70 via-slate-800/50 to-slate-900/70 backdrop-blur-md border-slate-800/50 hover:scale-105 transition-all duration-300 hover:shadow-3xl">
+            <CardContent className="p-8">
+              <div className="flex items-start justify-between mb-6">
+                <div className={`p-4 rounded-2xl ${
+                  index === 0 ? "bg-gradient-to-br from-blue-600/20 to-indigo-600/20 border border-blue-500/30" :
+                  index === 1 ? "bg-gradient-to-br from-green-600/20 to-emerald-600/20 border border-green-500/30" :
+                  index === 2 ? "bg-gradient-to-br from-orange-600/20 to-amber-600/20 border border-orange-500/30" :
+                  "bg-gradient-to-br from-red-600/20 to-pink-600/20 border border-red-500/30"
+                }`}>
+                  <Icon className={`h-7 w-7 ${
+                    index === 0 ? "text-blue-400" :
+                    index === 1 ? "text-green-400" :
+                    index === 2 ? "text-orange-400" :
+                    "text-red-400"
+                  }`} />
                 </div>
-                <div className={`w-12 h-12 ${card.iconBg} rounded-lg flex items-center justify-center`}>
-                  <Icon className={`${card.iconColor} text-xl`} />
+                <div className="text-right">
+                  <p className="text-4xl font-bold bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">
+                    {card.value}
+                  </p>
                 </div>
               </div>
-              <div className="mt-4 flex items-center">
-                <span className="text-sm font-medium text-foreground">{card.change}</span>
-                <span className="text-sm text-muted-foreground ml-1">{card.changeLabel}</span>
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-white">
+                  {card.title}
+                </h3>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className={`font-semibold ${
+                    index === 0 ? "text-blue-400" :
+                    index === 1 ? "text-green-400" :
+                    index === 2 ? "text-orange-400" :
+                    "text-red-400"
+                  }`}>
+                    {card.change}
+                  </span>
+                  <span className="text-slate-400">
+                    {card.changeLabel}
+                  </span>
+                </div>
               </div>
             </CardContent>
           </Card>

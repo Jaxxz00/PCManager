@@ -136,20 +136,26 @@ export default function Inventory() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-medium text-foreground">Inventario PC</h1>
-          <p className="text-muted-foreground">
-            {filteredPcs.length} di {pcs.length} PC visualizzati
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <DataExport pcs={pcs} employees={employees} filteredPcs={filteredPcs} />
-          <Button onClick={() => setShowPcForm(true)} className="flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            Nuovo PC
-          </Button>
+    <div className="space-y-8 p-2">
+      {/* Header Section */}
+      <div className="bg-gradient-to-r from-slate-900/50 via-blue-900/30 to-purple-900/50 backdrop-blur-md rounded-2xl p-8 border border-slate-800/50">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">Inventario PC</h1>
+            <p className="text-slate-300 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              {filteredPcs.length} di {pcs.length} PC visualizzati - Gestione completa dell'inventario hardware
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <DataExport pcs={pcs} employees={employees} filteredPcs={filteredPcs} />
+            <Button 
+              onClick={() => setShowPcForm(true)} 
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-xl border-0 text-white px-6 py-3 rounded-xl transition-all duration-300 hover:scale-105"
+            >
+              <Plus className="mr-2 h-5 w-5" />
+              Nuovo PC
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -159,10 +165,10 @@ export default function Inventory() {
         onExport={handleExport}
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Monitor className="mr-2 h-5 w-5" />
+      <Card className="bg-slate-900/70 backdrop-blur-md border-slate-800/50 shadow-2xl">
+        <CardHeader className="border-b border-slate-800/50 bg-gradient-to-r from-slate-900/50 to-blue-900/30">
+          <CardTitle className="flex items-center text-white text-xl font-semibold">
+            <Monitor className="mr-3 h-6 w-6 text-blue-400" />
             Elenco PC ({filteredPcs.length})
           </CardTitle>
         </CardHeader>

@@ -55,20 +55,28 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 p-2">
+      {/* Welcome Header */}
+      <div className="bg-gradient-to-r from-slate-900/50 via-blue-900/30 to-purple-900/50 backdrop-blur-md rounded-2xl p-8 border border-slate-800/50">
+        <h1 className="text-3xl font-bold text-white mb-2">Dashboard PC Manager</h1>
+        <p className="text-slate-300 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+          Panoramica completa del sistema IT Maori Group
+        </p>
+      </div>
+
       <StatsCards />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Recent PC Inventory */}
         <div className="lg:col-span-2">
-          <Card>
-            <CardHeader className="border-b border-border">
+          <Card className="bg-slate-900/70 backdrop-blur-md border-slate-800/50 shadow-2xl">
+            <CardHeader className="border-b border-slate-800/50 bg-gradient-to-r from-slate-900/50 to-blue-900/30">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-medium">Inventario PC Recente</CardTitle>
+                <CardTitle className="text-xl font-semibold text-white">Inventario PC Recente</CardTitle>
                 <Link href="/inventory">
-                  <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80">
+                  <Button variant="ghost" size="sm" className="text-blue-400 hover:text-white hover:bg-blue-600/20 transition-all duration-300">
                     Vedi Tutto
-                    <ExternalLink className="ml-1 h-4 w-4" />
+                    <ExternalLink className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
               </div>
