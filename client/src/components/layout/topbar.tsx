@@ -12,7 +12,7 @@ import {
 
 export default function Topbar() {
   return (
-    <header className="bg-white/90 backdrop-blur-sm border-b border-slate-200 h-16 flex items-center justify-between px-8 shadow-sm">
+    <header className="bg-white/90 backdrop-blur-sm border-b border-emerald-200/50 h-16 flex items-center justify-between px-8 shadow-sm">
       {/* Search */}
       <div className="flex-1 max-w-md">
         <div className="relative">

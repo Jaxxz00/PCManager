@@ -6,26 +6,26 @@
 
 @layer base {
   :root {
-    /* Professional color palette with more color */
-    --background: 218 19% 97%;
-    --foreground: 210 11% 15%;
+    /* Warm Professional Palette - Verde/Teal */
+    --background: 160 15% 97%;
+    --foreground: 160 12% 15%;
     --card: 0 0% 100%;
-    --card-foreground: 210 11% 15%;
+    --card-foreground: 160 12% 15%;
     --popover: 0 0% 100%;
-    --popover-foreground: 210 11% 15%;
-    --primary: 217 91% 60%;
+    --popover-foreground: 160 12% 15%;
+    --primary: 175 78% 40%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 217 32% 17%;
+    --secondary: 175 25% 20%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 210 22% 95%;
-    --muted-foreground: 215 13% 65%;
-    --accent: 217 32% 17%;
+    --muted: 160 20% 95%;
+    --muted-foreground: 160 8% 55%;
+    --accent: 175 25% 20%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 214 32% 88%;
+    --border: 160 25% 88%;
     --input: 0 0% 100%;
-    --ring: 217 91% 60%;
+    --ring: 175 78% 40%;
     --radius: 0.75rem;
     
     /* Professional spacing */
