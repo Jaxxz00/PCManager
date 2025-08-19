@@ -36,9 +36,9 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-80 bg-card shadow-xl flex-shrink-0 border-r border-border/50 h-screen flex flex-col">
+    <aside className="w-80 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 shadow-xl flex-shrink-0 border-r border-slate-700/50 h-screen flex flex-col">
       {/* Professional Header */}
-      <div className="p-8 border-b border-border/50 bg-gradient-to-br from-primary/5 to-primary/10">
+      <div className="p-8 border-b border-slate-700/50 bg-gradient-to-br from-blue-600/20 to-indigo-600/20">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg p-1">
             <img 
@@ -48,8 +48,8 @@ export default function Sidebar() {
             />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">MAORI GROUP</h1>
-            <p className="text-sm text-muted-foreground font-medium">Sistema IT Aziendale</p>
+            <h1 className="text-2xl font-bold text-white">MAORI GROUP</h1>
+            <p className="text-sm text-slate-300 font-medium">Sistema IT Aziendale</p>
           </div>
         </div>
       </div>
@@ -65,21 +65,21 @@ export default function Sidebar() {
               <Link key={item.name} href={item.href}>
                 <div className={cn(
                   "group flex items-center justify-between p-4 rounded-xl text-sm font-medium transition-all duration-200",
-                  "hover:bg-accent hover:text-accent-foreground hover:shadow-sm",
+                  "hover:bg-slate-700/50 hover:shadow-sm",
                   active 
-                    ? "bg-primary text-primary-foreground shadow-md" 
-                    : "text-foreground/80 hover:text-foreground"
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
+                    : "text-slate-300 hover:text-white"
                 )}>
                   <div className="flex items-center gap-4">
                     <Icon className={cn(
                       "w-5 h-5",
-                      active ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
+                      active ? "text-white" : "text-slate-400 group-hover:text-white"
                     )} />
                     <div>
                       <div className="font-semibold">{item.name}</div>
                       <div className={cn(
                         "text-xs",
-                        active ? "text-primary-foreground/80" : "text-muted-foreground"
+                        active ? "text-white/80" : "text-slate-400"
                       )}>
                         {item.description}
                       </div>
@@ -94,7 +94,7 @@ export default function Sidebar() {
                     )}
                     <ChevronRight className={cn(
                       "w-4 h-4 transition-transform duration-200",
-                      active ? "text-primary-foreground transform rotate-90" : "text-muted-foreground group-hover:text-foreground"
+                      active ? "text-white transform rotate-90" : "text-slate-400 group-hover:text-white"
                     )} />
                   </div>
                 </div>
@@ -104,8 +104,8 @@ export default function Sidebar() {
         </div>
 
         {/* Settings Section */}
-        <div className="pt-6 mt-6 border-t border-border/50">
-          <h3 className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+        <div className="pt-6 mt-6 border-t border-slate-700/50">
+          <h3 className="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
             Configurazione
           </h3>
           <div className="space-y-1">
@@ -117,21 +117,21 @@ export default function Sidebar() {
                 <Link key={item.name} href={item.href}>
                   <div className={cn(
                     "group flex items-center justify-between p-4 rounded-xl text-sm font-medium transition-all duration-200",
-                    "hover:bg-accent hover:text-accent-foreground hover:shadow-sm",
+                    "hover:bg-slate-700/50 hover:shadow-sm",
                     active 
-                      ? "bg-primary text-primary-foreground shadow-md" 
-                      : "text-foreground/80 hover:text-foreground"
+                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" 
+                      : "text-slate-300 hover:text-white"
                   )}>
                     <div className="flex items-center gap-4">
                       <Icon className={cn(
                         "w-5 h-5",
-                        active ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
+                        active ? "text-white" : "text-slate-400 group-hover:text-white"
                       )} />
                       <div>
                         <div className="font-semibold">{item.name}</div>
                         <div className={cn(
                           "text-xs",
-                          active ? "text-primary-foreground/80" : "text-muted-foreground"
+                          active ? "text-white/80" : "text-slate-400"
                         )}>
                           {item.description}
                         </div>
@@ -140,7 +140,7 @@ export default function Sidebar() {
                     
                     <ChevronRight className={cn(
                       "w-4 h-4 transition-transform duration-200",
-                      active ? "text-primary-foreground transform rotate-90" : "text-muted-foreground group-hover:text-foreground"
+                      active ? "text-white transform rotate-90" : "text-slate-400 group-hover:text-white"
                     )} />
                   </div>
                 </Link>
@@ -151,12 +151,12 @@ export default function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="p-6 border-t border-border/50 bg-muted/30">
+      <div className="p-6 border-t border-slate-700/50 bg-slate-800/50">
         <div className="text-center">
-          <p className="text-xs text-muted-foreground font-medium">
+          <p className="text-xs text-slate-300 font-medium">
             PC Manager v1.0
           </p>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-xs text-slate-400 mt-1">
             Sistema professionale IT
           </p>
         </div>
