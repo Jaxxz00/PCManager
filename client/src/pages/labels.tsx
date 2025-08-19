@@ -354,36 +354,7 @@ export default function Labels() {
               />
             </div>
 
-            <Separator />
 
-            {/* Informazioni Privacy */}
-            <div className="space-y-3">
-              <Label className="text-base font-medium">🔒 Privacy & Tracciamento</Label>
-              
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0">
-                    <Barcode className="h-5 w-5 text-blue-600 mt-0.5" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-medium text-blue-900 mb-1">
-                      Tracciamento tramite Database
-                    </h4>
-                    <p className="text-sm text-blue-700">
-                      Il nome del dipendente non appare sull'etichetta per privacy. 
-                      Il codice a barre contiene l'ID univoco del PC che permette di risalire 
-                      all'assegnazione tramite il database aziendale.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="text-sm text-muted-foreground space-y-1">
-                <p><strong>Sull'etichetta:</strong> Solo ID PC e stato assegnazione (ASSEGNATO/DISPONIBILE)</p>
-                <p><strong>Nel Codice a Barre:</strong> ID univoco del PC per ricerca rapida nel database</p>
-                <p><strong>Nel Sistema:</strong> Collegamento completo PC → Dipendente consultabile</p>
-              </div>
-            </div>
           </CardContent>
         </Card>
 
