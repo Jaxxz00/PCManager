@@ -293,26 +293,6 @@ export default function Labels() {
               </Select>
             </div>
 
-            {/* Tipo Etichetta */}
-            <div className="space-y-2">
-              <Label htmlFor="label-type">Formato Etichetta</Label>
-              <Select value={labelType} onValueChange={setLabelType}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="dropdown-menu-enhanced">
-                  {Object.entries(labelTemplates).map(([key, template]) => (
-                    <SelectItem key={key} value={key}>
-                      {template.name} ({template.size})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-sm text-muted-foreground">
-                {labelTemplates[labelType as keyof typeof labelTemplates]?.description}
-              </p>
-            </div>
-
             <Separator />
 
             {/* Opzioni */}
@@ -482,40 +462,7 @@ export default function Labels() {
         </Card>
       </div>
 
-      {/* Suggerimenti */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Suggerimenti per la Stampa</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div className="space-y-2">
-              <h4 className="font-medium">Carta Consigliata</h4>
-              <ul className="text-muted-foreground space-y-1">
-                <li>• Etichette adesive bianche</li>
-                <li>• Carta per stampante laser</li>
-                <li>• Resistenti all'acqua</li>
-              </ul>
-            </div>
-            <div className="space-y-2">
-              <h4 className="font-medium">Impostazioni Stampa</h4>
-              <ul className="text-muted-foreground space-y-1">
-                <li>• Qualità: Alta</li>
-                <li>• Margini: Minimi</li>
-                <li>• Orientamento: Orizzontale</li>
-              </ul>
-            </div>
-            <div className="space-y-2">
-              <h4 className="font-medium">Applicazione</h4>
-              <ul className="text-muted-foreground space-y-1">
-                <li>• Superficie pulita e asciutta</li>
-                <li>• Posizione visibile</li>
-                <li>• Evitare zone di calore</li>
-              </ul>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+
     </div>
   );
 }
