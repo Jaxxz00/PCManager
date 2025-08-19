@@ -165,13 +165,13 @@ export default function Labels() {
           
           <div style="
             display: flex;
-            flex-direction: column;
             align-items: center;
-            gap: 1mm;
+            justify-content: center;
+            gap: 1.5mm;
             margin-bottom: 2mm;
           ">
             <img src="/assets/maori-logo.jpeg" alt="Maori Group Logo" style="
-              height: 6mm;
+              height: 5mm;
               width: auto;
               object-fit: contain;
             "/>
@@ -179,7 +179,6 @@ export default function Labels() {
               font-size: 6pt; 
               color: #475569;
               font-weight: 500;
-              text-align: center;
             ">
               info@maorigroup.it
             </div>
@@ -242,8 +241,8 @@ export default function Labels() {
           <div style="font-size: 12px; color: #666; margin-bottom: 8px;">
             S/N: ${selectedPcData.serialNumber || 'N/A'}
           </div>
-          <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin-bottom: 8px;">
-            <img src="/assets/maori-logo.jpeg" alt="Logo" style="height: 16px; width: auto; object-fit: contain;">
+          <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 8px;">
+            <img src="/assets/maori-logo.jpeg" alt="Logo" style="height: 14px; width: auto; object-fit: contain;">
             <div style="font-size: 10px; color: #666;">
               info@maorigroup.it
             </div>
@@ -432,11 +431,11 @@ export default function Labels() {
                         <div className="text-gray-500 text-xs font-medium mb-2">
                           S/N: {selectedPcData.serialNumber || 'N/A'}
                         </div>
-                        <div className="flex flex-col items-center gap-1 mb-2">
+                        <div className="flex items-center justify-center gap-2 mb-2">
                           <img 
                             src="/assets/maori-logo.jpeg" 
                             alt="Maori Group Logo" 
-                            className="h-4 w-auto object-contain"
+                            className="h-3 w-auto object-contain"
                           />
                           <div className="text-gray-600 text-xs font-medium">
                             info@maorigroup.it
