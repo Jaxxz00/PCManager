@@ -48,6 +48,12 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Initialize database with test data on first run
+  const { storage, DatabaseStorage } = await import("./storage");
+  if (storage instanceof DatabaseStorage) {
+    await storage.initializeWithTestData();
+  }
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

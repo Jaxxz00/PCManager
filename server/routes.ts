@@ -64,17 +64,20 @@ const validateInput = (schema: z.ZodSchema) => {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
-  // Sicurezza: Helmet per headers sicuri
+  // Sicurezza: Helmet per headers sicuri - configurato per sviluppo
   app.use(helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        scriptSrc: ["'self'"],
-        imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        imgSrc: ["'self'", "data:", "https:", "blob:"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Permette Vite HMR
+        connectSrc: ["'self'", "ws:", "wss:", "http:", "https:"], // WebSocket per HMR
+        objectSrc: ["'none'"],
       },
     },
+    crossOriginEmbedderPolicy: false, // Disabilita per sviluppo
   }));
   
   // Rate limiting per API pubbliche

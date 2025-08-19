@@ -32,16 +32,19 @@ Professional Features: Document management for manleva/waivers, QR code labels
 - **Storage Layer**: Abstracted storage interface supporting both in-memory (development) and database implementations
 
 ### Data Storage Solutions
-- **Database**: PostgreSQL as the primary database
+- **Database**: PostgreSQL with complete persistent storage (MIGRATED ✅)
 - **ORM**: Drizzle ORM for type-safe database operations
+- **Storage Layer**: DatabaseStorage class replacing in-memory MemStorage
 - **Migrations**: Drizzle Kit for schema migrations and database management
-- **Connection**: Neon Database serverless PostgreSQL connection
+- **Connection**: Neon Database serverless PostgreSQL connection with WebSocket support
 - **Schema Validation**: Zod schemas generated from Drizzle tables for runtime validation
+- **Auto-Initialization**: Test data automatically seeded on first application start
 
-### Database Schema
-- **Employees Table**: Stores employee information (name, email, department, position)
-- **PCs Table**: Comprehensive PC inventory with specifications, assignments, warranty tracking, and status management
-- **Relationships**: Foreign key relationship linking PCs to employees for assignment tracking
+### Database Schema (PostgreSQL Tables)
+- **employees**: Employee information with UUID primary keys, unique email constraints
+- **pcs**: Comprehensive PC inventory with foreign key references to employees
+- **Relationships**: Enforced foreign key constraints with LEFT JOIN queries for PC-Employee data
+- **Timestamps**: Automatic created_at/updated_at tracking with PostgreSQL functions
 
 ### Authentication and Authorization
 - Currently implemented with basic session-based approach
@@ -50,16 +53,20 @@ Professional Features: Document management for manleva/waivers, QR code labels
 
 ### Development and Deployment
 - **Development**: Hot module replacement with Vite dev server
+- **Database**: Auto-migration with `npm run db:push` and automatic test data seeding
 - **Production Build**: Optimized static assets with Express static serving
-- **Environment Management**: Environment-specific configurations
+- **Environment Management**: Environment-specific configurations with DATABASE_URL
 - **Code Quality**: TypeScript strict mode with comprehensive type checking
+- **Security**: Production-ready with authentication, rate limiting, and security headers
 
 ### Key Design Patterns
-- **Repository Pattern**: Storage abstraction layer for easy testing and database switching
+- **Repository Pattern**: IStorage interface implemented by DatabaseStorage for PostgreSQL persistence
+- **Database Relations**: Type-safe Drizzle ORM with automatic JOIN queries for related data
 - **Form Validation**: Schema-first approach using Zod for both frontend and backend validation
 - **Component Composition**: Modular UI components with consistent design system
-- **Error Boundaries**: Graceful error handling in both frontend and backend
+- **Error Boundaries**: Graceful error handling in both frontend and backend with PostgreSQL error handling
 - **Responsive Design**: Mobile-first approach with adaptive layouts
+- **Security Architecture**: Multi-layer security with authentication, validation, and rate limiting
 
 ## External Dependencies
 

@@ -1,5 +1,7 @@
-import { type Employee, type InsertEmployee, type Pc, type InsertPc, type PcWithEmployee } from "@shared/schema";
+import { type Employee, type InsertEmployee, type Pc, type InsertPc, type PcWithEmployee, employees, pcs } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { db } from "./db";
+import { eq, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Employee methods
@@ -223,4 +225,206 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// DatabaseStorage implementation with PostgreSQL
+export class DatabaseStorage implements IStorage {
+  // Employee methods
+  async getEmployee(id: string): Promise<Employee | undefined> {
+    const [employee] = await db.select().from(employees).where(eq(employees.id, id));
+    return employee || undefined;
+  }
+
+  async getEmployees(): Promise<Employee[]> {
+    return await db.select().from(employees);
+  }
+
+  async createEmployee(insertEmployee: InsertEmployee): Promise<Employee> {
+    const [employee] = await db
+      .insert(employees)
+      .values(insertEmployee)
+      .returning();
+    return employee;
+  }
+
+  async updateEmployee(id: string, updateData: Partial<InsertEmployee>): Promise<Employee | undefined> {
+    const [employee] = await db
+      .update(employees)
+      .set(updateData)
+      .where(eq(employees.id, id))
+      .returning();
+    return employee || undefined;
+  }
+
+  async deleteEmployee(id: string): Promise<boolean> {
+    const result = await db
+      .delete(employees)
+      .where(eq(employees.id, id));
+    return result.rowCount > 0;
+  }
+
+  // PC methods
+  async getPc(id: string): Promise<Pc | undefined> {
+    const [pc] = await db.select().from(pcs).where(eq(pcs.id, id));
+    return pc || undefined;
+  }
+
+  async getPcs(): Promise<PcWithEmployee[]> {
+    const result = await db
+      .select({
+        pc: pcs,
+        employee: {
+          id: employees.id,
+          name: employees.name,
+          email: employees.email,
+        },
+      })
+      .from(pcs)
+      .leftJoin(employees, eq(pcs.employeeId, employees.id));
+
+    return result.map(row => ({
+      ...row.pc,
+      employee: row.employee.id ? row.employee : null,
+    }));
+  }
+
+  async getPcByPcId(pcId: string): Promise<Pc | undefined> {
+    const [pc] = await db.select().from(pcs).where(eq(pcs.pcId, pcId));
+    return pc || undefined;
+  }
+
+  async createPc(insertPc: InsertPc): Promise<Pc> {
+    const [pc] = await db
+      .insert(pcs)
+      .values({
+        ...insertPc,
+        employeeId: insertPc.employeeId || null,
+        status: insertPc.status || "active",
+      })
+      .returning();
+    return pc;
+  }
+
+  async updatePc(id: string, updateData: Partial<InsertPc>): Promise<Pc | undefined> {
+    const [pc] = await db
+      .update(pcs)
+      .set({
+        ...updateData,
+        updatedAt: sql`now()`,
+      })
+      .where(eq(pcs.id, id))
+      .returning();
+    return pc || undefined;
+  }
+
+  async deletePc(id: string): Promise<boolean> {
+    const result = await db
+      .delete(pcs)
+      .where(eq(pcs.id, id));
+    return result.rowCount > 0;
+  }
+
+  async getDashboardStats() {
+    const [stats] = await db.execute(sql`
+      SELECT 
+        COUNT(*) as total_pcs,
+        COUNT(CASE WHEN status = 'active' THEN 1 END) as active_pcs,
+        COUNT(CASE WHEN status = 'maintenance' THEN 1 END) as maintenance_pcs,
+        COUNT(CASE WHEN status = 'retired' THEN 1 END) as retired_pcs,
+        COUNT(CASE 
+          WHEN warranty_expiry BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '30 days' 
+          THEN 1 
+        END) as expiring_warranties
+      FROM pcs
+    `);
+
+    return {
+      totalPCs: Number(stats.total_pcs),
+      activePCs: Number(stats.active_pcs),
+      maintenancePCs: Number(stats.maintenance_pcs),
+      retiredPCs: Number(stats.retired_pcs),
+      expiringWarranties: Number(stats.expiring_warranties),
+    };
+  }
+
+  // Method to initialize with test data (run once)
+  async initializeWithTestData(): Promise<void> {
+    // Check if data already exists
+    const existingEmployees = await this.getEmployees();
+    if (existingEmployees.length > 0) {
+      console.log("Database already has data, skipping initialization");
+      return;
+    }
+
+    console.log("Initializing database with test data...");
+
+    // Create test employees
+    const testEmployees: InsertEmployee[] = [
+      {
+        name: "Luca Bianchi",
+        email: "luca.bianchi@maorigroup.com",
+        department: "IT",
+        position: "Developer",
+      },
+      {
+        name: "Sara Verdi",
+        email: "sara.verdi@maorigroup.com",
+        department: "Marketing",
+        position: "Manager",
+      },
+      {
+        name: "Marco Neri",
+        email: "marco.neri@maorigroup.com",
+        department: "Sales",
+        position: "Representative",
+      },
+    ];
+
+    const createdEmployees = [];
+    for (const emp of testEmployees) {
+      const created = await this.createEmployee(emp);
+      createdEmployees.push(created);
+    }
+
+    // Create test PCs
+    const testPCs: InsertPc[] = [
+      {
+        pcId: "PC-001",
+        employeeId: createdEmployees[0].id,
+        brand: "Dell",
+        model: "OptiPlex 7090",
+        cpu: "Intel i7-11700",
+        ram: 16,
+        storage: "512GB SSD",
+        operatingSystem: "Windows 11 Pro",
+        serialNumber: "DL001234567",
+        purchaseDate: "2024-01-15",
+        warrantyExpiry: "2027-01-15",
+        status: "active",
+        notes: "Workstation principale sviluppo",
+      },
+      {
+        pcId: "PC-002",
+        employeeId: createdEmployees[1].id,
+        brand: "HP",
+        model: "EliteDesk 800",
+        cpu: "Intel i5-11500",
+        ram: 8,
+        storage: "256GB SSD",
+        operatingSystem: "Windows 11 Pro",
+        serialNumber: "HP001234567",
+        purchaseDate: "2024-02-10",
+        warrantyExpiry: "2027-02-10",
+        status: "maintenance",
+        notes: "Manutenzione programmata",
+      },
+    ];
+
+    for (const pc of testPCs) {
+      await this.createPc(pc);
+    }
+
+    console.log("Test data initialized successfully!");
+  }
+}
+
+// Switch to DatabaseStorage
+export const storage = new DatabaseStorage();
