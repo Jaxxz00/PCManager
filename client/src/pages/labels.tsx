@@ -48,7 +48,7 @@ export default function Labels() {
       // Genera un codice a barre usando l'ID del PC (più semplice e leggibile)
       const canvas = document.createElement('canvas');
       
-      JsBarcode(canvas, pcData.pcId, {
+      JsBarcode(canvas, pcData.serialNumber || pcData.pcId, {
         format: "CODE128",
         width: 4,
         height: 100,
