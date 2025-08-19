@@ -50,13 +50,13 @@ export default function Labels() {
       
       JsBarcode(canvas, pcData.serialNumber || pcData.pcId, {
         format: "CODE128",
-        width: 2,
-        height: 40,
+        width: 1.5,
+        height: 30,
         displayValue: true,
-        fontSize: 10,
+        fontSize: 8,
         textAlign: "center",
         textPosition: "bottom",
-        textMargin: 2,
+        textMargin: 1,
         fontOptions: "bold",
         font: "Arial",
         background: "#ffffff",
@@ -121,44 +121,36 @@ export default function Labels() {
         width: 62mm; 
         height: 29mm; 
         border: 1px solid #e0e0e0; 
-        padding: 3mm; 
+        padding: 2mm; 
         display: flex; 
         flex-direction: column;
+        justify-content: space-between;
         background: white;
         font-family: 'Inter', sans-serif;
         position: relative;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        overflow: hidden;
       ">
-
-        
         <!-- Informazioni Principali -->
         <div style="
-          flex-grow: 1; 
-          display: flex; 
-          flex-direction: column; 
-          justify-content: center;
           text-align: center;
-          background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-          border-radius: 2mm;
-          padding: 2mm;
-          margin: 1mm 0;
+          padding: 1mm;
         ">
           <div style="
-            font-size: 9pt; 
+            font-size: 8pt; 
             color: #475569;
             font-weight: 600;
-            margin-bottom: 1mm;
-            text-align: center;
+            margin-bottom: 0.5mm;
+            line-height: 1.1;
           ">
             ${selectedPcData.brand?.toUpperCase()} ${selectedPcData.model}
           </div>
           
           <div style="
-            font-size: 7pt; 
+            font-size: 6pt; 
             color: #64748b;
             font-weight: 500;
-            margin-bottom: 2mm;
-            text-align: center;
+            margin-bottom: 1mm;
           ">
             S/N: ${selectedPcData.serialNumber || 'N/A'}
           </div>
@@ -167,16 +159,16 @@ export default function Labels() {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 1.5mm;
-            margin-bottom: 2mm;
+            gap: 1mm;
+            margin-bottom: 1mm;
           ">
             <img src="/assets/maori-logo.jpeg" alt="Maori Group Logo" style="
-              height: 5mm;
+              height: 3mm;
               width: auto;
               object-fit: contain;
             "/>
             <div style="
-              font-size: 6pt; 
+              font-size: 5pt; 
               color: #475569;
               font-weight: 500;
             ">
@@ -186,34 +178,32 @@ export default function Labels() {
           
           ${customText ? `
             <div style="
-              font-size: 6pt; 
+              font-size: 5pt; 
               color: #475569;
               font-weight: 500;
-              margin-bottom: 2mm;
+              margin-bottom: 1mm;
               font-style: italic;
-              text-align: center;
             ">
               ${customText}
             </div>
           ` : ''}
-          
-          <!-- Codice a Barre -->
-          ${barcodeUrl ? `
-            <div style="
-              display: flex;
-              justify-content: center;
-              margin-top: 1mm;
-            ">
-              <img src="${barcodeUrl}" style="
-                width: 30mm; 
-                height: 10mm; 
-                border: 1px solid #e0e0e0;
-                border-radius: 1mm;
-                object-fit: contain;
-              " />
-            </div>
-          ` : ''}
         </div>
+        
+        <!-- Codice a Barre -->
+        ${barcodeUrl ? `
+          <div style="
+            display: flex;
+            justify-content: center;
+            align-items: center;
+          ">
+            <img src="${barcodeUrl}" style="
+              width: 25mm; 
+              height: 7mm; 
+              object-fit: contain;
+            " />
+          </div>
+        ` : ''}
+      </div>
       </div>
     `;
   };
@@ -254,7 +244,7 @@ export default function Labels() {
           ` : ''}
           ${includeBarcode ? `
             <div style="display: flex; justify-content: center;">
-              <div style="width: 70px; height: 20px; background: #333; color: white; display: flex; align-items: center; justify-content: center; font-size: 8px; border-radius: 2px;">||||||||||||</div>
+              <div style="width: 60px; height: 16px; background: #333; color: white; display: flex; align-items: center; justify-content: center; font-size: 7px; border-radius: 2px;">||||||||||</div>
             </div>
           ` : ''}
         </div>
@@ -449,8 +439,8 @@ export default function Labels() {
                     {/* Codice a barre in fondo */}
                     {includeBarcode && (
                       <div className="flex justify-center">
-                        <div className="w-28 h-6 bg-gray-900 flex items-center justify-center text-white text-xs rounded-sm">
-                          <span className="font-mono text-xs">||||||||||</span>
+                        <div className="w-24 h-5 bg-gray-900 flex items-center justify-center text-white text-xs rounded-sm">
+                          <span className="font-mono text-xs">||||||||</span>
                         </div>
                       </div>
                     )}
