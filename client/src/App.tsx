@@ -35,11 +35,11 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <div className="flex h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950/50 to-purple-950/30">
+        <div className="flex h-screen overflow-hidden bg-background">
           <Sidebar />
           <div className="flex-1 flex flex-col overflow-hidden">
             <Topbar />
-            <main className="flex-1 overflow-auto p-8 bg-transparent">
+            <main className="flex-1 overflow-auto p-8 bg-muted/10">
               <div className="max-w-7xl mx-auto">
                 <Router />
               </div>

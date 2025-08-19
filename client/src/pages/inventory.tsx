@@ -136,26 +136,20 @@ export default function Inventory() {
   };
 
   return (
-    <div className="space-y-8 p-2">
-      {/* Header Section */}
-      <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Inventario PC</h1>
-            <p className="text-gray-600">
-              {filteredPcs.length} di {pcs.length} PC visualizzati - Gestione completa dell'inventario hardware
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <DataExport pcs={pcs} employees={employees} filteredPcs={filteredPcs} />
-            <Button 
-              onClick={() => setShowPcForm(true)} 
-              className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Nuovo PC
-            </Button>
-          </div>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-medium text-foreground">Inventario PC</h1>
+          <p className="text-muted-foreground">
+            {filteredPcs.length} di {pcs.length} PC visualizzati
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <DataExport pcs={pcs} employees={employees} filteredPcs={filteredPcs} />
+          <Button onClick={() => setShowPcForm(true)} className="flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            Nuovo PC
+          </Button>
         </div>
       </div>
 
@@ -165,10 +159,10 @@ export default function Inventory() {
         onExport={handleExport}
       />
 
-      <Card className="bg-white border-gray-200">
-        <CardHeader className="border-b border-gray-200">
-          <CardTitle className="flex items-center text-gray-900 text-lg font-medium">
-            <Monitor className="mr-2 h-5 w-5 text-gray-600" />
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Monitor className="mr-2 h-5 w-5" />
             Elenco PC ({filteredPcs.length})
           </CardTitle>
         </CardHeader>

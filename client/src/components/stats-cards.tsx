@@ -74,33 +74,23 @@ export default function StatsCards() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      {cards.map((card, index) => {
+      {cards.map((card) => {
         const Icon = card.icon;
         return (
-          <Card key={card.title} className="border-gray-200 bg-white">
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between mb-3">
-                <div className="p-2 rounded-lg bg-gray-50">
-                  <Icon className="h-5 w-5 text-gray-700" />
+          <Card key={card.title} className="stats-card">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">{card.title}</p>
+                  <p className="text-3xl font-bold text-foreground">{card.value}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-gray-900">
-                    {card.value}
-                  </p>
+                <div className={`w-12 h-12 ${card.iconBg} rounded-lg flex items-center justify-center`}>
+                  <Icon className={`${card.iconColor} text-xl`} />
                 </div>
               </div>
-              <div className="space-y-1">
-                <h3 className="text-base font-medium text-gray-900">
-                  {card.title}
-                </h3>
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="font-medium text-gray-700">
-                    {card.change}
-                  </span>
-                  <span className="text-gray-500">
-                    {card.changeLabel}
-                  </span>
-                </div>
+              <div className="mt-4 flex items-center">
+                <span className="text-sm font-medium text-foreground">{card.change}</span>
+                <span className="text-sm text-muted-foreground ml-1">{card.changeLabel}</span>
               </div>
             </CardContent>
           </Card>
