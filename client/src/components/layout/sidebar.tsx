@@ -42,7 +42,7 @@ export default function Sidebar() {
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg p-1">
             <img 
-              src="/attached_assets/IMG_4622_1755594689547.jpeg" 
+              src="/assets/maori-logo.jpeg" 
               alt="Maori Group Logo" 
               className="h-full w-full object-contain rounded-xl"
             />

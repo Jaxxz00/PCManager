@@ -135,7 +135,7 @@ export default function Labels() {
               align-items: center;
               gap: 1mm;
             ">
-              <img src="/attached_assets/IMG_4622_1755594689547.jpeg" alt="Maori Group Logo" style="
+              <img src="/assets/maori-logo.jpeg" alt="Maori Group Logo" style="
                 height: 6mm;
                 width: auto;
                 object-fit: contain;
@@ -416,7 +416,7 @@ export default function Labels() {
                       {includeLogo && (
                         <div className="flex items-center gap-2">
                           <img 
-                            src="/attached_assets/IMG_4622_1755594689547.jpeg" 
+                            src="/assets/maori-logo.jpeg" 
                             alt="Maori Group Logo" 
                             className="h-4 w-auto object-contain"
                           />
