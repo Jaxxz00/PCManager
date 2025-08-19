@@ -289,7 +289,14 @@ export default function Employees() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                toast({
+                                  title: "Funzione in sviluppo",
+                                  description: "La modifica dipendente sarà disponibile prossimamente.",
+                                });
+                              }}
+                            >
                               <Edit className="mr-2 h-4 w-4" />
                               Modifica
                             </DropdownMenuItem>

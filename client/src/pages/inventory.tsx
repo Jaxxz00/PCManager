@@ -250,7 +250,15 @@ export default function Inventory() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => console.log('Edit', pc.id)}>
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                // TODO: Implementare modifica PC
+                                toast({
+                                  title: "Funzione in sviluppo",
+                                  description: "La modifica PC sarà disponibile prossimamente.",
+                                });
+                              }}
+                            >
                               <Edit className="mr-2 h-4 w-4" />
                               Modifica
                             </DropdownMenuItem>
@@ -273,16 +281,10 @@ export default function Inventory() {
         </CardContent>
       </Card>
 
-      {showPcForm && (
-        <PcForm 
-          onClose={() => setShowPcForm(false)}
-          onSuccess={() => {
-            setShowPcForm(false);
-            queryClient.invalidateQueries({ queryKey: ["/api/pcs"] });
-            queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-          }}
-        />
-      )}
+      <PcForm 
+        open={showPcForm} 
+        onOpenChange={setShowPcForm}
+      />
     </div>
   );
 }

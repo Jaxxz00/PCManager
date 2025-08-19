@@ -312,7 +312,7 @@ export default function PcForm({ open, onOpenChange }: PcFormProps) {
                 <FormItem>
                   <FormLabel>Note</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Note aggiuntive..." {...field} />
+                    <Textarea placeholder="Note aggiuntive..." {...field} value={field.value || ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

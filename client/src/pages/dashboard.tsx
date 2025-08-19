@@ -121,7 +121,8 @@ export default function Dashboard() {
                             </span>
                           </TableCell>
                           <TableCell className="text-muted-foreground">
-                            {formatDate(pc.updatedAt?.toString() || pc.createdAt?.toString() || '')}
+                            {pc.updatedAt ? new Date(pc.updatedAt).toLocaleDateString('it-IT') : 
+                             pc.createdAt ? new Date(pc.createdAt).toLocaleDateString('it-IT') : 'N/A'}
                           </TableCell>
                         </TableRow>
                       ))
@@ -156,12 +157,28 @@ export default function Dashboard() {
                 Aggiungi Nuovo PC
               </Button>
               
-              <Button variant="outline" className="w-full" size="default">
+              <Button 
+                variant="outline" 
+                className="w-full" 
+                size="default"
+                onClick={() => {
+                  // TODO: Implementare esportazione
+                  alert("Funzione esportazione in sviluppo");
+                }}
+              >
                 <Download className="mr-2 h-4 w-4" />
                 Esporta Report
               </Button>
               
-              <Button variant="outline" className="w-full" size="default">
+              <Button 
+                variant="outline" 
+                className="w-full" 
+                size="default"
+                onClick={() => {
+                  // TODO: Implementare aggiornamento multiplo
+                  alert("Funzione aggiornamento multiplo in sviluppo");
+                }}
+              >
                 <Edit className="mr-2 h-4 w-4" />
                 Aggiornamento Multiplo
               </Button>
