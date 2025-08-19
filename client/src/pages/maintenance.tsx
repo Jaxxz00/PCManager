@@ -624,11 +624,11 @@ export default function Maintenance() {
                 <TableHead className="min-w-[120px]">Tipo</TableHead>
                 <TableHead className="min-w-[200px]">Descrizione</TableHead>
                 <TableHead className="min-w-[120px]">Stato</TableHead>
-                <TableHead className="min-w-[100px]">Priorità</TableHead>
+                <TableHead className="min-w-[120px]">Priorità</TableHead>
                 <TableHead className="min-w-[140px]">Data</TableHead>
                 <TableHead className="min-w-[120px]">Tecnico</TableHead>
-                <TableHead className="min-w-[80px]">Costo</TableHead>
-                <TableHead className="min-w-[100px]">Azioni</TableHead>
+                <TableHead className="min-w-[100px]">Costo</TableHead>
+                <TableHead className="min-w-[120px]">Azioni</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

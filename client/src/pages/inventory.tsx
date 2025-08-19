@@ -205,9 +205,9 @@ export default function Inventory() {
                     <TableHead className="min-w-[120px]">ID PC</TableHead>
                     <TableHead className="min-w-[200px]">Specifiche</TableHead>
                     <TableHead className="min-w-[180px]">Assegnazione</TableHead>
-                    <TableHead className="min-w-[100px]">Stato</TableHead>
+                    <TableHead className="min-w-[120px]">Stato</TableHead>
                     <TableHead className="min-w-[140px]">Garanzia</TableHead>
-                    <TableHead className="min-w-[100px]">Azioni</TableHead>
+                    <TableHead className="min-w-[120px]">Azioni</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

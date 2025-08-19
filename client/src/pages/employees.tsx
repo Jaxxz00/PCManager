@@ -241,9 +241,9 @@ export default function Employees() {
                   <TableHead className="font-medium min-w-[200px]">Email</TableHead>
                   <TableHead className="font-medium min-w-[120px]">Dipartimento</TableHead>
                   <TableHead className="font-medium min-w-[120px]">Posizione</TableHead>
-                  <TableHead className="font-medium min-w-[100px]">PC Assegnati</TableHead>
+                  <TableHead className="font-medium min-w-[120px]">PC Assegnati</TableHead>
                   <TableHead className="font-medium min-w-[120px]">Data Inserimento</TableHead>
-                  <TableHead className="w-12 min-w-[80px]">Azioni</TableHead>
+                  <TableHead className="min-w-[120px]">Azioni</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
