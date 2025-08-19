@@ -65,9 +65,9 @@ interface MaintenanceRecord {
 export default function Maintenance() {
   const [showMaintenanceForm, setShowMaintenanceForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [priorityFilter, setPriorityFilter] = useState("");
-  const [typeFilter, setTypeFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -171,9 +171,9 @@ export default function Maintenance() {
         record.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         record.technician.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesStatus = statusFilter === "" || record.status === statusFilter;
-      const matchesPriority = priorityFilter === "" || record.priority === priorityFilter;
-      const matchesType = typeFilter === "" || record.type === typeFilter;
+      const matchesStatus = statusFilter === "all" || record.status === statusFilter;
+      const matchesPriority = priorityFilter === "all" || record.priority === priorityFilter;
+      const matchesType = typeFilter === "all" || record.type === typeFilter;
       
       return matchesSearch && matchesStatus && matchesPriority && matchesType;
     });
@@ -534,7 +534,7 @@ export default function Maintenance() {
                 <SelectValue placeholder="Tutti gli stati" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tutti gli stati</SelectItem>
+                <SelectItem value="all">Tutti gli stati</SelectItem>
                 <SelectItem value="scheduled">Programmato</SelectItem>
                 <SelectItem value="in_progress">In Corso</SelectItem>
                 <SelectItem value="completed">Completato</SelectItem>
@@ -546,7 +546,7 @@ export default function Maintenance() {
                 <SelectValue placeholder="Tutte le priorità" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tutte le priorità</SelectItem>
+                <SelectItem value="all">Tutte le priorità</SelectItem>
                 <SelectItem value="low">Bassa</SelectItem>
                 <SelectItem value="medium">Media</SelectItem>
                 <SelectItem value="high">Alta</SelectItem>
@@ -558,7 +558,7 @@ export default function Maintenance() {
                 <SelectValue placeholder="Tutti i tipi" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tutti i tipi</SelectItem>
+                <SelectItem value="all">Tutti i tipi</SelectItem>
                 <SelectItem value="preventive">Preventiva</SelectItem>
                 <SelectItem value="corrective">Correttiva</SelectItem>
                 <SelectItem value="upgrade">Upgrade</SelectItem>
