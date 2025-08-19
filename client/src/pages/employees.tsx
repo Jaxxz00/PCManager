@@ -119,18 +119,18 @@ export default function Employees() {
   return (
     <div className="space-y-8 p-2">
       {/* Header Section */}
-      <div className="bg-white/95 backdrop-blur-md rounded-xl p-8 border border-gray-200 shadow-lg">
+      <div className="bg-white rounded-lg p-6 border border-gray-200">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestione Dipendenti</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Gestione Dipendenti</h1>
             <p className="text-gray-600">
               Organico aziendale e assegnazioni PC - {employees.length} dipendenti registrati
             </p>
           </div>
           <Dialog open={showEmployeeForm} onOpenChange={setShowEmployeeForm}>
             <DialogTrigger asChild>
-              <Button className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-lg transition-all duration-300 hover:scale-105 shadow-lg">
-                <Plus className="mr-2 h-5 w-5" />
+              <Button className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded">
+                <Plus className="mr-2 h-4 w-4" />
                 Aggiungi Dipendente
               </Button>
             </DialogTrigger>
@@ -234,25 +234,25 @@ export default function Employees() {
       </div>
 
       {/* Search */}
-      <Card className="bg-white/95 backdrop-blur-md border-gray-200 shadow-lg">
-        <CardContent className="p-6">
+      <Card className="bg-white border-gray-200">
+        <CardContent className="p-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="Cerca per nome, email, dipartimento o posizione..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-gray-500"
+              className="pl-10 bg-white border-gray-300 text-gray-900 placeholder:text-gray-500"
             />
           </div>
         </CardContent>
       </Card>
 
       {/* Employees Table */}
-      <Card className="bg-white/95 backdrop-blur-md border-gray-200 shadow-lg">
-        <CardHeader className="border-b border-gray-200 bg-gray-50/80">
-          <CardTitle className="flex items-center text-gray-900 text-xl font-semibold">
-            <User className="mr-3 h-6 w-6 text-gray-600" />
+      <Card className="bg-white border-gray-200">
+        <CardHeader className="border-b border-gray-200">
+          <CardTitle className="flex items-center text-gray-900 text-lg font-medium">
+            <User className="mr-2 h-5 w-5 text-gray-600" />
             Lista Dipendenti ({filteredEmployees.length})
           </CardTitle>
         </CardHeader>
@@ -285,25 +285,25 @@ export default function Employees() {
                   filteredEmployees.map((employee: Employee) => (
                     <TableRow 
                       key={employee.id} 
-                      className="border-gray-200 hover:bg-gray-50 transition-all duration-300"
+                      className="border-gray-200 hover:bg-gray-50"
                     >
                       <TableCell>
-                        <div className="flex items-center space-x-3">
-                          <div className="p-2 bg-gray-100 rounded-lg border border-gray-200">
+                        <div className="flex items-center space-x-2">
+                          <div className="p-1 bg-gray-100 rounded">
                             <User className="h-4 w-4 text-gray-600" />
                           </div>
-                          <span className="font-semibold text-gray-900">{employee.name}</span>
+                          <span className="font-medium text-gray-900">{employee.name}</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-gray-700">{employee.email}</TableCell>
                       <TableCell>
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800 border border-gray-200">
+                        <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">
                           {employee.department}
                         </span>
                       </TableCell>
                       <TableCell className="text-gray-700">{employee.position}</TableCell>
                       <TableCell>
-                        <span className="font-semibold text-gray-900">{getEmployeePcCount(employee.id)}</span>
+                        <span className="font-medium text-gray-900">{getEmployeePcCount(employee.id)}</span>
                       </TableCell>
                       <TableCell className="text-gray-500">
                         {employee.createdAt ? new Date(employee.createdAt).toLocaleDateString('it-IT') : 'N/A'}

@@ -57,8 +57,8 @@ export default function Dashboard() {
   return (
     <div className="space-y-8 p-2">
       {/* Welcome Header */}
-      <div className="bg-white/95 backdrop-blur-md rounded-xl p-8 border border-gray-200 shadow-lg">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard PC Manager</h1>
+      <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Dashboard PC Manager</h1>
         <p className="text-gray-600">
           Panoramica completa del sistema IT Maori Group
         </p>
@@ -69,12 +69,12 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Recent PC Inventory */}
         <div className="lg:col-span-2">
-          <Card className="bg-white/95 backdrop-blur-md border-gray-200 shadow-lg">
-            <CardHeader className="border-b border-gray-200 bg-gray-50/80">
+          <Card className="bg-white border-gray-200">
+            <CardHeader className="border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-xl font-semibold text-gray-900">Inventario PC Recente</CardTitle>
+                <CardTitle className="text-lg font-semibold text-gray-900">Inventario PC Recente</CardTitle>
                 <Link href="/inventory">
-                  <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-300">
+                  <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900 hover:bg-gray-100">
                     Vedi Tutto
                     <ExternalLink className="ml-2 h-4 w-4" />
                   </Button>

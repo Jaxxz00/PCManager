@@ -138,10 +138,10 @@ export default function Inventory() {
   return (
     <div className="space-y-8 p-2">
       {/* Header Section */}
-      <div className="bg-white/95 backdrop-blur-md rounded-xl p-8 border border-gray-200 shadow-lg">
+      <div className="bg-white rounded-lg p-6 border border-gray-200">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Inventario PC</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Inventario PC</h1>
             <p className="text-gray-600">
               {filteredPcs.length} di {pcs.length} PC visualizzati - Gestione completa dell'inventario hardware
             </p>
@@ -150,9 +150,9 @@ export default function Inventory() {
             <DataExport pcs={pcs} employees={employees} filteredPcs={filteredPcs} />
             <Button 
               onClick={() => setShowPcForm(true)} 
-              className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-lg transition-all duration-300 hover:scale-105 shadow-lg"
+              className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded"
             >
-              <Plus className="mr-2 h-5 w-5" />
+              <Plus className="mr-2 h-4 w-4" />
               Nuovo PC
             </Button>
           </div>
@@ -165,10 +165,10 @@ export default function Inventory() {
         onExport={handleExport}
       />
 
-      <Card className="bg-white/95 backdrop-blur-md border-gray-200 shadow-lg">
-        <CardHeader className="border-b border-gray-200 bg-gray-50/80">
-          <CardTitle className="flex items-center text-gray-900 text-xl font-semibold">
-            <Monitor className="mr-3 h-6 w-6 text-gray-600" />
+      <Card className="bg-white border-gray-200">
+        <CardHeader className="border-b border-gray-200">
+          <CardTitle className="flex items-center text-gray-900 text-lg font-medium">
+            <Monitor className="mr-2 h-5 w-5 text-gray-600" />
             Elenco PC ({filteredPcs.length})
           </CardTitle>
         </CardHeader>
