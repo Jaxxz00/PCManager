@@ -265,7 +265,7 @@ export default function Inventory() {
                                 Azioni
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
+                            <DropdownMenuContent align="end" className="dropdown-menu-enhanced">
                               <DropdownMenuItem 
                                 onClick={() => {
                                   // TODO: Implementare modifica PC

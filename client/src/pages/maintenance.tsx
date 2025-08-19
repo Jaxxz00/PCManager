@@ -698,7 +698,7 @@ export default function Maintenance() {
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent align="end" className="dropdown-menu-enhanced">
                           <DropdownMenuItem 
                             onClick={() => {
                               toast({
