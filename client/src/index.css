@@ -6,27 +6,27 @@
 
 @layer base {
   :root {
-    /* Warm Professional Palette - Verde/Teal */
-    --background: 160 15% 97%;
-    --foreground: 160 12% 15%;
-    --card: 0 0% 100%;
-    --card-foreground: 160 12% 15%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 160 12% 15%;
-    --primary: 175 78% 40%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 175 25% 20%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 160 20% 95%;
-    --muted-foreground: 160 8% 55%;
-    --accent: 175 25% 20%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 160 25% 88%;
-    --input: 0 0% 100%;
-    --ring: 175 78% 40%;
-    --radius: 0.75rem;
+    /* Modern Elegant Palette - Dark Professional */
+    --background: 222 20% 8%;
+    --foreground: 210 40% 98%;
+    --card: 222 18% 11%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 18% 11%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 230 100% 69%;
+    --primary-foreground: 222 84% 5%;
+    --secondary: 230 25% 18%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 215 27% 17%;
+    --muted-foreground: 217 10% 65%;
+    --accent: 230 25% 18%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 215 27% 17%;
+    --input: 215 27% 17%;
+    --ring: 230 100% 69%;
+    --radius: 1rem;
     
     /* Professional spacing */
     --content-max-width: 1400px;

@@ -12,14 +12,14 @@ import {
 
 export default function Topbar() {
   return (
-    <header className="bg-white/90 backdrop-blur-sm border-b border-emerald-200/50 h-16 flex items-center justify-between px-8 shadow-sm">
+    <header className="bg-slate-900/95 backdrop-blur-md border-b border-slate-800/50 h-16 flex items-center justify-between px-8 shadow-xl">
       {/* Search */}
       <div className="flex-1 max-w-md">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
           <Input
             placeholder="Cerca PC, dipendente..."
-            className="pl-10 bg-muted/30 border-0 focus:bg-background"
+            className="pl-10 bg-slate-800/50 border-slate-700/50 text-slate-200 placeholder:text-slate-400 focus:bg-slate-800 focus:border-blue-500/50 transition-all duration-300"
           />
         </div>
       </div>
@@ -29,11 +29,10 @@ export default function Topbar() {
         {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative">
+            <Button variant="ghost" size="icon" className="relative text-slate-300 hover:text-white hover:bg-slate-800/50 transition-all duration-300">
               <Bell className="h-5 w-5" />
               <Badge 
-                variant="destructive" 
-                className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs bg-gradient-to-r from-red-500 to-pink-500 text-white border-0"
               >
                 3
               </Badge>

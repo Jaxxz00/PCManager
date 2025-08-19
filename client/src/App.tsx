@@ -35,7 +35,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <div className="flex h-screen overflow-hidden bg-gradient-to-br from-emerald-50 via-teal-50/30 to-green-50/20">
+        <div className="flex h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950/50 to-purple-950/30">
           <Sidebar />
           <div className="flex-1 flex flex-col overflow-hidden">
             <Topbar />
