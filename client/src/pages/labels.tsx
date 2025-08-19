@@ -335,7 +335,7 @@ export default function Labels() {
                 <SelectTrigger>
                   <SelectValue placeholder="Scegli un PC..." />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="dropdown-menu-enhanced">
                   {isLoading ? (
                     <SelectItem value="loading" disabled>Caricamento...</SelectItem>
                   ) : (
@@ -357,7 +357,7 @@ export default function Labels() {
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="dropdown-menu-enhanced">
                   {Object.entries(labelTemplates).map(([key, template]) => (
                     <SelectItem key={key} value={key}>
                       {template.name} ({template.size})
