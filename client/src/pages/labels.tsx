@@ -50,13 +50,13 @@ export default function Labels() {
       
       JsBarcode(canvas, pcData.pcId, {
         format: "CODE128",
-        width: 2,
-        height: 60,
+        width: 3,
+        height: 80,
         displayValue: true,
-        fontSize: 14,
+        fontSize: 16,
         textAlign: "center",
         textPosition: "bottom",
-        textMargin: 2,
+        textMargin: 3,
         fontOptions: "bold",
         font: "Arial",
         background: "#ffffff",
@@ -206,8 +206,8 @@ export default function Labels() {
               margin-top: 1mm;
             ">
               <img src="${barcodeUrl}" style="
-                width: 25mm; 
-                height: 8mm; 
+                width: 35mm; 
+                height: 12mm; 
                 border: 1px solid #e0e0e0;
                 border-radius: 1mm;
                 object-fit: contain;
@@ -258,7 +258,7 @@ export default function Labels() {
           ` : ''}
           ${includeBarcode ? `
             <div style="display: flex; justify-content: center;">
-              <div style="width: 60px; height: 20px; background: #333; color: white; display: flex; align-items: center; justify-content: center; font-size: 8px; border-radius: 2px;">||||</div>
+              <div style="width: 80px; height: 25px; background: #333; color: white; display: flex; align-items: center; justify-content: center; font-size: 8px; border-radius: 2px;">||||||||||||</div>
             </div>
           ` : ''}
         </div>
@@ -451,8 +451,8 @@ export default function Labels() {
                         )}
                         {includeBarcode && (
                           <div className="flex justify-center mt-2">
-                            <div className="w-20 h-6 bg-gray-900 flex items-center justify-center text-white text-xs rounded border shadow-sm">
-                              ||||||
+                            <div className="w-28 h-8 bg-gray-900 flex items-center justify-center text-white text-xs rounded border shadow-sm">
+                              ||||||||||||
                             </div>
                           </div>
                         )}
