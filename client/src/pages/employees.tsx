@@ -119,17 +119,17 @@ export default function Employees() {
   return (
     <div className="space-y-8 p-2">
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-slate-900/50 via-purple-900/30 to-indigo-900/50 backdrop-blur-md rounded-2xl p-8 border border-slate-800/50">
+      <div className="bg-gradient-to-r from-slate-900/80 via-slate-800/60 to-slate-900/80 backdrop-blur-md rounded-xl p-8 border border-slate-700/40">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-white mb-2">Gestione Dipendenti</h1>
-            <p className="text-slate-300 bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">
+            <p className="text-slate-400">
               Organico aziendale e assegnazioni PC - {employees.length} dipendenti registrati
             </p>
           </div>
           <Dialog open={showEmployeeForm} onOpenChange={setShowEmployeeForm}>
             <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-xl border-0 text-white px-6 py-3 rounded-xl transition-all duration-300 hover:scale-105">
+              <Button className="bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-lg transition-all duration-300 hover:scale-105 shadow-lg">
                 <Plus className="mr-2 h-5 w-5" />
                 Aggiungi Dipendente
               </Button>
@@ -234,7 +234,7 @@ export default function Employees() {
       </div>
 
       {/* Search */}
-      <Card className="bg-slate-900/70 backdrop-blur-md border-slate-800/50 shadow-xl">
+      <Card className="bg-slate-900/60 backdrop-blur-md border-slate-700/50 shadow-xl">
         <CardContent className="p-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
@@ -242,17 +242,17 @@ export default function Employees() {
               placeholder="Cerca per nome, email, dipartimento o posizione..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-slate-800/50 border-slate-700/50 text-slate-200 placeholder:text-slate-400 focus:border-purple-500/50"
+              className="pl-10 bg-slate-800/50 border-slate-700/50 text-slate-200 placeholder:text-slate-400 focus:border-slate-600/50"
             />
           </div>
         </CardContent>
       </Card>
 
       {/* Employees Table */}
-      <Card className="bg-slate-900/70 backdrop-blur-md border-slate-800/50 shadow-2xl">
-        <CardHeader className="border-b border-slate-800/50 bg-gradient-to-r from-slate-900/50 to-purple-900/30">
+      <Card className="bg-slate-900/60 backdrop-blur-md border-slate-700/50 shadow-xl">
+        <CardHeader className="border-b border-slate-700/40 bg-slate-800/30">
           <CardTitle className="flex items-center text-white text-xl font-semibold">
-            <User className="mr-3 h-6 w-6 text-purple-400" />
+            <User className="mr-3 h-6 w-6 text-slate-300" />
             Lista Dipendenti ({filteredEmployees.length})
           </CardTitle>
         </CardHeader>
@@ -289,15 +289,15 @@ export default function Employees() {
                     >
                       <TableCell>
                         <div className="flex items-center space-x-3">
-                          <div className="p-2 bg-gradient-to-br from-purple-600/20 to-indigo-600/20 rounded-lg border border-purple-500/30">
-                            <User className="h-4 w-4 text-purple-400" />
+                          <div className="p-2 bg-slate-700/40 rounded-lg border border-slate-600/30">
+                            <User className="h-4 w-4 text-slate-300" />
                           </div>
                           <span className="font-semibold text-white">{employee.name}</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-slate-300">{employee.email}</TableCell>
                       <TableCell>
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-purple-600/20 to-indigo-600/20 text-purple-300 border border-purple-500/30">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-700/40 text-slate-200 border border-slate-600/30">
                           {employee.department}
                         </span>
                       </TableCell>

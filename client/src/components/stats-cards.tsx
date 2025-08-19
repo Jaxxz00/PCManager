@@ -77,24 +77,14 @@ export default function StatsCards() {
       {cards.map((card, index) => {
         const Icon = card.icon;
         return (
-          <Card key={card.title} className="border-0 shadow-2xl bg-gradient-to-br from-slate-900/70 via-slate-800/50 to-slate-900/70 backdrop-blur-md border-slate-800/50 hover:scale-105 transition-all duration-300 hover:shadow-3xl">
-            <CardContent className="p-8">
-              <div className="flex items-start justify-between mb-6">
-                <div className={`p-4 rounded-2xl ${
-                  index === 0 ? "bg-gradient-to-br from-blue-600/20 to-indigo-600/20 border border-blue-500/30" :
-                  index === 1 ? "bg-gradient-to-br from-green-600/20 to-emerald-600/20 border border-green-500/30" :
-                  index === 2 ? "bg-gradient-to-br from-orange-600/20 to-amber-600/20 border border-orange-500/30" :
-                  "bg-gradient-to-br from-red-600/20 to-pink-600/20 border border-red-500/30"
-                }`}>
-                  <Icon className={`h-7 w-7 ${
-                    index === 0 ? "text-blue-400" :
-                    index === 1 ? "text-green-400" :
-                    index === 2 ? "text-orange-400" :
-                    "text-red-400"
-                  }`} />
+          <Card key={card.title} className="border-slate-700/50 shadow-xl bg-slate-900/60 backdrop-blur-md hover:scale-[1.02] transition-all duration-300 hover:shadow-2xl hover:border-slate-600/50">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="p-3 rounded-xl bg-slate-700/40 border border-slate-600/30">
+                  <Icon className="h-6 w-6 text-slate-300" />
                 </div>
                 <div className="text-right">
-                  <p className="text-4xl font-bold bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">
+                  <p className="text-3xl font-bold text-white">
                     {card.value}
                   </p>
                 </div>
@@ -104,12 +94,7 @@ export default function StatsCards() {
                   {card.title}
                 </h3>
                 <div className="flex items-center gap-2 text-sm">
-                  <span className={`font-semibold ${
-                    index === 0 ? "text-blue-400" :
-                    index === 1 ? "text-green-400" :
-                    index === 2 ? "text-orange-400" :
-                    "text-red-400"
-                  }`}>
+                  <span className="font-medium text-slate-300">
                     {card.change}
                   </span>
                   <span className="text-slate-400">
