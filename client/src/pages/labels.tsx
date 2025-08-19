@@ -411,10 +411,10 @@ export default function Labels() {
                 {/* Anteprima */}
                 <div className="border-2 border-dashed border-border p-6 rounded-lg bg-muted/30">
                   <div 
-                    className="bg-white border-2 border-gray-300 mx-auto relative shadow-lg rounded-sm"
+                    className="bg-white border-2 border-gray-300 mx-auto relative shadow-lg rounded-sm overflow-hidden"
                     style={{
-                      width: '300px',
-                      height: '140px',
+                      width: '280px',
+                      height: '130px',
                       fontFamily: 'Inter, sans-serif',
                       display: 'flex',
                       flexDirection: 'column',
@@ -422,26 +422,26 @@ export default function Labels() {
                     }}
                   >
                     {/* Area centrale con info PC */}
-                    <div className="flex-1 flex flex-col justify-center items-center p-4">
+                    <div className="flex-1 flex flex-col justify-center items-center p-3">
                       <div className="text-center w-full">
-                        <div className="text-gray-800 text-xl font-bold mb-2 tracking-wide">
+                        <div className="text-gray-800 text-lg font-bold mb-1 tracking-wide leading-tight">
                           {selectedPcData.brand?.toUpperCase()} {selectedPcData.model}
                         </div>
-                        <div className="text-gray-600 text-sm font-medium mb-3">
+                        <div className="text-gray-600 text-xs font-medium mb-2">
                           S/N: {selectedPcData.serialNumber || 'N/A'}
                         </div>
-                        <div className="flex items-center justify-center gap-2 mb-3">
+                        <div className="flex items-center justify-center gap-1 mb-2">
                           <img 
                             src="/assets/maori-logo.jpeg" 
                             alt="Maori Group Logo" 
-                            className="h-4 w-auto object-contain"
+                            className="h-3 w-auto object-contain"
                           />
-                          <div className="text-gray-700 text-sm font-medium">
+                          <div className="text-gray-700 text-xs font-medium">
                             info@maorigroup.it
                           </div>
                         </div>
                         {customText && (
-                          <div className="text-gray-600 text-xs mb-3 italic">
+                          <div className="text-gray-600 text-xs mb-2 italic">
                             {customText}
                           </div>
                         )}
@@ -450,9 +450,9 @@ export default function Labels() {
                     
                     {/* Codice a barre in fondo */}
                     {includeBarcode && (
-                      <div className="flex justify-center pb-3 px-4">
-                        <div className="w-40 h-10 bg-gray-900 flex items-center justify-center text-white text-xs rounded-sm border shadow-sm">
-                          <span className="font-mono tracking-wide">||||||||||||||||</span>
+                      <div className="flex justify-center pb-2 px-3">
+                        <div className="w-32 h-8 bg-gray-900 flex items-center justify-center text-white text-xs rounded-sm border shadow-sm">
+                          <span className="font-mono tracking-normal">||||||||||||</span>
                         </div>
                       </div>
                     )}
