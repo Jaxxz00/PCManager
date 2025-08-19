@@ -129,23 +129,7 @@ export default function Labels() {
         position: relative;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
       ">
-        <!-- Header con Codice a Barre -->
-        <div style="
-          display: flex; 
-          justify-content: flex-end; 
-          align-items: flex-start;
-          margin-bottom: 2mm;
-        ">
-          ${barcodeUrl ? `
-            <img src="${barcodeUrl}" style="
-              width: 25mm; 
-              height: 8mm; 
-              border: 1px solid #e0e0e0;
-              border-radius: 1mm;
-              object-fit: contain;
-            " />
-          ` : ''}
-        </div>
+
         
         <!-- Informazioni Principali -->
         <div style="
@@ -160,46 +144,42 @@ export default function Labels() {
           margin: 1mm 0;
         ">
           <div style="
-            font-weight: 800; 
-            font-size: 11pt; 
-            color: #0f172a;
-            margin-bottom: 1mm;
-            letter-spacing: 0.3px;
-          ">
-            ${selectedPcData.pcId}
-          </div>
-          
-          <div style="
-            font-size: 7pt; 
+            font-size: 9pt; 
             color: #475569;
-            font-weight: 500;
+            font-weight: 600;
             margin-bottom: 1mm;
+            text-align: center;
           ">
             ${selectedPcData.brand?.toUpperCase()} ${selectedPcData.model}
           </div>
           
           <div style="
-            font-size: 6pt; 
+            font-size: 7pt; 
             color: #64748b;
             font-weight: 500;
-            margin-bottom: 1mm;
+            margin-bottom: 2mm;
+            text-align: center;
           ">
             S/N: ${selectedPcData.serialNumber || 'N/A'}
           </div>
           
           ${selectedPcData.employee?.name ? `
             <div style="
-              font-size: 6pt; 
-              color: #64748b;
-              font-weight: 400;
+              font-size: 7pt; 
+              color: #16a34a;
+              font-weight: 500;
+              text-align: center;
+              margin-bottom: 2mm;
             ">
               ASSEGNATO
             </div>
           ` : `
             <div style="
-              font-size: 6pt; 
+              font-size: 7pt; 
               color: #94a3b8;
-              font-weight: 400;
+              font-weight: 500;
+              text-align: center;
+              margin-bottom: 2mm;
             ">
               DISPONIBILE
             </div>
@@ -210,33 +190,30 @@ export default function Labels() {
               font-size: 6pt; 
               color: #475569;
               font-weight: 500;
-              margin-top: 1mm;
+              margin-bottom: 2mm;
               font-style: italic;
+              text-align: center;
             ">
               ${customText}
             </div>
           ` : ''}
-        </div>
-        
-        <!-- Footer con Logo -->
-        <div style="
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          font-size: 5pt; 
-          color: #94a3b8;
-          border-top: 1px solid #e2e8f0;
-          padding-top: 1mm;
-        ">
-          <div style="display: flex; align-items: center; gap: 1mm;">
-            <img src="/assets/maori-logo.jpeg" alt="Maori Group Logo" style="
-              height: 4mm;
-              width: auto;
-              object-fit: contain;
-            "/>
-            <span>Maori Group S.r.l.</span>
-          </div>
-          <span>${new Date().toLocaleDateString('it-IT')}</span>
+          
+          <!-- Codice a Barre -->
+          ${barcodeUrl ? `
+            <div style="
+              display: flex;
+              justify-content: center;
+              margin-top: 1mm;
+            ">
+              <img src="${barcodeUrl}" style="
+                width: 25mm; 
+                height: 8mm; 
+                border: 1px solid #e0e0e0;
+                border-radius: 1mm;
+                object-fit: contain;
+              " />
+            </div>
+          ` : ''}
         </div>
       </div>
     `;
@@ -258,46 +235,32 @@ export default function Labels() {
         justify-content: space-between;
         background: white;
       ">
-        <div style="display: flex; justify-content: flex-end; align-items: flex-start;">
-          ${includeBarcode ? `
-            <div style="width: 60px; height: 20px; background: #333; color: white; display: flex; align-items: center; justify-content: center; font-size: 8px; border-radius: 2px;">||||</div>
-          ` : ''}
-        </div>
-        
         <div style="text-align: center; flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
           <div style="font-weight: bold; font-size: 16px; margin-bottom: 4px;">
-            ${selectedPcData.pcId}
+            ${selectedPcData.brand?.toUpperCase()} ${selectedPcData.model}
           </div>
-          <div style="font-size: 12px; color: #666;">
-            ${selectedPcData.brand} ${selectedPcData.model}
-          </div>
-          <div style="font-size: 10px; color: #888; margin-top: 2px;">
+          <div style="font-size: 12px; color: #666; margin-bottom: 8px;">
             S/N: ${selectedPcData.serialNumber || 'N/A'}
           </div>
           ${selectedPcData.employee?.name ? `
-            <div style="font-size: 10px; color: #888; margin-top: 2px;">
+            <div style="font-size: 12px; color: #16a34a; font-weight: bold; margin-bottom: 8px;">
               ASSEGNATO
             </div>
           ` : `
-            <div style="font-size: 10px; color: #ccc; margin-top: 2px;">
+            <div style="font-size: 12px; color: #999; margin-bottom: 8px;">
               DISPONIBILE
             </div>
           `}
           ${customText ? `
-            <div style="font-size: 10px; color: #333; margin-top: 4px;">
+            <div style="font-size: 10px; color: #333; margin-bottom: 8px;">
               ${customText}
             </div>
           ` : ''}
-        </div>
-        
-        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 8px; color: #999; border-top: 1px solid #ddd; padding-top: 4px;">
-          <div style="display: flex; align-items: center; gap: 4px;">
-            ${includeLogo ? `
-              <img src="/assets/maori-logo.jpeg" alt="Logo" style="height: 12px; width: auto; object-fit: contain;">
-            ` : ''}
-            <span>Maori Group S.r.l.</span>
-          </div>
-          <span>${new Date().toLocaleDateString('it-IT')}</span>
+          ${includeBarcode ? `
+            <div style="display: flex; justify-content: center;">
+              <div style="width: 60px; height: 20px; background: #333; color: white; display: flex; align-items: center; justify-content: center; font-size: 8px; border-radius: 2px;">||||</div>
+            </div>
+          ` : ''}
         </div>
       </div>
     `;
@@ -459,59 +422,45 @@ export default function Labels() {
                       fontFamily: 'Inter, sans-serif'
                     }}
                   >
-                    {/* Header con Codice a Barre */}
-                    <div className="flex justify-end items-start p-3 pb-1">
-                      {includeBarcode && (
-                        <div className="w-16 h-8 bg-gray-900 flex items-center justify-center text-white text-xs rounded border shadow-sm">
-                          ||||||
-                        </div>
-                      )}
+                    {/* Header vuoto */}
+                    <div className="p-3 pb-1">
                     </div>
                     
                     {/* Area centrale con info PC */}
                     <div className="px-3 py-2 flex-grow flex flex-col justify-center">
                       <div className="text-center bg-gradient-to-br from-gray-50 to-gray-100 rounded p-2 mx-1">
-                        <div className="font-bold text-lg text-gray-900 mb-1 tracking-wide">
-                          {selectedPcData.pcId}
-                        </div>
-                        <div className="text-gray-600 text-sm font-medium">
+                        <div className="text-gray-700 text-lg font-semibold mb-1">
                           {selectedPcData.brand?.toUpperCase()} {selectedPcData.model}
                         </div>
-                        <div className="text-gray-500 text-xs font-medium mt-1">
+                        <div className="text-gray-500 text-xs font-medium mb-2">
                           S/N: {selectedPcData.serialNumber || 'N/A'}
                         </div>
                         {selectedPcData.employee?.name ? (
-                          <div className="text-green-600 text-xs mt-1 font-medium">
+                          <div className="text-green-600 text-sm font-medium mb-2">
                             ASSEGNATO
                           </div>
                         ) : (
-                          <div className="text-gray-400 text-xs mt-1">
+                          <div className="text-gray-400 text-sm mb-2">
                             DISPONIBILE
                           </div>
                         )}
                         {customText && (
-                          <div className="text-gray-600 text-xs mt-1 italic">
+                          <div className="text-gray-600 text-xs mb-2 italic">
                             {customText}
+                          </div>
+                        )}
+                        {includeBarcode && (
+                          <div className="flex justify-center mt-2">
+                            <div className="w-20 h-6 bg-gray-900 flex items-center justify-center text-white text-xs rounded border shadow-sm">
+                              ||||||
+                            </div>
                           </div>
                         )}
                       </div>
                     </div>
                     
-                    {/* Footer con Logo */}
-                    <div className="flex justify-between items-center px-3 pb-2 border-t border-gray-200 pt-1">
-                      <div className="flex items-center gap-1 text-gray-400 text-xs">
-                        {includeLogo && (
-                          <img 
-                            src="/assets/maori-logo.jpeg" 
-                            alt="Maori Group Logo" 
-                            className="h-2 w-auto object-contain"
-                          />
-                        )}
-                        <span>Maori Group S.r.l.</span>
-                      </div>
-                      <div className="text-gray-400 text-xs">
-                        {new Date().toLocaleDateString('it-IT')}
-                      </div>
+                    {/* Footer vuoto */}
+                    <div className="px-3 pb-2">
                     </div>
                   </div>
                 </div>
