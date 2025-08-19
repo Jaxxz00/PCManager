@@ -178,6 +178,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint per ricerca PC tramite QR scan - PUBBLICO per utilizzo mobile
+  app.get("/api/pcs/qr/:pcId", async (req, res) => {
+    try {
+      const pc = await storage.getPcByPcId(req.params.pcId);
+      if (!pc) {
+        return res.status(404).json({ 
+          message: "PC non trovato", 
+          pcId: req.params.pcId 
+        });
+      }
+      
+      // Restituisce info PC + dipendente assegnato per QR scan
+      const pcs = await storage.getPcs();
+      const pcWithEmployee = pcs.find(p => p.id === pc.id);
+      
+      res.json({
+        ...pc,
+        employee: pcWithEmployee?.employee || null,
+        scanTimestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Errore ricerca QR PC:", error);
+      res.status(500).json({ message: "Errore interno server" });
+    }
+  });
+
   app.post("/api/pcs", async (req, res) => {
     try {
       const validatedData = insertPcSchema.parse(req.body);

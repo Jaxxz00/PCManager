@@ -43,9 +43,20 @@ export default function Labels() {
     }
   };
 
-  const generateQRCode = async (data: string): Promise<string> => {
+  const generateQRCode = async (pcData: PcWithEmployee): Promise<string> => {
     try {
-      return await QRCodeLib.toDataURL(data, {
+      // QR contiene JSON con info complete per ricerca database
+      const qrData = JSON.stringify({
+        pcId: pcData.pcId,
+        id: pcData.id,
+        brand: pcData.brand,
+        model: pcData.model,
+        serialNumber: pcData.serialNumber,
+        hasEmployee: !!pcData.employee?.id,
+        lastUpdate: new Date().toISOString()
+      });
+      
+      return await QRCodeLib.toDataURL(qrData, {
         width: 200,
         margin: 1,
         color: {
@@ -62,7 +73,7 @@ export default function Labels() {
   const printLabel = async () => {
     if (!selectedPcData) return;
     
-    const qrCodeDataUrl = await generateQRCode(`PC-${selectedPcData.pcId}`);
+    const qrCodeDataUrl = await generateQRCode(selectedPcData);
     const labelContent = generateProfessionalLabel(qrCodeDataUrl);
     
     const printWindow = window.open('', '_blank');
@@ -199,9 +210,17 @@ export default function Labels() {
               color: #64748b;
               font-weight: 400;
             ">
-              ${selectedPcData.employee.name}
+              ASSEGNATO
             </div>
-          ` : ''}
+          ` : `
+            <div style="
+              font-size: 6pt; 
+              color: #94a3b8;
+              font-weight: 400;
+            ">
+              DISPONIBILE
+            </div>
+          `}
           
           ${customText ? `
             <div style="
@@ -256,7 +275,7 @@ export default function Labels() {
             </div>
           ` : ''}
           ${includeQR ? `
-            <img src="${generateQRCode(selectedPcData.pcId)}" width="40" height="40" />
+            <div style="width: 40px; height: 40px; background: #333; color: white; display: flex; align-items: center; justify-content: center; font-size: 8px; border-radius: 2px;">QR</div>
           ` : ''}
         </div>
         
@@ -269,9 +288,13 @@ export default function Labels() {
           </div>
           ${selectedPcData.employee?.name ? `
             <div style="font-size: 10px; color: #888; margin-top: 2px;">
-              ${selectedPcData.employee.name}
+              ASSEGNATO
             </div>
-          ` : ''}
+          ` : `
+            <div style="font-size: 10px; color: #ccc; margin-top: 2px;">
+              DISPONIBILE
+            </div>
+          `}
           ${customText ? `
             <div style="font-size: 10px; color: #333; margin-top: 4px;">
               ${customText}
@@ -387,6 +410,37 @@ export default function Labels() {
                 onChange={(e) => setCustomText(e.target.value)}
               />
             </div>
+
+            <Separator />
+
+            {/* Informazioni Privacy */}
+            <div className="space-y-3">
+              <Label className="text-base font-medium">🔒 Privacy & Tracciamento</Label>
+              
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0">
+                    <QrCode className="h-5 w-5 text-blue-600 mt-0.5" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-medium text-blue-900 mb-1">
+                      Tracciamento tramite Database
+                    </h4>
+                    <p className="text-sm text-blue-700">
+                      Il nome del dipendente non appare sull'etichetta per privacy. 
+                      Il QR code contiene dati tecnici e ID univoco che permettono di risalire 
+                      all'assegnazione tramite il database aziendale.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-sm text-muted-foreground space-y-1">
+                <p><strong>Sull'etichetta:</strong> Solo ID PC e stato assegnazione (ASSEGNATO/DISPONIBILE)</p>
+                <p><strong>Nel QR Code:</strong> ID, Brand, Modello, Serial Number, Stato assegnazione</p>
+                <p><strong>Nel Sistema:</strong> Collegamento completo PC → Dipendente consultabile</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -441,9 +495,13 @@ export default function Labels() {
                         <div className="text-gray-600 text-sm font-medium">
                           {selectedPcData.brand?.toUpperCase()} {selectedPcData.model}
                         </div>
-                        {selectedPcData.employee?.name && (
-                          <div className="text-gray-500 text-xs mt-1">
-                            {selectedPcData.employee.name}
+                        {selectedPcData.employee?.name ? (
+                          <div className="text-green-600 text-xs mt-1 font-medium">
+                            ASSEGNATO
+                          </div>
+                        ) : (
+                          <div className="text-gray-400 text-xs mt-1">
+                            DISPONIBILE
                           </div>
                         )}
                         {customText && (
