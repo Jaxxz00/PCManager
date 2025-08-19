@@ -77,27 +77,27 @@ export default function StatsCards() {
       {cards.map((card, index) => {
         const Icon = card.icon;
         return (
-          <Card key={card.title} className="border-slate-700/50 shadow-xl bg-slate-900/60 backdrop-blur-md hover:scale-[1.02] transition-all duration-300 hover:shadow-2xl hover:border-slate-600/50">
+          <Card key={card.title} className="border-gray-200 shadow-lg bg-white/95 backdrop-blur-md hover:scale-[1.02] transition-all duration-300 hover:shadow-xl hover:border-gray-300">
             <CardContent className="p-6">
               <div className="flex items-start justify-between mb-4">
-                <div className="p-3 rounded-xl bg-slate-700/40 border border-slate-600/30">
-                  <Icon className="h-6 w-6 text-slate-300" />
+                <div className="p-3 rounded-xl bg-gray-100 border border-gray-200">
+                  <Icon className="h-6 w-6 text-gray-600" />
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-bold text-white">
+                  <p className="text-3xl font-bold text-gray-900">
                     {card.value}
                   </p>
                 </div>
               </div>
               <div className="space-y-2">
-                <h3 className="text-lg font-semibold text-white">
+                <h3 className="text-lg font-semibold text-gray-900">
                   {card.title}
                 </h3>
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="font-medium text-slate-300">
+                  <span className="font-medium text-gray-700">
                     {card.change}
                   </span>
-                  <span className="text-slate-400">
+                  <span className="text-gray-500">
                     {card.changeLabel}
                   </span>
                 </div>

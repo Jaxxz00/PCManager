@@ -119,24 +119,24 @@ export default function Employees() {
   return (
     <div className="space-y-8 p-2">
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-slate-900/80 via-slate-800/60 to-slate-900/80 backdrop-blur-md rounded-xl p-8 border border-slate-700/40">
+      <div className="bg-white/95 backdrop-blur-md rounded-xl p-8 border border-gray-200 shadow-lg">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Gestione Dipendenti</h1>
-            <p className="text-slate-400">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestione Dipendenti</h1>
+            <p className="text-gray-600">
               Organico aziendale e assegnazioni PC - {employees.length} dipendenti registrati
             </p>
           </div>
           <Dialog open={showEmployeeForm} onOpenChange={setShowEmployeeForm}>
             <DialogTrigger asChild>
-              <Button className="bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-lg transition-all duration-300 hover:scale-105 shadow-lg">
+              <Button className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-lg transition-all duration-300 hover:scale-105 shadow-lg">
                 <Plus className="mr-2 h-5 w-5" />
                 Aggiungi Dipendente
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-slate-900/95 backdrop-blur-md border-slate-800/50">
+            <DialogContent className="bg-white border-gray-200">
               <DialogHeader>
-                <DialogTitle className="text-white text-xl">Aggiungi Nuovo Dipendente</DialogTitle>
+                <DialogTitle className="text-gray-900 text-xl">Aggiungi Nuovo Dipendente</DialogTitle>
               </DialogHeader>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -145,11 +145,11 @@ export default function Employees() {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-slate-200">Nome Completo</FormLabel>
+                        <FormLabel className="text-gray-700">Nome Completo</FormLabel>
                         <FormControl>
                           <Input 
                             placeholder="Mario Rossi" 
-                            className="bg-slate-800/50 border-slate-700/50 text-slate-200 placeholder:text-slate-400"
+                            className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500"
                             {...field} 
                           />
                         </FormControl>
@@ -234,25 +234,25 @@ export default function Employees() {
       </div>
 
       {/* Search */}
-      <Card className="bg-slate-900/60 backdrop-blur-md border-slate-700/50 shadow-xl">
+      <Card className="bg-white/95 backdrop-blur-md border-gray-200 shadow-lg">
         <CardContent className="p-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="Cerca per nome, email, dipartimento o posizione..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-slate-800/50 border-slate-700/50 text-slate-200 placeholder:text-slate-400 focus:border-slate-600/50"
+              className="pl-10 bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-gray-500"
             />
           </div>
         </CardContent>
       </Card>
 
       {/* Employees Table */}
-      <Card className="bg-slate-900/60 backdrop-blur-md border-slate-700/50 shadow-xl">
-        <CardHeader className="border-b border-slate-700/40 bg-slate-800/30">
-          <CardTitle className="flex items-center text-white text-xl font-semibold">
-            <User className="mr-3 h-6 w-6 text-slate-300" />
+      <Card className="bg-white/95 backdrop-blur-md border-gray-200 shadow-lg">
+        <CardHeader className="border-b border-gray-200 bg-gray-50/80">
+          <CardTitle className="flex items-center text-gray-900 text-xl font-semibold">
+            <User className="mr-3 h-6 w-6 text-gray-600" />
             Lista Dipendenti ({filteredEmployees.length})
           </CardTitle>
         </CardHeader>
@@ -260,23 +260,23 @@ export default function Employees() {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="border-slate-800/30 hover:bg-slate-800/30">
-                  <TableHead className="text-slate-300 font-semibold">Nome</TableHead>
-                  <TableHead className="text-slate-300 font-semibold">Email</TableHead>
-                  <TableHead className="text-slate-300 font-semibold">Dipartimento</TableHead>
-                  <TableHead className="text-slate-300 font-semibold">Posizione</TableHead>
-                  <TableHead className="text-slate-300 font-semibold">PC Assegnati</TableHead>
-                  <TableHead className="text-slate-300 font-semibold">Data Inserimento</TableHead>
+                <TableRow className="border-gray-200 hover:bg-gray-50">
+                  <TableHead className="text-gray-700 font-semibold">Nome</TableHead>
+                  <TableHead className="text-gray-700 font-semibold">Email</TableHead>
+                  <TableHead className="text-gray-700 font-semibold">Dipartimento</TableHead>
+                  <TableHead className="text-gray-700 font-semibold">Posizione</TableHead>
+                  <TableHead className="text-gray-700 font-semibold">PC Assegnati</TableHead>
+                  <TableHead className="text-gray-700 font-semibold">Data Inserimento</TableHead>
                   <TableHead className="w-12"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   [...Array(5)].map((_, i) => (
-                    <TableRow key={i} className="border-slate-800/30">
+                    <TableRow key={i} className="border-gray-200">
                       {[...Array(7)].map((_, j) => (
                         <TableCell key={j} className="animate-pulse">
-                          <div className="h-4 bg-slate-700 rounded w-20"></div>
+                          <div className="h-4 bg-gray-300 rounded w-20"></div>
                         </TableCell>
                       ))}
                     </TableRow>
@@ -285,27 +285,27 @@ export default function Employees() {
                   filteredEmployees.map((employee: Employee) => (
                     <TableRow 
                       key={employee.id} 
-                      className="border-slate-800/30 hover:bg-slate-800/50 transition-all duration-300 hover:scale-[1.01] hover:shadow-lg"
+                      className="border-gray-200 hover:bg-gray-50 transition-all duration-300"
                     >
                       <TableCell>
                         <div className="flex items-center space-x-3">
-                          <div className="p-2 bg-slate-700/40 rounded-lg border border-slate-600/30">
-                            <User className="h-4 w-4 text-slate-300" />
+                          <div className="p-2 bg-gray-100 rounded-lg border border-gray-200">
+                            <User className="h-4 w-4 text-gray-600" />
                           </div>
-                          <span className="font-semibold text-white">{employee.name}</span>
+                          <span className="font-semibold text-gray-900">{employee.name}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-slate-300">{employee.email}</TableCell>
+                      <TableCell className="text-gray-700">{employee.email}</TableCell>
                       <TableCell>
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-700/40 text-slate-200 border border-slate-600/30">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800 border border-gray-200">
                           {employee.department}
                         </span>
                       </TableCell>
-                      <TableCell className="text-slate-300">{employee.position}</TableCell>
+                      <TableCell className="text-gray-700">{employee.position}</TableCell>
                       <TableCell>
-                        <span className="font-semibold text-white">{getEmployeePcCount(employee.id)}</span>
+                        <span className="font-semibold text-gray-900">{getEmployeePcCount(employee.id)}</span>
                       </TableCell>
-                      <TableCell className="text-slate-400">
+                      <TableCell className="text-gray-500">
                         {employee.createdAt ? new Date(employee.createdAt).toLocaleDateString('it-IT') : 'N/A'}
                       </TableCell>
                       <TableCell>

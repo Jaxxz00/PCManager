@@ -138,11 +138,11 @@ export default function Inventory() {
   return (
     <div className="space-y-8 p-2">
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-slate-900/80 via-slate-800/60 to-slate-900/80 backdrop-blur-md rounded-xl p-8 border border-slate-700/40">
+      <div className="bg-white/95 backdrop-blur-md rounded-xl p-8 border border-gray-200 shadow-lg">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Inventario PC</h1>
-            <p className="text-slate-400">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Inventario PC</h1>
+            <p className="text-gray-600">
               {filteredPcs.length} di {pcs.length} PC visualizzati - Gestione completa dell'inventario hardware
             </p>
           </div>
@@ -150,7 +150,7 @@ export default function Inventory() {
             <DataExport pcs={pcs} employees={employees} filteredPcs={filteredPcs} />
             <Button 
               onClick={() => setShowPcForm(true)} 
-              className="bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-lg transition-all duration-300 hover:scale-105 shadow-lg"
+              className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-lg transition-all duration-300 hover:scale-105 shadow-lg"
             >
               <Plus className="mr-2 h-5 w-5" />
               Nuovo PC
@@ -165,10 +165,10 @@ export default function Inventory() {
         onExport={handleExport}
       />
 
-      <Card className="bg-slate-900/60 backdrop-blur-md border-slate-700/50 shadow-xl">
-        <CardHeader className="border-b border-slate-700/40 bg-slate-800/30">
-          <CardTitle className="flex items-center text-white text-xl font-semibold">
-            <Monitor className="mr-3 h-6 w-6 text-slate-300" />
+      <Card className="bg-white/95 backdrop-blur-md border-gray-200 shadow-lg">
+        <CardHeader className="border-b border-gray-200 bg-gray-50/80">
+          <CardTitle className="flex items-center text-gray-900 text-xl font-semibold">
+            <Monitor className="mr-3 h-6 w-6 text-gray-600" />
             Elenco PC ({filteredPcs.length})
           </CardTitle>
         </CardHeader>
