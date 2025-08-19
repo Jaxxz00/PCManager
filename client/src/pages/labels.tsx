@@ -135,18 +135,12 @@ export default function Labels() {
               align-items: center;
               gap: 1mm;
             ">
-              <svg width="8mm" height="6mm" viewBox="0 0 100 60" style="margin-right: 1mm;">
-                <defs>
-                  <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:#1e40af;stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
-                  </linearGradient>
-                </defs>
-                <path d="M10 45 L25 15 L40 45 M25 35 L35 35" stroke="url(#logoGradient)" stroke-width="3" fill="none"/>
-                <path d="M50 45 L50 15 M50 30 Q60 20 70 30 Q80 40 90 30" stroke="url(#logoGradient)" stroke-width="3" fill="none"/>
-                <circle cx="25" cy="50" r="2" fill="url(#logoGradient)"/>
-                <circle cx="70" cy="50" r="2" fill="url(#logoGradient)"/>
-              </svg>
+              <img src="/attached_assets/IMG_4622_1755594689547.jpeg" alt="Maori Group Logo" style="
+                height: 6mm;
+                width: auto;
+                object-fit: contain;
+                margin-right: 1mm;
+              "/>
               <div style="
                 font-weight: 700; 
                 font-size: 8pt; 
@@ -421,18 +415,11 @@ export default function Labels() {
                     <div className="flex justify-between items-start p-3 pb-1">
                       {includeLogo && (
                         <div className="flex items-center gap-2">
-                          <svg width="24" height="16" viewBox="0 0 100 60" className="mr-1">
-                            <defs>
-                              <linearGradient id="logoGradientPreview" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" style={{stopColor:"#1e40af", stopOpacity:1}} />
-                                <stop offset="100%" style={{stopColor:"#3b82f6", stopOpacity:1}} />
-                              </linearGradient>
-                            </defs>
-                            <path d="M10 45 L25 15 L40 45 M25 35 L35 35" stroke="url(#logoGradientPreview)" strokeWidth="3" fill="none"/>
-                            <path d="M50 45 L50 15 M50 30 Q60 20 70 30 Q80 40 90 30" stroke="url(#logoGradientPreview)" strokeWidth="3" fill="none"/>
-                            <circle cx="25" cy="50" r="2" fill="url(#logoGradientPreview)"/>
-                            <circle cx="70" cy="50" r="2" fill="url(#logoGradientPreview)"/>
-                          </svg>
+                          <img 
+                            src="/attached_assets/IMG_4622_1755594689547.jpeg" 
+                            alt="Maori Group Logo" 
+                            className="h-4 w-auto object-contain"
+                          />
                           <div className="font-bold text-sm text-blue-700 tracking-wide">
                             MAORI GROUP
                           </div>

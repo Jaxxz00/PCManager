@@ -1,12 +1,16 @@
-# PC Manager - Enterprise IT Management System
+# PC Manager - Gestionale PC Aziendali per Maori Group
 
 ## Overview
 
-PC Manager is a comprehensive enterprise IT management system built to track and manage company computers and employees. The application provides a centralized dashboard for monitoring PC inventory, employee assignments, and system statistics. It features a modern React frontend with a Node.js/Express backend and uses PostgreSQL for data persistence.
+Sistema di gestione completo per computer e dipendenti aziendali di Maori Group. L'applicazione fornisce una dashboard centralizzata per il monitoraggio dell'inventario PC, assegnazioni dipendenti, gestione documenti e statistiche del sistema. Include interfaccia React moderna, backend Node.js/Express e database PostgreSQL con cloud storage per documenti.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Language: Italian throughout the entire application interface
+Company: Maori Group - integrated corporate branding with official logo
+Logo: Uses official Maori Group logo image (IMG_4622_1755594689547.jpeg)
+Professional Features: Document management for manleva/waivers, QR code labels
 
 ## System Architecture
 
