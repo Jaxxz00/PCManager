@@ -196,13 +196,13 @@ export default function Maintenance() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "scheduled":
-        return <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">📅 Programmato</Badge>;
+        return <Badge variant="outline" className="border-blue-200 text-blue-700 bg-blue-50">Programmato</Badge>;
       case "in_progress":
-        return <Badge className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">⚡ In Corso</Badge>;
+        return <Badge variant="outline" className="border-orange-200 text-orange-700 bg-orange-50">In Corso</Badge>;
       case "completed":
-        return <Badge className="bg-gradient-to-r from-green-500 to-green-600 text-white">✅ Completato</Badge>;
+        return <Badge variant="outline" className="border-green-200 text-green-700 bg-green-50">Completato</Badge>;
       case "cancelled":
-        return <Badge className="bg-gradient-to-r from-red-500 to-red-600 text-white">❌ Annullato</Badge>;
+        return <Badge variant="destructive">Annullato</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -211,13 +211,13 @@ export default function Maintenance() {
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
       case "low":
-        return <Badge className="bg-gradient-to-r from-gray-400 to-gray-500 text-white">😌 Bassa</Badge>;
+        return <Badge variant="secondary">Bassa</Badge>;
       case "medium":
-        return <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">🟡 Media</Badge>;
+        return <Badge variant="outline" className="border-blue-200 text-blue-700">Media</Badge>;
       case "high":
-        return <Badge className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">🔥 Alta</Badge>;
+        return <Badge variant="outline" className="border-orange-200 text-orange-700 bg-orange-50">Alta</Badge>;
       case "critical":
-        return <Badge className="bg-gradient-to-r from-red-500 to-red-600 text-white animate-pulse">🚨 CRITICA</Badge>;
+        return <Badge variant="destructive">Critica</Badge>;
       default:
         return <Badge variant="outline">{priority}</Badge>;
     }
@@ -225,10 +225,10 @@ export default function Maintenance() {
 
   const getTypeLabel = (type: string) => {
     switch (type) {
-      case "preventive": return "🔧 Preventiva";
-      case "corrective": return "🚑 Correttiva";
-      case "upgrade": return "🚀 Upgrade";
-      case "cleaning": return "🧹 Pulizia";
+      case "preventive": return "Preventiva";
+      case "corrective": return "Correttiva";
+      case "upgrade": return "Upgrade";
+      case "cleaning": return "Pulizia";
       default: return type;
     }
   };
@@ -248,20 +248,19 @@ export default function Maintenance() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-6 bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 dark:from-blue-950/30 dark:via-purple-950/30 dark:to-pink-950/30 rounded-xl border border-blue-200/50 dark:border-blue-800/50">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-            <Sparkles className="h-8 w-8 text-purple-500" />
+          <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
+            <Wrench className="h-6 w-6 text-blue-600" />
             Centro Manutenzione
-            <Heart className="h-6 w-6 text-pink-500" />
           </h1>
-          <p className="text-muted-foreground mt-2 text-lg">🔧 Gestione divertente degli interventi PC! ✨</p>
+          <p className="text-muted-foreground mt-1">Gestione professionale degli interventi di manutenzione</p>
         </div>
         <Dialog open={showMaintenanceForm} onOpenChange={setShowMaintenanceForm}>
           <DialogTrigger asChild>
-            <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
-              <Zap className="mr-2 h-5 w-5" />
-              🚀 Nuovo Intervento
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Plus className="mr-2 h-4 w-4" />
+              Nuovo Intervento
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
@@ -475,85 +474,85 @@ export default function Maintenance() {
         </Dialog>
       </div>
 
-      {/* Statistiche Manutenzione - Design Colorato */}
+      {/* Statistiche Manutenzione */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card className="bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-indigo-950 dark:to-blue-900 border-indigo-200 dark:border-indigo-800 hover:shadow-lg transition-all duration-300 hover:scale-105">
+        <Card className="hover:shadow-md transition-shadow">
           <CardContent className="p-6">
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-indigo-500 rounded-full">
-                <Wrench className="h-6 w-6 text-white" />
+              <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                <Wrench className="h-5 w-5 text-slate-600 dark:text-slate-400" />
               </div>
               <div>
-                <p className="text-sm font-medium text-indigo-700 dark:text-indigo-300">🔧 Totale</p>
-                <p className="text-3xl font-bold text-indigo-900 dark:text-indigo-100">{maintenanceStats.total}</p>
+                <p className="text-sm text-muted-foreground">Totale Interventi</p>
+                <p className="text-2xl font-semibold">{maintenanceStats.total}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-gradient-to-br from-blue-50 to-cyan-100 dark:from-blue-950 dark:to-cyan-900 border-blue-200 dark:border-blue-800 hover:shadow-lg transition-all duration-300 hover:scale-105">
+        <Card className="hover:shadow-md transition-shadow">
           <CardContent className="p-6">
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-blue-500 rounded-full">
-                <Calendar className="h-6 w-6 text-white" />
+              <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <Calendar className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-blue-700 dark:text-blue-300">📅 Programmati</p>
-                <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">{maintenanceStats.scheduled}</p>
+                <p className="text-sm text-muted-foreground">Programmati</p>
+                <p className="text-2xl font-semibold text-blue-600">{maintenanceStats.scheduled}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-gradient-to-br from-orange-50 to-yellow-100 dark:from-orange-950 dark:to-yellow-900 border-orange-200 dark:border-orange-800 hover:shadow-lg transition-all duration-300 hover:scale-105">
+        <Card className="hover:shadow-md transition-shadow">
           <CardContent className="p-6">
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-orange-500 rounded-full">
-                <Clock className="h-6 w-6 text-white" />
+              <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                <Clock className="h-5 w-5 text-orange-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-orange-700 dark:text-orange-300">⏰ In Corso</p>
-                <p className="text-3xl font-bold text-orange-900 dark:text-orange-100">{maintenanceStats.inProgress}</p>
+                <p className="text-sm text-muted-foreground">In Corso</p>
+                <p className="text-2xl font-semibold text-orange-600">{maintenanceStats.inProgress}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-950 dark:to-emerald-900 border-green-200 dark:border-green-800 hover:shadow-lg transition-all duration-300 hover:scale-105">
+        <Card className="hover:shadow-md transition-shadow">
           <CardContent className="p-6">
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-green-500 rounded-full">
-                <CheckCircle className="h-6 w-6 text-white" />
+              <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <CheckCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-green-700 dark:text-green-300">✅ Completati</p>
-                <p className="text-3xl font-bold text-green-900 dark:text-green-100">{maintenanceStats.completed}</p>
+                <p className="text-sm text-muted-foreground">Completati</p>
+                <p className="text-2xl font-semibold text-green-600">{maintenanceStats.completed}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-gradient-to-br from-red-50 to-pink-100 dark:from-red-950 dark:to-pink-900 border-red-200 dark:border-red-800 hover:shadow-lg transition-all duration-300 hover:scale-105">
+        <Card className="hover:shadow-md transition-shadow">
           <CardContent className="p-6">
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-red-500 rounded-full">
-                <AlertTriangle className="h-6 w-6 text-white" />
+              <div className="p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                <AlertTriangle className="h-5 w-5 text-red-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-red-700 dark:text-red-300">🚨 Priorità Alta</p>
-                <p className="text-3xl font-bold text-red-900 dark:text-red-100">{maintenanceStats.highPriority}</p>
+                <p className="text-sm text-muted-foreground">Priorità Alta</p>
+                <p className="text-2xl font-semibold text-red-600">{maintenanceStats.highPriority}</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filtri Colorati */}
-      <Card className="bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950 dark:to-purple-950 border-violet-200 dark:border-violet-800">
+      {/* Filtri */}
+      <Card>
         <CardContent className="p-6">
           <div className="mb-4 flex items-center gap-2">
-            <Filter className="h-5 w-5 text-purple-500" />
-            <h3 className="font-semibold text-purple-700 dark:text-purple-300">🎯 Filtri Ricerca</h3>
+            <Filter className="h-5 w-5 text-muted-foreground" />
+            <h3 className="font-medium">Filtri di Ricerca</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div className="relative">
@@ -601,21 +600,20 @@ export default function Maintenance() {
                 <SelectItem value="cleaning">Pulizia</SelectItem>
               </SelectContent>
             </Select>
-            <Button className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white">
+            <Button variant="outline" className="w-full">
               <Download className="mr-2 h-4 w-4" />
-              📊 Esporta
+              Esporta
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Tabella Interventi Colorata */}
-      <Card className="bg-gradient-to-br from-slate-50 to-gray-50 dark:from-slate-950 dark:to-gray-950 border-slate-200 dark:border-slate-800">
-        <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-t-lg">
-          <CardTitle className="flex items-center text-xl">
-            <Star className="mr-3 h-6 w-6 text-yellow-300" />
-            🎉 Lista Interventi Manutenzione ({filteredRecords.length})
-            <Sparkles className="ml-3 h-5 w-5 text-yellow-300" />
+      {/* Tabella Interventi */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Wrench className="mr-2 h-5 w-5" />
+            Interventi di Manutenzione ({filteredRecords.length})
           </CardTitle>
         </CardHeader>
         <CardContent className="overflow-x-auto">
@@ -655,7 +653,7 @@ export default function Maintenance() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                      <Badge variant="outline" className="border-purple-200 text-purple-700 bg-purple-50">
                         {getTypeLabel(record.type)}
                       </Badge>
                     </TableCell>
@@ -710,7 +708,7 @@ export default function Maintenance() {
                             }}
                           >
                             <Eye className="mr-2 h-4 w-4" />
-                            👁️ Visualizza
+                            Visualizza
                           </DropdownMenuItem>
                           <DropdownMenuItem 
                             onClick={() => {
@@ -721,7 +719,7 @@ export default function Maintenance() {
                             }}
                           >
                             <Edit className="mr-2 h-4 w-4" />
-                            ✏️ Modifica
+                            Modifica
                           </DropdownMenuItem>
                           <DropdownMenuItem 
                             onClick={() => {
@@ -733,7 +731,7 @@ export default function Maintenance() {
                             }}
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
-                            🗑️ Elimina
+                            Elimina
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -744,15 +742,15 @@ export default function Maintenance() {
                 <TableRow>
                   <TableCell colSpan={9} className="text-center py-12">
                     <div className="flex flex-col items-center justify-center space-y-4">
-                      <div className="p-4 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900 dark:to-purple-900 rounded-full">
-                        <Wrench className="h-16 w-16 text-indigo-500" />
+                      <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-full">
+                        <Wrench className="h-12 w-12 text-slate-400" />
                       </div>
-                      <div className="space-y-2">
-                        <p className="text-xl font-bold text-foreground">🤔 Nessun intervento trovato!</p>
+                      <div className="space-y-2 text-center">
+                        <p className="text-lg font-medium">Nessun intervento trovato</p>
                         <p className="text-muted-foreground">
                           {mockMaintenanceRecords.length === 0 
-                            ? "🎯 Inizia programmando il primo intervento di manutenzione!"
-                            : "🔍 Prova a modificare i filtri di ricerca"
+                            ? "Inizia programmando il primo intervento di manutenzione"
+                            : "Prova a modificare i filtri di ricerca"
                           }
                         </p>
                       </div>
