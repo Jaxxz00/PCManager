@@ -12,6 +12,7 @@ import Reports from "@/pages/reports";
 import Documents from "@/pages/documents";
 import Settings from "@/pages/settings";
 import Maintenance from "@/pages/maintenance";
+import Workflow from "@/pages/workflow";
 import Sidebar from "@/components/layout/sidebar";
 import Topbar from "@/components/layout/topbar";
 
@@ -25,6 +26,7 @@ function Router() {
       <Route path="/reports" component={Reports} />
       <Route path="/documents" component={Documents} />
       <Route path="/maintenance" component={Maintenance} />
+      <Route path="/workflow" component={Workflow} />
       <Route path="/settings" component={Settings} />
       <Route component={NotFound} />
     </Switch>

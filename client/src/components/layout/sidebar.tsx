@@ -9,7 +9,8 @@ import {
   Tags,
   Building2,
   ChevronRight,
-  Shield
+  Shield,
+  GitBranch
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,7 @@ const navigation = [
   { name: "Dashboard", href: "/", icon: BarChart3, description: "Panoramica generale" },
   { name: "Inventario PC", href: "/inventory", icon: Monitor, description: "Gestione computer" },
   { name: "Dipendenti", href: "/employees", icon: Users, description: "Personale aziendale" },
+  { name: "Workflow Assegnazione", href: "/workflow", icon: GitBranch, description: "Processo guidato completo" },
   { name: "Documenti", href: "/documents", icon: Shield, description: "Manleva e contratti" },
   { name: "Etichette", href: "/labels", icon: Tags, description: "Stampa etichette" },
   { name: "Report", href: "/reports", icon: FileText, description: "Analisi e statistiche" },
