@@ -89,11 +89,6 @@ export default function Sidebar() {
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    {item.badge && (
-                      <Badge variant="secondary" className="text-xs">
-                        {item.badge}
-                      </Badge>
-                    )}
                     <ChevronRight className={cn(
                       "w-4 h-4 transition-transform duration-200",
                       active ? "text-primary-foreground transform rotate-90" : "text-muted-foreground group-hover:text-foreground"

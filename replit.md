@@ -4,7 +4,10 @@
 
 Sistema di gestione completo per computer e dipendenti aziendali di Maori Group. L'applicazione fornisce una dashboard centralizzata per il monitoraggio dell'inventario PC, assegnazioni dipendenti, gestione documenti e statistiche del sistema. Include interfaccia React moderna, backend Node.js/Express e **database PostgreSQL completamente integrato** per persistenza dati con cloud storage per documenti.
 
-## Recent Changes (19/08/2025)
+## Recent Changes (22/08/2025)
+- ✅ **WORKFLOW GUIDATO COMPLETO**: Processo guidato da selezione PC a consegna con manleva firmata (6 passaggi)
+- ✅ **INTERFACCIA VISUAL RICCA**: Trasformazione da design minimal a interfaccia ricca con gradienti, icone colorate, animazioni
+- ✅ **ETICHETTE OTTIMIZZATE**: Formato finale 5cm x 3cm con layout bilanciato e contenimento garantito
 - ✅ **MIGRAZIONE POSTGRESQL COMPLETATA**: Sistema ora usa DatabaseStorage con PostgreSQL per persistenza completa
 - ✅ **AUTO-INIZIALIZZAZIONE**: Dati test automaticamente creati al primo avvio
 - ✅ **SICUREZZA RINFORZATA**: CSP configurato per sviluppo, autenticazione e rate limiting attivi
@@ -20,6 +23,7 @@ Language: Italian throughout the entire application interface
 Company: Maori Group - integrated corporate branding with official logo
 Logo: Uses official Maori Group logo image (IMG_4622_1755594689547.jpeg)
 Professional Features: Document management for manleva/waivers, QR code labels
+UI Design Preference: Rich visual interface with colors, gradients, and detailed elements (not minimal)
 
 ## System Architecture
 
