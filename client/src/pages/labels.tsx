@@ -50,10 +50,10 @@ export default function Labels() {
       
       JsBarcode(canvas, pcData.serialNumber || pcData.pcId, {
         format: "CODE128",
-        width: 1.5,
-        height: 30,
+        width: 1.2,
+        height: 25,
         displayValue: true,
-        fontSize: 8,
+        fontSize: 7,
         textAlign: "center",
         textPosition: "bottom",
         textMargin: 1,
@@ -118,8 +118,8 @@ export default function Labels() {
 
     return `
       <div class="label" style="
-        width: 62mm; 
-        height: 29mm; 
+        width: 50mm; 
+        height: 30mm; 
         border: 1px solid #e0e0e0; 
         padding: 2mm; 
         display: flex; 
@@ -163,7 +163,7 @@ export default function Labels() {
             margin-bottom: 1mm;
           ">
             <img src="/assets/maori-logo.jpeg" alt="Maori Group Logo" style="
-              height: 3mm;
+              height: 2.5mm;
               width: auto;
               object-fit: contain;
             "/>
@@ -197,8 +197,8 @@ export default function Labels() {
             align-items: center;
           ">
             <img src="${barcodeUrl}" style="
-              width: 25mm; 
-              height: 7mm; 
+              width: 22mm; 
+              height: 6mm; 
               object-fit: contain;
             " />
           </div>
@@ -244,7 +244,7 @@ export default function Labels() {
           ` : ''}
           ${includeBarcode ? `
             <div style="display: flex; justify-content: center;">
-              <div style="width: 60px; height: 16px; background: #333; color: white; display: flex; align-items: center; justify-content: center; font-size: 7px; border-radius: 2px;">||||||||||</div>
+              <div style="width: 50px; height: 14px; background: #333; color: white; display: flex; align-items: center; justify-content: center; font-size: 6px; border-radius: 2px;">||||||||</div>
             </div>
           ` : ''}
         </div>
@@ -354,8 +354,8 @@ export default function Labels() {
                   <div 
                     className="bg-white border-2 border-gray-300 mx-auto relative shadow-lg rounded-sm overflow-hidden"
                     style={{
-                      width: '260px',
-                      height: '120px',
+                      width: '210px',
+                      height: '126px',
                       fontFamily: 'Inter, sans-serif',
                       display: 'flex',
                       flexDirection: 'column',
@@ -390,8 +390,8 @@ export default function Labels() {
                     {/* Codice a barre in fondo */}
                     {includeBarcode && (
                       <div className="flex justify-center">
-                        <div className="w-24 h-5 bg-gray-900 flex items-center justify-center text-white text-xs rounded-sm">
-                          <span className="font-mono text-xs">||||||||</span>
+                        <div className="w-20 h-4 bg-gray-900 flex items-center justify-center text-white text-xs rounded-sm">
+                          <span className="font-mono text-xs">||||||</span>
                         </div>
                       </div>
                     )}
