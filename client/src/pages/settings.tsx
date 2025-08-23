@@ -20,11 +20,38 @@ import {
 
 export default function SettingsPage() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Hero Header */}
+      <div className="bg-gradient-to-r from-slate-700 via-gray-700 to-zinc-800 rounded-xl p-6 text-white shadow-xl">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-white/20 rounded-full backdrop-blur-sm">
+            <Settings className="h-8 w-8" />
+          </div>
+          <div className="flex-1">
+            <h1 className="text-3xl font-bold">Centro Configurazione</h1>
+            <p className="text-slate-100 text-lg">Gestione avanzata impostazioni sistema Maori Group</p>
+            <div className="flex items-center gap-6 mt-2 text-sm text-slate-200">
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4" />
+                <span>Sicurezza avanzata</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Database className="w-4 h-4" />
+                <span>Backup automatico</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                <span>Gestione utenti</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-medium text-foreground">Configurazione Sistema</h1>
-          <p className="text-muted-foreground">Gestisci le impostazioni globali del sistema</p>
+        <div className="bg-gradient-to-r from-gray-50 to-slate-100 p-4 rounded-lg border border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">Pannello Amministrazione</h2>
+          <p className="text-gray-700">Configura parametri avanzati del sistema</p>
         </div>
         <Badge variant="outline" className="w-fit">
           <Settings className="w-3 h-3 mr-1" />

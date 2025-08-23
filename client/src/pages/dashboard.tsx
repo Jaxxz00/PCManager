@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Plus, Download, Edit, ExternalLink } from "lucide-react";
+import { Plus, Download, Edit, ExternalLink, Monitor, User, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -55,20 +55,38 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Welcome Header */}
+      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 rounded-xl p-6 text-white shadow-xl">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-white/20 rounded-full backdrop-blur-sm">
+            <Monitor className="h-8 w-8" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold">Dashboard Gestionale PC</h1>
+            <p className="text-blue-100 text-lg">Panoramica completa dell'inventario e statistiche Maori Group</p>
+          </div>
+        </div>
+      </div>
+      
       <StatsCards />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Recent PC Inventory */}
         <div className="lg:col-span-2">
-          <Card>
-            <CardHeader className="border-b border-border">
+          <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50">
+            <CardHeader className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-t-lg">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-medium">Inventario PC Recente</CardTitle>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white/20 rounded-lg">
+                    <Monitor className="h-5 w-5" />
+                  </div>
+                  <CardTitle className="text-xl font-bold">Inventario PC Recente</CardTitle>
+                </div>
                 <Link href="/inventory">
-                  <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80">
+                  <Button variant="ghost" size="sm" className="bg-white/20 text-white hover:bg-white/30 border-white/20">
                     Vedi Tutto
-                    <ExternalLink className="ml-1 h-4 w-4" />
+                    <ExternalLink className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
               </div>
@@ -108,21 +126,48 @@ export default function Dashboard() {
                         </TableRow>
                       ))
                     ) : recentPcs.length > 0 ? (
-                      recentPcs.map((pc: PcWithEmployee) => (
-                        <TableRow key={pc.id} className="table-row-hover">
-                          <TableCell className="font-medium">{pc.pcId}</TableCell>
-                          <TableCell>{pc.employee?.name || "Non assegnato"}</TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {pc.brand} {pc.model}
+                      recentPcs.map((pc: PcWithEmployee, index) => (
+                        <TableRow key={pc.id} className={`transition-all duration-300 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 ${
+                          index % 2 === 0 ? 'bg-gray-50/50' : 'bg-white'
+                        }`}>
+                          <TableCell className="font-bold text-emerald-700">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                              {pc.pcId}
+                            </div>
                           </TableCell>
                           <TableCell>
-                            <span className={getStatusBadge(pc.status)}>
+                            <div className="flex items-center gap-2">
+                              <div className="p-1 bg-blue-100 rounded-full">
+                                <User className="w-3 h-3 text-blue-600" />
+                              </div>
+                              <span className={pc.employee ? "font-medium text-gray-900" : "text-gray-500 italic"}>
+                                {pc.employee?.name || "Non assegnato"}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium text-gray-800">
+                              {pc.brand} {pc.model}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm ${
+                              pc.status === 'active' 
+                                ? 'bg-green-100 text-green-800 border border-green-200' :
+                                pc.status === 'maintenance' 
+                                  ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
+                                  'bg-red-100 text-red-800 border border-red-200'
+                            }`}>
                               {getStatusText(pc.status)}
                             </span>
                           </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {pc.updatedAt ? new Date(pc.updatedAt).toLocaleDateString('it-IT') : 
-                             pc.createdAt ? new Date(pc.createdAt).toLocaleDateString('it-IT') : 'N/A'}
+                          <TableCell className="text-gray-600">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              {pc.updatedAt ? new Date(pc.updatedAt).toLocaleDateString('it-IT') : 
+                               pc.createdAt ? new Date(pc.createdAt).toLocaleDateString('it-IT') : 'N/A'}
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))
@@ -141,46 +186,61 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Actions and System Health */}
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-medium">Azioni Rapide</CardTitle>
+          <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50">
+            <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-t-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <Plus className="h-5 w-5" />
+                </div>
+                <CardTitle className="text-xl font-bold">Azioni Rapide</CardTitle>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-4 p-6">
               <Button 
                 onClick={() => setShowPcForm(true)}
-                className="w-full bg-primary hover:bg-primary/90"
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                 size="lg"
               >
-                <Plus className="mr-2 h-4 w-4" />
-                Aggiungi Nuovo PC
+                <div className="flex items-center gap-3">
+                  <div className="p-1 bg-white/20 rounded">
+                    <Plus className="h-4 w-4" />
+                  </div>
+                  <span className="font-semibold">Aggiungi Nuovo PC</span>
+                </div>
               </Button>
               
               <Button 
                 variant="outline" 
-                className="w-full" 
-                size="default"
+                className="w-full border-orange-200 text-orange-700 hover:bg-orange-50 hover:border-orange-300 transition-all duration-300" 
+                size="lg"
                 onClick={() => {
-                  // TODO: Implementare esportazione
                   alert("Funzione esportazione in sviluppo");
                 }}
               >
-                <Download className="mr-2 h-4 w-4" />
-                Esporta Report
+                <div className="flex items-center gap-3">
+                  <div className="p-1 bg-orange-100 rounded">
+                    <Download className="h-4 w-4 text-orange-600" />
+                  </div>
+                  <span className="font-semibold">Esporta Report</span>
+                </div>
               </Button>
               
               <Button 
                 variant="outline" 
-                className="w-full" 
-                size="default"
+                className="w-full border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 transition-all duration-300"
+                size="lg"
                 onClick={() => {
-                  // TODO: Implementare aggiornamento multiplo
                   alert("Funzione aggiornamento multiplo in sviluppo");
                 }}
               >
-                <Edit className="mr-2 h-4 w-4" />
-                Aggiornamento Multiplo
+                <div className="flex items-center gap-3">
+                  <div className="p-1 bg-green-100 rounded">
+                    <Edit className="h-4 w-4 text-green-600" />
+                  </div>
+                  <span className="font-semibold">Aggiornamento Multiplo</span>
+                </div>
               </Button>
             </CardContent>
           </Card>

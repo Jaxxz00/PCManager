@@ -151,12 +151,39 @@ export default function Inventory() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Hero Header */}
+      <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 rounded-xl p-6 text-white shadow-xl">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-white/20 rounded-full backdrop-blur-sm">
+            <Monitor className="h-8 w-8" />
+          </div>
+          <div className="flex-1">
+            <h1 className="text-3xl font-bold">Inventario PC Aziendale</h1>
+            <p className="text-emerald-100 text-lg">Gestione completa dell'inventario computer Maori Group - {pcs.length} dispositivi totali</p>
+            <div className="flex items-center gap-6 mt-2 text-sm text-emerald-200">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span>{filteredPcs.filter(pc => pc.status === 'active').length} Attivi</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                <span>{filteredPcs.filter(pc => pc.status === 'maintenance').length} In Manutenzione</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+                <span>{filteredPcs.filter(pc => pc.status === 'retired').length} Dismessi</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Inventario PC</h1>
-          <p className="text-muted-foreground">
-            Gestisci l'inventario hardware aziendale - {pcs.length} dispositivi totali
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-100 p-4 rounded-lg border border-blue-200">
+          <h2 className="text-lg font-semibold text-blue-900">Riepilogo Inventario</h2>
+          <p className="text-blue-700">
+            Risultati filtrati: <span className="font-bold">{filteredPcs.length}</span> di <span className="font-bold">{pcs.length}</span> dispositivi
           </p>
         </div>
         <div className="flex items-center gap-2">

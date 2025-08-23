@@ -109,11 +109,38 @@ export default function Reports() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Hero Header */}
+      <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-700 rounded-xl p-6 text-white shadow-xl">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-white/20 rounded-full backdrop-blur-sm">
+            <BarChart3 className="h-8 w-8" />
+          </div>
+          <div className="flex-1">
+            <h1 className="text-3xl font-bold">Centro Report e Analytics</h1>
+            <p className="text-indigo-100 text-lg">Analisi avanzate e insights sull'inventario IT Maori Group</p>
+            <div className="flex items-center gap-6 mt-2 text-sm text-indigo-200">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4" />
+                <span>Statistiche in tempo reale</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <PieChart className="w-4 h-4" />
+                <span>Grafici interattivi</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Download className="w-4 h-4" />
+                <span>Esportazione dati</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-medium text-foreground">Report e Analisi</h1>
-          <p className="text-muted-foreground">Analisi dettagliate dell'inventario IT aziendale</p>
+        <div className="bg-gradient-to-r from-blue-50 to-cyan-100 p-4 rounded-lg border border-blue-200">
+          <h2 className="text-lg font-semibold text-blue-900">Dashboard Analytics</h2>
+          <p className="text-blue-700">Visualizza metriche dettagliate dell'inventario IT</p>
         </div>
         <div className="flex items-center gap-2">
           <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>

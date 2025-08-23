@@ -253,11 +253,38 @@ export default function Labels() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Hero Header */}
+      <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-yellow-700 rounded-xl p-6 text-white shadow-xl">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-white/20 rounded-full backdrop-blur-sm">
+            <Printer className="h-8 w-8" />
+          </div>
+          <div className="flex-1">
+            <h1 className="text-3xl font-bold">Centro Stampa Etichette</h1>
+            <p className="text-orange-100 text-lg">Sistema professionale per etichettatura dispositivi Maori Group</p>
+            <div className="flex items-center gap-6 mt-2 text-sm text-orange-200">
+              <div className="flex items-center gap-2">
+                <Barcode className="w-4 h-4" />
+                <span>Codici a barre CODE128</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Settings className="w-4 h-4" />
+                <span>Formato 5cm x 3cm</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Building2 className="w-4 h-4" />
+                <span>Logo aziendale incluso</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-medium text-foreground">Etichette PC</h1>
-          <p className="text-muted-foreground">Genera e stampa etichette di riconoscimento per i computer</p>
+        <div className="bg-gradient-to-r from-amber-50 to-orange-100 p-4 rounded-lg border border-amber-200">
+          <h2 className="text-lg font-semibold text-amber-900">Generazione Etichette</h2>
+          <p className="text-amber-700">Crea etichette personalizzate per identificazione asset IT</p>
         </div>
       </div>
 
