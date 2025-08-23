@@ -255,15 +255,15 @@ export default function Labels() {
   return (
     <div className="space-y-8">
       {/* Hero Header */}
-      <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-yellow-700 rounded-xl p-6 text-white shadow-xl">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl p-6 text-white shadow-xl">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-white/20 rounded-full backdrop-blur-sm">
             <Printer className="h-8 w-8" />
           </div>
           <div className="flex-1">
             <h1 className="text-3xl font-bold">Centro Stampa Etichette</h1>
-            <p className="text-orange-100 text-lg">Sistema professionale per etichettatura dispositivi Maori Group</p>
-            <div className="flex items-center gap-6 mt-2 text-sm text-orange-200">
+            <p className="text-blue-100 text-lg">Sistema professionale per etichettatura dispositivi Maori Group</p>
+            <div className="flex items-center gap-6 mt-2 text-sm text-blue-200">
               <div className="flex items-center gap-2">
                 <Barcode className="w-4 h-4" />
                 <span>Codici a barre CODE128</span>

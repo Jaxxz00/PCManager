@@ -119,15 +119,15 @@ export default function Employees() {
   return (
     <div className="space-y-8">
       {/* Hero Header */}
-      <div className="bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-700 rounded-xl p-6 text-white shadow-xl">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl p-6 text-white shadow-xl">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-white/20 rounded-full backdrop-blur-sm">
             <User className="h-8 w-8" />
           </div>
           <div className="flex-1">
             <h1 className="text-3xl font-bold">Team Maori Group</h1>
-            <p className="text-purple-100 text-lg">Gestione completa dei dipendenti e assegnazioni dispositivi</p>
-            <div className="flex items-center gap-6 mt-2 text-sm text-purple-200">
+            <p className="text-blue-100 text-lg">Gestione completa dei dipendenti e assegnazioni dispositivi</p>
+            <div className="flex items-center gap-6 mt-2 text-sm text-blue-200">
               <div className="flex items-center gap-2">
                 <User className="w-4 h-4" />
                 <span>{employees.length} Dipendenti attivi</span>

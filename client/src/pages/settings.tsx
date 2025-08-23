@@ -22,15 +22,15 @@ export default function SettingsPage() {
   return (
     <div className="space-y-8">
       {/* Hero Header */}
-      <div className="bg-gradient-to-r from-slate-700 via-gray-700 to-zinc-800 rounded-xl p-6 text-white shadow-xl">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl p-6 text-white shadow-xl">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-white/20 rounded-full backdrop-blur-sm">
             <Settings className="h-8 w-8" />
           </div>
           <div className="flex-1">
             <h1 className="text-3xl font-bold">Centro Configurazione</h1>
-            <p className="text-slate-100 text-lg">Gestione avanzata impostazioni sistema Maori Group</p>
-            <div className="flex items-center gap-6 mt-2 text-sm text-slate-200">
+            <p className="text-blue-100 text-lg">Gestione avanzata impostazioni sistema Maori Group</p>
+            <div className="flex items-center gap-6 mt-2 text-sm text-blue-200">
               <div className="flex items-center gap-2">
                 <Shield className="w-4 h-4" />
                 <span>Sicurezza avanzata</span>

@@ -189,7 +189,7 @@ export default function Dashboard() {
         <div className="space-y-8">
           {/* Quick Actions */}
           <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50">
-            <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-t-lg">
+            <CardHeader className="bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-t-lg">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-white/20 rounded-lg">
                   <Plus className="h-5 w-5" />
