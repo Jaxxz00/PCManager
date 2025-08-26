@@ -121,7 +121,7 @@ export default function Employees() {
   return (
     <div className="space-y-8">
       {/* Hero Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl p-6 text-white shadow-xl">
+      <div className="bg-gradient-to-r from-blue-800 via-blue-700 to-blue-900 rounded-xl p-6 text-white shadow-xl">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-white/20 rounded-full backdrop-blur-sm">
             <User className="h-8 w-8" />
@@ -144,9 +144,9 @@ export default function Employees() {
       </div>
       
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="bg-gradient-to-r from-violet-50 to-purple-100 p-4 rounded-lg border border-violet-200">
-          <h2 className="text-lg font-semibold text-violet-900">Gestione Dipendenti</h2>
-          <p className="text-violet-700">Ricerca e gestisci il team aziendale</p>
+        <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+          <h2 className="text-lg font-semibold text-blue-900">Gestione Dipendenti</h2>
+          <p className="text-blue-700">Ricerca e gestisci il team aziendale</p>
         </div>
         <Dialog open={showEmployeeForm} onOpenChange={setShowEmployeeForm}>
           <DialogTrigger asChild>

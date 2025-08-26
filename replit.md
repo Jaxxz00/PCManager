@@ -23,7 +23,8 @@ Language: Italian throughout the entire application interface
 Company: Maori Group - integrated corporate branding with official logo
 Logo: Uses official Maori Group logo image (IMG_4622_1755594689547.jpeg)
 Professional Features: Document management for manleva/waivers, QR code labels
-UI Design Preference: Rich visual interface with colors, gradients, and detailed elements (not minimal)
+UI Design Preference: Rich visual interface with gradients and detailed elements (not minimal)
+Color Scheme: Dark blue color scheme (blu scuro) - no purple/violet combinations
 
 ## System Architecture
 
