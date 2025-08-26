@@ -175,7 +175,9 @@ export class MemStorage implements IStorage {
     const pc: Pc = {
       ...insertPc,
       id,
+      employeeId: insertPc.employeeId || null,
       status: insertPc.status || "active",
+      notes: insertPc.notes || null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -258,7 +260,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(employees)
       .where(eq(employees.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // PC methods
@@ -282,7 +284,7 @@ export class DatabaseStorage implements IStorage {
 
     return result.map(row => ({
       ...row.pc,
-      employee: row.employee.id ? row.employee : null,
+      employee: row.employee?.id ? row.employee : null,
     }));
   }
 
@@ -319,12 +321,12 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(pcs)
       .where(eq(pcs.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async getDashboardStats() {
     try {
-      const [stats] = await db.execute(sql`
+      const result = await db.execute(sql`
         SELECT 
           COUNT(*) as total_pcs,
           COUNT(CASE WHEN status = 'active' THEN 1 END) as active_pcs,
@@ -337,6 +339,8 @@ export class DatabaseStorage implements IStorage {
         FROM pcs
       `);
 
+      const stats = result.rows[0] || {};
+      
       return {
         totalPCs: Number(stats.total_pcs || 0),
         activePCs: Number(stats.active_pcs || 0),

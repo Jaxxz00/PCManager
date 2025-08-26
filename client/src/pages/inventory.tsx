@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useDebounce } from "@/hooks/use-debounce";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Edit, Trash2, Monitor, User, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,9 @@ export default function Inventory() {
   });
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Ottimizzazione: debounce per la ricerca
+  const debouncedSearch = useDebounce(filters.search, 300);
 
   const { data: pcs = [], isLoading } = useQuery<PcWithEmployee[]>({
     queryKey: ["/api/pcs"],
@@ -60,9 +64,9 @@ export default function Inventory() {
 
   const filteredPcs = useMemo(() => {
     return pcs.filter((pc: PcWithEmployee) => {
-      // Ricerca generale
-      if (filters.search.trim()) {
-        const searchLower = filters.search.toLowerCase();
+      // Usa ricerca con debounce per performance
+      if (debouncedSearch.trim()) {
+        const searchLower = debouncedSearch.toLowerCase();
         const matchesSearch = pc.pcId.toLowerCase().includes(searchLower) ||
                              pc.brand.toLowerCase().includes(searchLower) ||
                              pc.model.toLowerCase().includes(searchLower) ||
@@ -110,7 +114,7 @@ export default function Inventory() {
 
       return true;
     });
-  }, [pcs, filters]);
+  }, [pcs, filters, debouncedSearch]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {

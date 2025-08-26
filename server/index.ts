@@ -4,6 +4,10 @@ import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 
+// Trust proxy per corretto funzionamento dietro reverse proxy (Replit)
+// Configurato per funzionare correttamente con l'ambiente Replit
+app.set('trust proxy', 1);
+
 // Sicurezza: Limite dimensione payload per prevenire DoS
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));

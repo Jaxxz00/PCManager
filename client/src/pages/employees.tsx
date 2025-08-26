@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useDebounce } from "@/hooks/use-debounce";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, MoreHorizontal, Edit, Trash2, User, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ type EmployeeFormData = z.infer<typeof insertEmployeeSchema>;
 export default function Employees() {
   const [showEmployeeForm, setShowEmployeeForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearch = useDebounce(searchTerm, 300);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 

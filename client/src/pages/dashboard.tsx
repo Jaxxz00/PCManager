@@ -1,3 +1,4 @@
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Plus, Download, Edit, ExternalLink, Monitor, User, Calendar } from "lucide-react";
@@ -6,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import StatsCards from "@/components/stats-cards";
 import PcForm from "@/components/pc-form";
-import { useState } from "react";
 import { cn } from "@/lib/utils";
 import type { PcWithEmployee } from "@shared/schema";
 
@@ -17,7 +17,8 @@ export default function Dashboard() {
     queryKey: ["/api/pcs"],
   });
 
-  const recentPcs = pcs.slice(0, 5);
+  // Ottimizzazione: memoizza i PC recenti
+  const recentPcs = useMemo(() => pcs.slice(0, 5), [pcs]);
 
   const getStatusBadge = (status: string) => {
     const baseClasses = "status-badge";
