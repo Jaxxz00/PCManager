@@ -2,25 +2,33 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { z } from "zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, Eye, EyeOff, User, Lock, KeyRound, HelpCircle } from "lucide-react";
-import { loginSchema, type LoginData } from "@shared/schema";
+import { Shield, Eye, EyeOff, Lock, User, HelpCircle, KeyRound } from "lucide-react";
 import logoUrl from "@assets/IMG_4622_1755594689547.jpeg";
 
-export default function LoginPage() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
-  const [showBackupCode, setShowBackupCode] = useState(false);
-  const { toast } = useToast();
+const loginSchema = z.object({
+  username: z.string().min(1, "Username obbligatorio"),
+  password: z.string().min(1, "Password obbligatoria"),
+  twoFactorCode: z.string().optional(),
+});
 
+type LoginData = z.infer<typeof loginSchema>;
+
+export default function LoginPage() {
   const [requires2FA, setRequires2FA] = useState(false);
-  const [credentials, setCredentials] = useState<{ username: string; password: string } | null>(null);
+  const [credentials, setCredentials] = useState<{username: string, password: string} | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [usingBackupCode, setUsingBackupCode] = useState(false);
+  const { toast } = useToast();
 
   const form = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
@@ -69,7 +77,7 @@ export default function LoginPage() {
       
       toast({
         title: "Accesso effettuato",
-        description: "Benvenuto nel gestionale Maori Group",
+        description: "Benvenuto nel sistema Maori Group",
       });
       
       // Redirect to dashboard
@@ -97,223 +105,265 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-8">
-        {/* Logo e Header */}
-        <div className="text-center space-y-4">
-          <div className="flex justify-center">
-            <div className="p-4 bg-white rounded-2xl shadow-lg">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 flex">
+      {/* Left Panel - Branding */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 via-transparent to-slate-900/40"></div>
+        <div className="relative z-10 flex flex-col justify-center items-center p-12 text-white">
+          <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-white/20">
+            <img 
+              src={logoUrl} 
+              alt="Maori Group Logo" 
+              className="h-20 w-auto object-contain mx-auto mb-6"
+            />
+            <h1 className="text-4xl font-bold mb-4 text-center bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+              MAORI GROUP
+            </h1>
+            <p className="text-lg text-blue-100 text-center max-w-sm leading-relaxed">
+              Sistema IT Aziendale per la gestione avanzata delle risorse informatiche
+            </p>
+          </div>
+        </div>
+        {/* Decorative elements */}
+        <div className="absolute top-20 left-20 w-32 h-32 bg-blue-400/10 rounded-full blur-xl"></div>
+        <div className="absolute bottom-32 right-16 w-48 h-48 bg-blue-500/10 rounded-full blur-2xl"></div>
+      </div>
+
+      {/* Right Panel - Login Form */}
+      <div className="flex-1 flex items-center justify-center p-8 bg-white">
+        <div className="w-full max-w-md space-y-8">
+          {/* Mobile Logo */}
+          <div className="lg:hidden text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-100 rounded-full mb-4">
               <img 
                 src={logoUrl} 
                 alt="Maori Group Logo" 
-                className="h-16 w-auto object-contain"
+                className="h-10 w-auto object-contain"
               />
             </div>
+            <h1 className="text-2xl font-bold text-slate-900">MAORI GROUP</h1>
+            <p className="text-slate-600 mt-1">Sistema IT Aziendale</p>
           </div>
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold text-gray-900">MAORI GROUP</h1>
-            <p className="text-gray-600">Sistema IT Aziendale</p>
-          </div>
-        </div>
 
-        {/* Form di Login */}
-        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-          <CardHeader className="bg-gradient-to-r from-blue-800 via-blue-700 to-blue-900 text-white rounded-t-lg">
-            <div className="flex items-center justify-center gap-3">
-              <div className="p-2 bg-white/20 rounded-lg">
-                <Shield className="h-6 w-6" />
-              </div>
-              <CardTitle className="text-xl font-bold">Accesso Sicuro</CardTitle>
+          {/* Form Header */}
+          <div className="text-center space-y-3">
+            <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-50 rounded-2xl mb-4">
+              <Shield className="h-7 w-7 text-blue-600" />
             </div>
-          </CardHeader>
-          
-          <CardContent className="p-8">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                {!requires2FA && (
-                  <>
-                    <FormField
-                      control={form.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-700 font-medium">Username</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                              <Input
-                                placeholder="Inserisci username"
-                                className="pl-10 py-3 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                                data-testid="input-username"
-                                autoComplete="username"
-                                autoFocus
-                                {...field}
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+            <h2 className="text-3xl font-bold text-slate-900">
+              {requires2FA ? "Autenticazione 2FA" : "Accesso Sicuro"}
+            </h2>
+            <p className="text-slate-600 text-lg">
+              {requires2FA 
+                ? "Inserisci il codice di autenticazione" 
+                : "Accedi con le tue credenziali aziendali"
+              }
+            </p>
+          </div>
 
-                    <FormField
-                      control={form.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-700 font-medium">Password</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                              <Input
-                                type={showPassword ? "text" : "password"}
-                                placeholder="Inserisci password"
-                                className="pl-10 pr-10 py-3 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                                data-testid="input-password"
-                                autoComplete="current-password"
-                                {...field}
-                              />
-                              <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                                data-testid="button-toggle-password"
-                              >
-                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                              </button>
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </>
-                )}
+          {/* Forgot Password Info */}
+          {showForgotPassword && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+              <HelpCircle className="h-5 w-5 text-blue-600 mx-auto mb-2" />
+              <p className="text-sm text-blue-800 font-medium">
+                Contatta l'amministratore di sistema per reimpostare la password
+              </p>
+            </div>
+          )}
 
-                {requires2FA && (
-                  <div className="space-y-4">
-                    <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
-                      <Shield className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                      <h3 className="font-semibold text-blue-900 mb-1">Autenticazione a Due Fattori</h3>
-                      <p className="text-sm text-blue-700">Inserisci il codice di 6 cifre dalla tua app di autenticazione</p>
-                    </div>
-                    
-                    <FormField
-                      control={form.control}
-                      name="twoFactorCode"
-                      render={({ field }) => (
-                        <FormItem>
-                          <div className="flex items-center justify-between">
-                            <FormLabel className="text-gray-700 font-medium">
-                              {showBackupCode ? "Codice di Backup" : "Codice 2FA"}
-                            </FormLabel>
-                            <button
-                              type="button"
-                              onClick={() => setShowBackupCode(!showBackupCode)}
-                              className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1"
-                            >
-                              <KeyRound className="h-3 w-3" />
-                              {showBackupCode ? "Usa codice 2FA" : "Usa backup code"}
-                            </button>
-                          </div>
-                          <FormControl>
-                            <div className="relative">
-                              {showBackupCode ? (
-                                <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                              ) : (
-                                <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                              )}
-                              <Input
-                                {...field}
-                                type="text"
-                                maxLength={showBackupCode ? 10 : 8}
-                                className="pl-10 py-3 border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-center tracking-widest font-mono"
-                                placeholder={showBackupCode ? "0000000000" : "000000"}
-                                data-testid={showBackupCode ? "input-backup-code" : "input-2fa-code"}
-                                autoFocus
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <div className="text-center">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setRequires2FA(false);
-                          setCredentials(null);
-                          form.reset();
-                        }}
-                        className="text-sm text-gray-600 hover:text-gray-800 underline"
-                      >
-                        Torna al login
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {!requires2FA && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="remember"
-                        checked={rememberMe}
-                        onCheckedChange={(checked) => setRememberMe(checked === true)}
-                        data-testid="checkbox-remember-me"
-                      />
-                      <label
-                        htmlFor="remember"
-                        className="text-sm font-medium text-gray-700 cursor-pointer"
-                      >
-                        Ricordami
-                      </label>
-                    </div>
-                    <button
-                      type="button"
-                      className="text-sm text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-1"
-                      data-testid="button-forgot-password"
-                    >
-                      <HelpCircle className="h-4 w-4" />
-                      Password dimenticata?
-                    </button>
-                  </div>
-                )}
-
-                <Button
-                  type="submit"
-                  disabled={loginMutation.isPending}
-                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-[1.02]"
-                  data-testid="button-login"
+          {/* Form di Login */}
+          <Card className="border-0 shadow-xl bg-white">
+            <CardHeader className="text-center pb-6">
+              <div className="flex items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(!showForgotPassword)}
+                  className="text-sm text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1 underline"
+                  data-testid="button-forgot-password"
                 >
-                  {loginMutation.isPending ? (
+                  <HelpCircle className="h-4 w-4" />
+                  Password dimenticata?
+                </button>
+              </div>
+            </CardHeader>
+
+            <CardContent className="space-y-6">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  {!requires2FA ? (
                     <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
-                      {requires2FA ? "Verifica in corso..." : "Accesso in corso..."}
+                      {/* Username */}
+                      <FormField
+                        control={form.control}
+                        name="username"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-slate-700 font-medium">Username</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+                                <Input
+                                  {...field}
+                                  type="text"
+                                  autoComplete="username"
+                                  autoFocus
+                                  className="pl-10 h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
+                                  placeholder="Inserisci il tuo username"
+                                  data-testid="input-username"
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Password */}
+                      <FormField
+                        control={form.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-slate-700 font-medium">Password</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+                                <Input
+                                  {...field}
+                                  type={showPassword ? "text" : "password"}
+                                  autoComplete="current-password"
+                                  className="pl-10 pr-12 h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
+                                  placeholder="Inserisci la tua password"
+                                  data-testid="input-password"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setShowPassword(!showPassword)}
+                                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                  data-testid="button-toggle-password"
+                                >
+                                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                </button>
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </>
                   ) : (
                     <>
-                      <Shield className="mr-2 h-5 w-5" />
-                      {requires2FA ? "Verifica Codice 2FA" : "Accedi al Sistema"}
+                      {/* 2FA Code */}
+                      <FormField
+                        control={form.control}
+                        name="twoFactorCode"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-slate-700 font-medium flex items-center gap-2">
+                              {usingBackupCode ? (
+                                <>
+                                  <KeyRound className="h-4 w-4" />
+                                  Codice di Backup
+                                </>
+                              ) : (
+                                <>
+                                  <Shield className="h-4 w-4" />
+                                  Codice 2FA
+                                </>
+                              )}
+                            </FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                {usingBackupCode ? (
+                                  <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+                                ) : (
+                                  <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+                                )}
+                                <Input
+                                  {...field}
+                                  type="text"
+                                  autoFocus
+                                  className="pl-10 h-12 text-center text-xl tracking-widest border-slate-200 focus:border-blue-500 focus:ring-blue-500"
+                                  placeholder={usingBackupCode ? "0000000000" : "000000"}
+                                  maxLength={usingBackupCode ? 10 : 6}
+                                  data-testid={usingBackupCode ? "input-backup-code" : "input-2fa-code"}
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                            <div className="text-center mt-3">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setUsingBackupCode(!usingBackupCode);
+                                  form.setValue('twoFactorCode', '');
+                                }}
+                                className="text-sm text-blue-600 hover:text-blue-800 underline"
+                              >
+                                {usingBackupCode ? "Usa codice 2FA" : "Usa codice di backup"}
+                              </button>
+                            </div>
+                          </FormItem>
+                        )}
+                      />
                     </>
                   )}
-                </Button>
-              </form>
-            </Form>
 
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
+                  {/* Remember Me Checkbox */}
+                  {!requires2FA && (
+                    <div className="flex items-center justify-between py-2">
+                      <div className="flex items-center space-x-3">
+                        <Checkbox
+                          id="remember"
+                          checked={rememberMe}
+                          onCheckedChange={(checked) => setRememberMe(checked === true)}
+                          data-testid="checkbox-remember-me"
+                        />
+                        <Label
+                          htmlFor="remember"
+                          className="text-sm font-medium text-slate-700 cursor-pointer"
+                        >
+                          Ricordami
+                        </Label>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Submit Button */}
+                  <Button
+                    type="submit"
+                    className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                    disabled={loginMutation.isPending}
+                    data-testid="button-login"
+                  >
+                    {loginMutation.isPending ? (
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        Accesso in corso...
+                      </div>
+                    ) : requires2FA ? (
+                      "Verifica e Accedi"
+                    ) : (
+                      "Accedi al Sistema"
+                    )}
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+
+          {/* Footer */}
+          <div className="text-center">
+            <div className="text-sm text-slate-500 bg-slate-50 rounded-lg p-3">
+              <Shield className="h-4 w-4 mx-auto mb-1 text-slate-400" />
+              <p>Accesso riservato al personale autorizzato</p>
+            </div>
+            <div className="mt-4 text-center">
+              <p className="text-sm text-slate-600">
                 Per richiedere un nuovo account contatta l'amministratore di sistema
               </p>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Footer */}
-        <div className="text-center text-sm text-gray-500">
-          <p>Accesso riservato al personale autorizzato</p>
+          </div>
         </div>
       </div>
     </div>
