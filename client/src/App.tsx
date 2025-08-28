@@ -38,7 +38,7 @@ export const useAuth = () => useContext(AuthContext);
 
 function AuthProvider({ children }: { children: React.ReactNode }) {
   const [sessionId, setSessionId] = useState<string | null>(
-    localStorage.getItem('sessionId')
+    localStorage.getItem('sessionId') || sessionStorage.getItem('sessionId')
   );
 
   const { data: user, isLoading, error } = useQuery({
@@ -56,6 +56,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         if (response.status === 401) {
           // Sessione scaduta o non valida
           localStorage.removeItem('sessionId');
+          sessionStorage.removeItem('sessionId');
           setSessionId(null);
           return null;
         }
@@ -82,6 +83,8 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Logout error:', error);
     } finally {
       localStorage.removeItem('sessionId');
+      sessionStorage.removeItem('sessionId');
+      localStorage.removeItem('rememberLogin');
       setSessionId(null);
       window.location.href = '/login';
     }
@@ -90,7 +93,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   // Gestisco i cambiamenti del sessionId nel localStorage
   useEffect(() => {
     const handleStorageChange = () => {
-      const newSessionId = localStorage.getItem('sessionId');
+      const newSessionId = localStorage.getItem('sessionId') || sessionStorage.getItem('sessionId');
       if (newSessionId !== sessionId) {
         setSessionId(newSessionId);
       }
