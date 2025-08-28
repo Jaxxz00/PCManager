@@ -7,6 +7,8 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,7 +32,12 @@ import {
   Key,
   Download,
   Check,
-  X
+  X,
+  Plus,
+  Edit,
+  Trash2,
+  Eye,
+  EyeOff
 } from "lucide-react";
 
 // Tipi per i form locali (diversi dagli schemi completi del backend)
@@ -45,6 +52,358 @@ const localDisable2FASchema = z.object({
 
 type LocalSetup2FAData = z.infer<typeof localSetup2FASchema>;
 type LocalDisable2FAData = z.infer<typeof localDisable2FASchema>;
+
+// Schema per creazione utente
+const createUserSchema = z.object({
+  username: z.string().min(3, "Username deve essere almeno 3 caratteri"),
+  email: z.string().email("Email non valida"),
+  firstName: z.string().min(1, "Nome richiesto"),
+  lastName: z.string().min(1, "Cognome richiesto"),
+  password: z.string().min(6, "Password deve essere almeno 6 caratteri"),
+  role: z.enum(["admin", "user"], { errorMap: () => ({ message: "Seleziona un ruolo" }) }),
+});
+
+type CreateUserData = z.infer<typeof createUserSchema>;
+
+// Componente per gestire gli utenti
+function UserManagementCard() {
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const { toast } = useToast();
+
+  // Form per creare utente
+  const createForm = useForm<CreateUserData>({
+    resolver: zodResolver(createUserSchema),
+    defaultValues: {
+      username: "",
+      email: "",
+      firstName: "",
+      lastName: "",
+      password: "",
+      role: "user",
+    },
+  });
+
+  // Query per lista utenti
+  const { data: users = [], isLoading } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+  });
+
+  // Mutation per creare utente
+  const createUserMutation = useMutation({
+    mutationFn: async (data: CreateUserData) => {
+      const response = await apiRequest("POST", "/api/users", data);
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Utente creato",
+        description: "Il nuovo utente è stato creato con successo",
+      });
+      setShowCreateDialog(false);
+      createForm.reset();
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Errore",
+        description: error.message || "Impossibile creare l'utente",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation per eliminare utente
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const response = await apiRequest("DELETE", `/api/users/${userId}`);
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Utente eliminato",
+        description: "L'utente è stato eliminato dal sistema",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+    },
+    onError: () => {
+      toast({
+        title: "Errore",
+        description: "Impossibile eliminare l'utente",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation per toggle attivo/inattivo
+  const toggleUserMutation = useMutation({
+    mutationFn: async ({ userId, isActive }: { userId: string; isActive: boolean }) => {
+      const response = await apiRequest("PATCH", `/api/users/${userId}`, { isActive });
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Stato aggiornato",
+        description: "Lo stato dell'utente è stato aggiornato",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+    },
+    onError: () => {
+      toast({
+        title: "Errore",
+        description: "Impossibile aggiornare lo stato",
+        variant: "destructive",
+      });
+    },
+  });
+
+  return (
+    <>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center">
+              <Users className="mr-2 h-5 w-5" />
+              Gestione Utenti
+            </CardTitle>
+            <Button
+              onClick={() => setShowCreateDialog(true)}
+              size="sm"
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Nuovo Utente
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
+              <p className="text-gray-600">Caricamento utenti...</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  {users.length} utent{users.length !== 1 ? 'i' : 'e'} registrat{users.length !== 1 ? 'i' : 'o'}
+                </p>
+                <Badge variant="outline">{users.length}</Badge>
+              </div>
+              
+              {users.length > 0 && (
+                <div className="border rounded-lg overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Utente</TableHead>
+                        <TableHead>Ruolo</TableHead>
+                        <TableHead>Stato</TableHead>
+                        <TableHead className="text-right">Azioni</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {users.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{user.firstName} {user.lastName}</p>
+                              <p className="text-sm text-gray-500">@{user.username}</p>
+                              <p className="text-xs text-gray-400">{user.email}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                              {user.role === 'admin' ? 'Amministratore' : 'Utente'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Badge variant={user.isActive ? 'default' : 'secondary'}>
+                                {user.isActive ? 'Attivo' : 'Sospeso'}
+                              </Badge>
+                              {user.twoFactorEnabled && (
+                                <Badge variant="outline" className="text-xs">
+                                  2FA
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleUserMutation.mutate({ 
+                                  userId: user.id, 
+                                  isActive: !user.isActive 
+                                })}
+                                disabled={toggleUserMutation.isPending}
+                              >
+                                {user.isActive ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => deleteUserMutation.mutate(user.id)}
+                                disabled={deleteUserMutation.isPending}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Dialog per creare nuovo utente */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5" />
+              Crea Nuovo Utente
+            </DialogTitle>
+            <DialogDescription>
+              Inserisci i dati per creare un nuovo utente del sistema
+            </DialogDescription>
+          </DialogHeader>
+
+          <Form {...createForm}>
+            <form onSubmit={createForm.handleSubmit((data) => createUserMutation.mutate(data))} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={createForm.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Mario" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={createForm.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Cognome</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Rossi" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <FormField
+                control={createForm.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="mario.rossi" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={createForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="email" placeholder="mario.rossi@maorigroup.com" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={createForm.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="password" placeholder="Almeno 6 caratteri" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={createForm.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ruolo</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleziona ruolo" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="user">Utente Standard</SelectItem>
+                        <SelectItem value="admin">Amministratore</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="flex gap-2 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setShowCreateDialog(false)}
+                  className="flex-1"
+                >
+                  Annulla
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={createUserMutation.isPending}
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                >
+                  {createUserMutation.isPending ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                  ) : (
+                    <>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Crea Utente
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
 
 // Componente per gestire 2FA
 function TwoFactorAuthCard() {
@@ -399,6 +758,10 @@ export default function SettingsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Componente 2FA */}
         <TwoFactorAuthCard />
+        
+        {/* Gestione Utenti */}
+        <UserManagementCard />
+        
         {/* Database e Backup */}
         <Card>
           <CardHeader>

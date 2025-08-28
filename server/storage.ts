@@ -26,8 +26,10 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getAllUsers(): Promise<User[]>;
   createUser(user: InsertUser & { password: string }): Promise<User>;
   updateUser(id: string, user: Partial<InsertUser>): Promise<User | undefined>;
+  deleteUser(id: string): Promise<boolean>;
   updateLastLogin(id: string): Promise<void>;
   validatePassword(username: string, password: string): Promise<User | null>;
 
@@ -482,6 +484,11 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
+  async getAllUsers(): Promise<User[]> {
+    const allUsers = await db.select().from(users);
+    return allUsers;
+  }
+
   async createUser(userData: InsertUser & { password: string }): Promise<User> {
     const { password, ...insertData } = userData;
     const saltRounds = 12;
@@ -507,6 +514,13 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return user || undefined;
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    const result = await db
+      .delete(users)
+      .where(eq(users.id, id));
+    return (result.rowCount ?? 0) > 0;
   }
 
   async updateLastLogin(id: string): Promise<void> {

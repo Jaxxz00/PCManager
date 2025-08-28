@@ -300,6 +300,150 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User Management Routes (Admin only)
+  app.get("/api/users", methodFilter(['GET']), authenticateRequest, async (req, res) => {
+    try {
+      const currentUser = req.session?.user;
+      if (!currentUser || currentUser.role !== 'admin') {
+        return res.status(403).json({ error: "Accesso negato. Solo amministratori possono visualizzare gli utenti." });
+      }
+
+      const users = await storage.getAllUsers();
+      // Rimuovi dati sensibili
+      const safeUsers = users.map(({ passwordHash, twoFactorSecret, backupCodes, ...safeUser }) => safeUser);
+      res.json(safeUsers);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ error: "Errore interno del server" });
+    }
+  });
+
+  app.post("/api/users", methodFilter(['POST']), strictContentType, authenticateRequest, async (req, res) => {
+    try {
+      const currentUser = req.session?.user;
+      if (!currentUser || currentUser.role !== 'admin') {
+        return res.status(403).json({ error: "Accesso negato. Solo amministratori possono creare utenti." });
+      }
+
+      const { username, email, firstName, lastName, password, role } = req.body;
+      
+      // Validation
+      if (!username || !email || !firstName || !lastName || !password || !role) {
+        return res.status(400).json({ error: "Tutti i campi sono obbligatori" });
+      }
+
+      if (username.length < 3) {
+        return res.status(400).json({ error: "Username deve essere almeno 3 caratteri" });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({ error: "Password deve essere almeno 6 caratteri" });
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: "Email non valida" });
+      }
+
+      if (!['admin', 'user'].includes(role)) {
+        return res.status(400).json({ error: "Ruolo non valido" });
+      }
+
+      // Check if username or email already exists
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(409).json({ error: "Username già esistente" });
+      }
+
+      const existingEmail = await storage.getUserByEmail(email);
+      if (existingEmail) {
+        return res.status(409).json({ error: "Email già esistente" });
+      }
+
+      const newUser = await storage.createUser({
+        username,
+        email,
+        firstName,
+        lastName,
+        role,
+        isActive: true,
+        password,
+      });
+
+      // Non restituisco dati sensibili
+      const { passwordHash, twoFactorSecret, backupCodes, ...safeUser } = newUser;
+      res.status(201).json({ 
+        message: "Utente creato con successo",
+        user: safeUser 
+      });
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ error: "Errore interno del server" });
+    }
+  });
+
+  app.patch("/api/users/:userId", methodFilter(['PATCH']), strictContentType, authenticateRequest, async (req, res) => {
+    try {
+      const currentUser = req.session?.user;
+      if (!currentUser || currentUser.role !== 'admin') {
+        return res.status(403).json({ error: "Accesso negato. Solo amministratori possono modificare utenti." });
+      }
+
+      const { userId } = req.params;
+      const { isActive } = req.body;
+
+      if (typeof isActive !== 'boolean') {
+        return res.status(400).json({ error: "isActive deve essere un booleano" });
+      }
+
+      // Don't allow disabling the current admin user
+      if (userId === currentUser.id && !isActive) {
+        return res.status(400).json({ error: "Non puoi disattivare il tuo stesso account" });
+      }
+
+      const updatedUser = await storage.updateUser(userId, { isActive });
+      if (!updatedUser) {
+        return res.status(404).json({ error: "Utente non trovato" });
+      }
+
+      // Non restituisco dati sensibili
+      const { passwordHash, twoFactorSecret, backupCodes, ...safeUser } = updatedUser;
+      res.json({ 
+        message: "Stato utente aggiornato",
+        user: safeUser 
+      });
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ error: "Errore interno del server" });
+    }
+  });
+
+  app.delete("/api/users/:userId", methodFilter(['DELETE']), authenticateRequest, async (req, res) => {
+    try {
+      const currentUser = req.session?.user;
+      if (!currentUser || currentUser.role !== 'admin') {
+        return res.status(403).json({ error: "Accesso negato. Solo amministratori possono eliminare utenti." });
+      }
+
+      const { userId } = req.params;
+
+      // Don't allow deleting the current admin user
+      if (userId === currentUser.id) {
+        return res.status(400).json({ error: "Non puoi eliminare il tuo stesso account" });
+      }
+
+      const deleted = await storage.deleteUser(userId);
+      if (!deleted) {
+        return res.status(404).json({ error: "Utente non trovato" });
+      }
+
+      res.json({ message: "Utente eliminato con successo" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ error: "Errore interno del server" });
+    }
+  });
+
   // 2FA Routes (tutte protette da autenticazione)
   app.post("/api/auth/2fa/setup", authenticateRequest, async (req, res) => {
     try {
