@@ -374,13 +374,13 @@ function UserManagementCard() {
                       >
                         <SelectItem 
                           value="user" 
-                          className="cursor-pointer bg-gray-50 hover:bg-blue-100 focus:bg-blue-100 text-gray-900 font-semibold py-3 px-4 my-1 mx-2 rounded-lg border border-gray-200"
+                          className="cursor-pointer text-gray-900 font-semibold py-4 px-4"
                         >
                           👤 Utente Standard
                         </SelectItem>
                         <SelectItem 
                           value="admin" 
-                          className="cursor-pointer bg-gray-50 hover:bg-blue-100 focus:bg-blue-100 text-gray-900 font-semibold py-3 px-4 my-1 mx-2 rounded-lg border border-gray-200"
+                          className="cursor-pointer text-gray-900 font-semibold py-4 px-4"
                         >
                           🔧 Amministratore
                         </SelectItem>
