@@ -1,7 +1,8 @@
-import { type Employee, type InsertEmployee, type Pc, type InsertPc, type PcWithEmployee, employees, pcs } from "@shared/schema";
+import { type Employee, type InsertEmployee, type Pc, type InsertPc, type PcWithEmployee, type User, type InsertUser, employees, pcs, users, sessions } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
 import { eq, sql } from "drizzle-orm";
+import bcrypt from "bcrypt";
 
 export interface IStorage {
   // Employee methods
@@ -19,6 +20,20 @@ export interface IStorage {
   updatePc(id: string, pc: Partial<InsertPc>): Promise<Pc | undefined>;
   deletePc(id: string): Promise<boolean>;
 
+  // User authentication methods
+  getUser(id: string): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(user: InsertUser & { password: string }): Promise<User>;
+  updateUser(id: string, user: Partial<InsertUser>): Promise<User | undefined>;
+  updateLastLogin(id: string): Promise<void>;
+  validatePassword(username: string, password: string): Promise<User | null>;
+
+  // Session management
+  createSession(userId: string): Promise<string>;
+  validateSession(sessionId: string): Promise<User | null>;
+  deleteSession(sessionId: string): Promise<boolean>;
+
   // Dashboard stats
   getDashboardStats(): Promise<{
     totalPCs: number;
@@ -32,10 +47,14 @@ export interface IStorage {
 export class MemStorage implements IStorage {
   private employees: Map<string, Employee>;
   private pcs: Map<string, Pc>;
+  private users: Map<string, User>;
+  private sessions: Map<string, { userId: string; expiresAt: Date }>;
 
   constructor() {
     this.employees = new Map();
     this.pcs = new Map();
+    this.users = new Map();
+    this.sessions = new Map();
     this.initializeTestData();
   }
 
@@ -225,6 +244,97 @@ export class MemStorage implements IStorage {
       expiringWarranties,
     };
   }
+
+  // User authentication methods (placeholder for MemStorage)
+  async getUser(id: string): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.username === username);
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.email === email);
+  }
+
+  async createUser(userData: InsertUser & { password: string }): Promise<User> {
+    const { password, ...insertData } = userData;
+    const id = randomUUID();
+    const passwordHash = await bcrypt.hash(password, 12);
+    
+    const user: User = {
+      ...insertData,
+      id,
+      passwordHash,
+      role: insertData.role || 'admin',
+      isActive: insertData.isActive ?? true,
+      lastLogin: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    this.users.set(id, user);
+    return user;
+  }
+
+  async updateUser(id: string, updateData: Partial<InsertUser>): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+    
+    const updatedUser: User = {
+      ...user,
+      ...updateData,
+      updatedAt: new Date(),
+    };
+    
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+
+  async updateLastLogin(id: string): Promise<void> {
+    const user = this.users.get(id);
+    if (user) {
+      user.lastLogin = new Date();
+      this.users.set(id, user);
+    }
+  }
+
+  async validatePassword(username: string, password: string): Promise<User | null> {
+    const user = await this.getUserByUsername(username);
+    if (!user) return null;
+    
+    const isValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isValid) return null;
+    
+    await this.updateLastLogin(user.id);
+    return user;
+  }
+
+  async createSession(userId: string): Promise<string> {
+    const sessionId = randomUUID();
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+    
+    this.sessions.set(sessionId, { userId, expiresAt });
+    return sessionId;
+  }
+
+  async validateSession(sessionId: string): Promise<User | null> {
+    const session = this.sessions.get(sessionId);
+    if (!session) return null;
+    
+    if (session.expiresAt < new Date()) {
+      this.sessions.delete(sessionId);
+      return null;
+    }
+    
+    return this.users.get(session.userId) || null;
+  }
+
+  async deleteSession(sessionId: string): Promise<boolean> {
+    return this.sessions.delete(sessionId);
+  }
 }
 
 // DatabaseStorage implementation with PostgreSQL
@@ -324,6 +434,114 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount ?? 0) > 0;
   }
 
+  // User authentication methods
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
+  }
+
+  async createUser(userData: InsertUser & { password: string }): Promise<User> {
+    const { password, ...insertData } = userData;
+    const saltRounds = 12;
+    const passwordHash = await bcrypt.hash(password, saltRounds);
+    
+    const [user] = await db
+      .insert(users)
+      .values({
+        ...insertData,
+        passwordHash,
+      })
+      .returning();
+    return user;
+  }
+
+  async updateUser(id: string, updateData: Partial<InsertUser>): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({
+        ...updateData,
+        updatedAt: sql`now()`,
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return user || undefined;
+  }
+
+  async updateLastLogin(id: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ lastLogin: sql`now()` })
+      .where(eq(users.id, id));
+  }
+
+  async validatePassword(username: string, password: string): Promise<User | null> {
+    const user = await this.getUserByUsername(username);
+    if (!user) return null;
+    
+    const isValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isValid) return null;
+    
+    await this.updateLastLogin(user.id);
+    return user;
+  }
+
+  // Session management
+  async createSession(userId: string): Promise<string> {
+    const sessionId = randomUUID();
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7); // Session dura 7 giorni
+    
+    await db
+      .insert(sessions)
+      .values({
+        id: sessionId,
+        userId,
+        expiresAt,
+      });
+    
+    return sessionId;
+  }
+
+  async validateSession(sessionId: string): Promise<User | null> {
+    const result = await db
+      .select({
+        user: users,
+        session: sessions,
+      })
+      .from(sessions)
+      .innerJoin(users, eq(sessions.userId, users.id))
+      .where(eq(sessions.id, sessionId));
+
+    if (result.length === 0) return null;
+    
+    const { user, session } = result[0];
+    
+    // Controlla se la sessione è scaduta
+    if (session.expiresAt < new Date()) {
+      await this.deleteSession(sessionId);
+      return null;
+    }
+    
+    return user;
+  }
+
+  async deleteSession(sessionId: string): Promise<boolean> {
+    const result = await db
+      .delete(sessions)
+      .where(eq(sessions.id, sessionId));
+    return (result.rowCount ?? 0) > 0;
+  }
+
   async getDashboardStats() {
     try {
       const result = await db.execute(sql`
@@ -381,10 +599,21 @@ export class DatabaseStorage implements IStorage {
     const existingEmployees = await this.getEmployees();
     if (existingEmployees.length > 0) {
       console.log("Database already has data, skipping initialization");
+      
+      // Controlla se esiste almeno un utente admin
+      const adminUsers = await db.select().from(users).where(eq(users.role, 'admin')).limit(1);
+      if (adminUsers.length === 0) {
+        console.log("No admin user found, creating default admin...");
+        await this.createDefaultAdmin();
+      }
+      
       return;
     }
 
     console.log("Initializing database with test data...");
+    
+    // Crea l'utente admin di default
+    await this.createDefaultAdmin();
 
     // Create test employees
     const testEmployees: InsertEmployee[] = [
@@ -453,6 +682,26 @@ export class DatabaseStorage implements IStorage {
     }
 
     console.log("Test data initialized successfully!");
+  }
+  
+  // Crea l'utente admin di default
+  private async createDefaultAdmin(): Promise<void> {
+    try {
+      const adminUser = await this.createUser({
+        username: "admin",
+        email: "admin@maorigroup.com",
+        firstName: "Amministratore",
+        lastName: "Sistema",
+        role: "admin",
+        isActive: true,
+        password: "admin123", // Password di default, da cambiare al primo accesso
+      });
+      
+      console.log(`Admin user created: ${adminUser.username} (${adminUser.email})`);
+      console.log("Default password: admin123 - Please change it after first login");
+    } catch (error) {
+      console.error("Error creating default admin user:", error);
+    }
   }
 }
 

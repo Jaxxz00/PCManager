@@ -1,0 +1,200 @@
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
+import { Shield, Eye, EyeOff, User, Lock } from "lucide-react";
+import { loginSchema, type LoginData } from "@shared/schema";
+import logoUrl from "@assets/IMG_4622_1755594689547.jpeg";
+
+export default function LoginPage() {
+  const [showPassword, setShowPassword] = useState(false);
+  const { toast } = useToast();
+
+  const form = useForm<LoginData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+    },
+  });
+
+  const loginMutation = useMutation({
+    mutationFn: async (data: LoginData) => {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Errore durante l'accesso");
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      // Salvo il sessionId nel localStorage
+      localStorage.setItem('sessionId', data.sessionId);
+      
+      toast({
+        title: "Accesso effettuato",
+        description: "Benvenuto nel gestionale Maori Group",
+      });
+      
+      // Redirect to dashboard
+      window.location.href = "/";
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Errore di accesso",
+        description: error.message || "Credenziali non valide",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = (data: LoginData) => {
+    loginMutation.mutate(data);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-8">
+        {/* Logo e Header */}
+        <div className="text-center space-y-4">
+          <div className="flex justify-center">
+            <div className="p-4 bg-white rounded-2xl shadow-lg">
+              <img 
+                src={logoUrl} 
+                alt="Maori Group Logo" 
+                className="h-16 w-auto object-contain"
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold text-gray-900">Gestionale PC Maori Group</h1>
+            <p className="text-gray-600">Accedi al sistema di gestione aziendale</p>
+          </div>
+        </div>
+
+        {/* Form di Login */}
+        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="bg-gradient-to-r from-blue-800 via-blue-700 to-blue-900 text-white rounded-t-lg">
+            <div className="flex items-center justify-center gap-3">
+              <div className="p-2 bg-white/20 rounded-lg">
+                <Shield className="h-6 w-6" />
+              </div>
+              <CardTitle className="text-xl font-bold">Accesso Sicuro</CardTitle>
+            </div>
+          </CardHeader>
+          
+          <CardContent className="p-8">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 font-medium">Username</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                          <Input
+                            placeholder="Inserisci username"
+                            className="pl-10 py-3 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                            data-testid="input-username"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 font-medium">Password</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                          <Input
+                            type={showPassword ? "text" : "password"}
+                            placeholder="Inserisci password"
+                            className="pl-10 pr-10 py-3 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                            data-testid="input-password"
+                            {...field}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                            data-testid="button-toggle-password"
+                          >
+                            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                          </button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Button
+                  type="submit"
+                  disabled={loginMutation.isPending}
+                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-[1.02]"
+                  data-testid="button-login"
+                >
+                  {loginMutation.isPending ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
+                      Accesso in corso...
+                    </>
+                  ) : (
+                    <>
+                      <Shield className="mr-2 h-5 w-5" />
+                      Accedi al Sistema
+                    </>
+                  )}
+                </Button>
+              </form>
+            </Form>
+
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600">
+                Non hai un account?{" "}
+                <a 
+                  href="/register" 
+                  className="text-blue-600 hover:text-blue-700 font-medium hover:underline"
+                  data-testid="link-register"
+                >
+                  Richiedi accesso
+                </a>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Footer */}
+        <div className="text-center text-sm text-gray-500">
+          <p>© 2024 Maori Group S.r.l. - Sistema gestionale interno</p>
+          <p className="mt-1">Accesso riservato al personale autorizzato</p>
+        </div>
+      </div>
+    </div>
+  );
+}

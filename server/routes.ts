@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertEmployeeSchema, insertPcSchema } from "@shared/schema";
+import { insertEmployeeSchema, insertPcSchema, loginSchema, registerSchema } from "@shared/schema";
 import { z } from "zod";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
@@ -14,6 +14,12 @@ declare module 'express-serve-static-core' {
     session?: {
       id?: string;
       userId?: string;
+      user?: {
+        id: string;
+        username: string;
+        email: string;
+        role: string;
+      };
     };
   }
 }
@@ -27,18 +33,40 @@ const apiLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Middleware di autenticazione basilare (da espandere con Replit Auth)
-const authenticateRequest = (req: Request, res: Response, next: NextFunction) => {
-  // Per ora controllo base - da implementare con sistema auth completo
-  const apiKey = req.headers['x-api-key'] as string;
-  const sessionId = req.session?.id;
+// Middleware di autenticazione con sessioni
+const authenticateRequest = async (req: Request, res: Response, next: NextFunction) => {
+  const sessionId = req.headers['authorization']?.replace('Bearer ', '') ||
+                   req.session?.id ||
+                   req.cookies?.sessionId;
   
-  if (!apiKey && !sessionId) {
+  if (!sessionId) {
     return res.status(401).json({ error: "Autenticazione richiesta" });
   }
   
-  // TODO: Implementare controlli auth più robusti
-  next();
+  try {
+    const user = await storage.validateSession(sessionId);
+    if (!user) {
+      return res.status(401).json({ error: "Sessione non valida o scaduta" });
+    }
+    
+    // Aggiungo i dati utente alla request
+    req.session = {
+      ...req.session,
+      id: sessionId,
+      userId: user.id,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+      }
+    };
+    
+    next();
+  } catch (error) {
+    console.error('Authentication error:', error);
+    res.status(500).json({ error: "Errore interno del server" });
+  }
 };
 
 // Middleware per validazione input
@@ -82,6 +110,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Rate limiting per API pubbliche
   app.use('/api/', apiLimiter);
+  
+  // Authentication routes (pubbliche, senza autenticazione)
+  app.post("/api/auth/register", validateInput(registerSchema), async (req, res) => {
+    try {
+      const { username, email } = req.body;
+      
+      // Controllo se l'utente esiste già
+      const existingByUsername = await storage.getUserByUsername(username);
+      if (existingByUsername) {
+        return res.status(400).json({ error: "Username già in uso" });
+      }
+      
+      const existingByEmail = await storage.getUserByEmail(email);
+      if (existingByEmail) {
+        return res.status(400).json({ error: "Email già registrata" });
+      }
+      
+      // Creo l'utente
+      const user = await storage.createUser(req.body);
+      
+      // Rimuovo la password hash dalla risposta
+      const { passwordHash, ...userResponse } = user;
+      
+      res.status(201).json({
+        message: "Account creato con successo",
+        user: userResponse
+      });
+    } catch (error) {
+      console.error('Registration error:', error);
+      res.status(500).json({ error: "Errore durante la registrazione" });
+    }
+  });
+
+  app.post("/api/auth/login", validateInput(loginSchema), async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      // Validazione credenziali
+      const user = await storage.validatePassword(username, password);
+      if (!user) {
+        return res.status(401).json({ error: "Credenziali non valide" });
+      }
+      
+      if (!user.isActive) {
+        return res.status(401).json({ error: "Account disattivato" });
+      }
+      
+      // Creo sessione
+      const sessionId = await storage.createSession(user.id);
+      
+      // Rimuovo la password hash dalla risposta
+      const { passwordHash, ...userResponse } = user;
+      
+      res.json({
+        message: "Accesso effettuato con successo",
+        sessionId,
+        user: userResponse
+      });
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(500).json({ error: "Errore durante l'accesso" });
+    }
+  });
+
+  app.post("/api/auth/logout", authenticateRequest, async (req, res) => {
+    try {
+      const sessionId = req.session?.id;
+      if (sessionId) {
+        await storage.deleteSession(sessionId);
+      }
+      
+      res.json({ message: "Logout effettuato con successo" });
+    } catch (error) {
+      console.error('Logout error:', error);
+      res.status(500).json({ error: "Errore durante il logout" });
+    }
+  });
+
+  app.get("/api/auth/me", authenticateRequest, async (req, res) => {
+    try {
+      const user = req.session?.user;
+      if (!user) {
+        return res.status(401).json({ error: "Utente non autenticato" });
+      }
+      
+      res.json(user);
+    } catch (error) {
+      console.error('Get user error:', error);
+      res.status(500).json({ error: "Errore durante il recupero utente" });
+    }
+  });
   
   // Dashboard stats
   app.get("/api/dashboard/stats", async (req, res) => {

@@ -1,4 +1,4 @@
-import { Bell, Search, User } from "lucide-react";
+import { Bell, Search, User, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -9,8 +9,11 @@ import {
   DropdownMenuTrigger, 
   DropdownMenuSeparator 
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/App";
 
 export default function Topbar() {
+  const { user, logout } = useAuth();
+
   return (
     <header className="bg-background border-b border-border h-16 flex items-center justify-between px-8 shadow-sm">
       {/* Search */}
@@ -71,26 +74,37 @@ export default function Topbar() {
         {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center space-x-2 px-3">
-              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                <User className="h-4 w-4 text-primary" />
+            <Button variant="ghost" className="flex items-center gap-2 px-3">
+              <div className="p-1 bg-blue-100 rounded-full">
+                <User className="h-4 w-4 text-blue-600" />
               </div>
-              <div className="hidden sm:block text-left">
-                <p className="text-sm font-medium">Admin</p>
-                <p className="text-xs text-muted-foreground">Sistema IT</p>
+              <div className="text-left hidden md:block">
+                <p className="text-sm font-medium">{user?.username || 'Utente'}</p>
+                <p className="text-xs text-muted-foreground">{user?.role || 'Admin'}</p>
               </div>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem>
+          <DropdownMenuContent align="end" className="w-56">
+            <div className="px-3 py-2 border-b">
+              <p className="font-medium">{user?.firstName} {user?.lastName}</p>
+              <p className="text-sm text-muted-foreground">{user?.email}</p>
+            </div>
+            <DropdownMenuItem className="cursor-pointer">
+              <User className="mr-2 h-4 w-4" />
               Profilo
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">
+              <Settings className="mr-2 h-4 w-4" />
               Impostazioni
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">
-              Disconnetti
+            <DropdownMenuItem 
+              className="cursor-pointer text-red-600 focus:text-red-600"
+              onClick={logout}
+              data-testid="button-logout"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
