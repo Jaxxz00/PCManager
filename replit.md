@@ -28,6 +28,7 @@ Sistema di gestione completo per computer e dipendenti aziendali di Maori Group.
 - ✅ **ETICHETTE PRIVACY-COMPLIANT**: Sistema stampa etichette senza dati personali, solo QR per lookup database
 - ✅ **FRONTEND UX MIGLIORATO**: Check usabilità completato, errori TypeScript risolti, interfaccia professionalizzata
 - ✅ **PAGINA MANUTENZIONE COMPLETA**: Centro manutenzione PC con gestione interventi, priorità, costi e tracking tecnici
+- ✅ **DIALOG TRANSPARENCY RISOLTO**: Sistemato problema dialog trasparenti con CSS universale per Radix UI
 - ✅ **DROPDOWN VISIBILITY RISOLTO**: Sostituiti componenti Radix UI Select con elementi HTML nativi per eliminare conflitti z-index nei dialog
 
 ## User Preferences
