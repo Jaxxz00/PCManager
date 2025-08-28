@@ -111,8 +111,8 @@ export default function LoginPage() {
             </div>
           </div>
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold text-gray-900">Gestionale PC Maori Group</h1>
-            <p className="text-gray-600">Accedi al sistema di gestione aziendale</p>
+            <h1 className="text-3xl font-bold text-gray-900">MAORI GROUP</h1>
+            <p className="text-gray-600">Sistema IT Aziendale</p>
           </div>
         </div>
 
