@@ -351,35 +351,34 @@ function UserManagementCard() {
                 )}
               />
               
-              <FormField
-                control={createForm.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Ruolo</FormLabel>
-                    <div className="relative">
-                      <select
-                        value={field.value}
-                        onChange={(e) => field.onChange(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        style={{
-                          appearance: 'none',
-                          backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                          backgroundPosition: 'right 8px center',
-                          backgroundRepeat: 'no-repeat',
-                          backgroundSize: '16px',
-                          paddingRight: '32px'
-                        }}
-                      >
-                        <option value="" disabled>Seleziona ruolo</option>
-                        <option value="user">👤 Utente Standard</option>
-                        <option value="admin">🔧 Amministratore</option>
-                      </select>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none">
+                  Ruolo
+                </label>
+                <select
+                  value={createForm.watch("role") || ""}
+                  onChange={(e) => createForm.setValue("role", e.target.value as "user" | "admin")}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+                  required
+                  style={{
+                    appearance: 'none',
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 8px center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '16px',
+                    paddingRight: '32px'
+                  }}
+                >
+                  <option value="" disabled>Seleziona ruolo</option>
+                  <option value="user">👤 Utente Standard</option>
+                  <option value="admin">🔧 Amministratore</option>
+                </select>
+                {createForm.formState.errors.role && (
+                  <p className="text-sm text-red-600">
+                    {createForm.formState.errors.role.message}
+                  </p>
                 )}
-              />
+              </div>
               
               <div className="flex gap-2 pt-4">
                 <Button 
