@@ -47,22 +47,23 @@ export default function Login() {
   // Mutation per il login
   const loginMutation = useMutation({
     mutationFn: async (data: LoginData) => {
-      const response = await apiRequest("POST", "/api/auth/login", data);
-
-      if (!response.ok) {
-        const error = await response.json();
-        
-        // Gestione specifica per richiesta 2FA
-        if (response.status === 206 && error.requires2FA) {
+      try {
+        const response = await apiRequest("POST", "/api/auth/login", data);
+        return response.json();
+      } catch (error: any) {
+        // apiRequest lancia errore se non 200 - parsarlo dal messaggio
+        if (error.message?.includes("200:") && error.message?.includes("requires2FA")) {
           throw new Error("2FA_REQUIRED");
         }
-        
-        throw new Error(error.message || "Errore di login");
+        throw error;
       }
-
-      return response.json();
     },
     onSuccess: (data) => {
+      // Salva il sessionId per l'autenticazione
+      if (data.sessionId) {
+        localStorage.setItem('sessionId', data.sessionId);
+      }
+      
       toast({
         title: "Accesso completato",
         description: "Benvenuto nel sistema PC Manager",
