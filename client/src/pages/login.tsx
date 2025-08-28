@@ -101,16 +101,13 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 flex">
       {/* Left Panel - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 items-center justify-center">
-        {/* Logo integrato direttamente nello sfondo senza contenitori */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 items-center justify-center">
+        {/* Logo completamente pulito senza effetti */}
         <img 
           src={logoUrl} 
           alt="Maori Group Logo" 
-          className="max-w-[70%] max-h-[50%] w-auto h-auto object-contain opacity-70 filter drop-shadow-2xl"
+          className="max-w-[70%] max-h-[50%] w-auto h-auto object-contain opacity-70"
         />
-        {/* Decorative elements */}
-        <div className="absolute top-20 left-20 w-32 h-32 bg-blue-400/10 rounded-full blur-xl"></div>
-        <div className="absolute bottom-32 right-16 w-48 h-48 bg-blue-500/10 rounded-full blur-2xl"></div>
       </div>
 
       {/* Right Panel - Login Form */}
