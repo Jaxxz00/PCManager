@@ -25,8 +25,7 @@ export default function LoginPage() {
   const [requires2FA, setRequires2FA] = useState(false);
   const [credentials, setCredentials] = useState<{username: string, password: string} | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+
   const [usingBackupCode, setUsingBackupCode] = useState(false);
   const { toast } = useToast();
 
@@ -67,13 +66,8 @@ export default function LoginPage() {
         return;
       }
       
-      // Salvo il sessionId nel localStorage (con opzione remember me)
-      if (rememberMe) {
-        localStorage.setItem('sessionId', data.sessionId);
-        localStorage.setItem('rememberLogin', 'true');
-      } else {
-        sessionStorage.setItem('sessionId', data.sessionId);
-      }
+      // Salvo il sessionId nel sessionStorage
+      sessionStorage.setItem('sessionId', data.sessionId);
       
       toast({
         title: "Accesso effettuato",
@@ -161,30 +155,11 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Forgot Password Info */}
-          {showForgotPassword && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
-              <HelpCircle className="h-5 w-5 text-blue-600 mx-auto mb-2" />
-              <p className="text-sm text-blue-800 font-medium">
-                Contatta l'amministratore di sistema per reimpostare la password
-              </p>
-            </div>
-          )}
+
 
           {/* Form di Login */}
           <Card className="border-0 shadow-xl bg-white">
             <CardHeader className="text-center pb-6">
-              <div className="flex items-center justify-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowForgotPassword(!showForgotPassword)}
-                  className="text-sm text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1 underline"
-                  data-testid="button-forgot-password"
-                >
-                  <HelpCircle className="h-4 w-4" />
-                  Password dimenticata?
-                </button>
-              </div>
             </CardHeader>
 
             <CardContent className="space-y-6">
@@ -309,25 +284,7 @@ export default function LoginPage() {
                     </>
                   )}
 
-                  {/* Remember Me Checkbox */}
-                  {!requires2FA && (
-                    <div className="flex items-center justify-between py-2">
-                      <div className="flex items-center space-x-3">
-                        <Checkbox
-                          id="remember"
-                          checked={rememberMe}
-                          onCheckedChange={(checked) => setRememberMe(checked === true)}
-                          data-testid="checkbox-remember-me"
-                        />
-                        <Label
-                          htmlFor="remember"
-                          className="text-sm font-medium text-slate-700 cursor-pointer"
-                        >
-                          Ricordami
-                        </Label>
-                      </div>
-                    </div>
-                  )}
+
 
                   {/* Submit Button */}
                   <Button
