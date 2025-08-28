@@ -164,35 +164,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   };
   
   // Authentication routes (pubbliche, senza autenticazione)
-  app.post("/api/auth/register", methodFilter(['POST']), strictContentType, validateInput(registerSchema), async (req, res) => {
-    try {
-      const { username, email } = req.body;
-      
-      // Controllo se l'utente esiste già
-      const existingByUsername = await storage.getUserByUsername(username);
-      if (existingByUsername) {
-        return res.status(400).json({ error: "Username già in uso" });
-      }
-      
-      const existingByEmail = await storage.getUserByEmail(email);
-      if (existingByEmail) {
-        return res.status(400).json({ error: "Email già registrata" });
-      }
-      
-      // Creo l'utente
-      const user = await storage.createUser(req.body);
-      
-      // Rimuovo la password hash dalla risposta
-      const { passwordHash, ...userResponse } = user;
-      
-      res.status(201).json({
-        message: "Account creato con successo",
-        user: userResponse
-      });
-    } catch (error) {
-      console.error('Registration error:', error);
-      res.status(500).json({ error: "Errore durante la registrazione" });
-    }
+  // Endpoint registrazione DISABILITATO per sicurezza aziendale
+  app.post("/api/auth/register", methodFilter(['POST']), (req, res) => {
+    res.status(403).json({
+      error: "Registrazione non consentita",
+      message: "La creazione di nuovi account è riservata esclusivamente agli amministratori di sistema",
+      code: "REGISTRATION_DISABLED"
+    });
   });
 
   app.post("/api/auth/login", methodFilter(['POST']), strictContentType, loginLimiter, validateInput(loginSchema), async (req, res) => {

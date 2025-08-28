@@ -261,7 +261,7 @@ export default function LoginPage() {
                       <Checkbox
                         id="remember"
                         checked={rememberMe}
-                        onCheckedChange={setRememberMe}
+                        onCheckedChange={(checked) => setRememberMe(checked === true)}
                         data-testid="checkbox-remember-me"
                       />
                       <label
@@ -305,14 +305,7 @@ export default function LoginPage() {
 
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
-                Non hai un account?{" "}
-                <a 
-                  href="/register" 
-                  className="text-blue-600 hover:text-blue-700 font-medium hover:underline"
-                  data-testid="link-register"
-                >
-                  Richiedi accesso
-                </a>
+                Per richiedere un nuovo account contatta l'amministratore di sistema
               </p>
             </div>
           </CardContent>

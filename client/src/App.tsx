@@ -14,7 +14,7 @@ import Settings from "@/pages/settings";
 import Maintenance from "@/pages/maintenance";
 import Workflow from "@/pages/workflow";
 import LoginPage from "@/pages/login";
-import RegisterPage from "@/pages/register";
+// RegisterPage rimossa - registrazione disabilitata per sicurezza
 import Sidebar from "@/components/layout/sidebar";
 import Topbar from "@/components/layout/topbar";
 import { createContext, useContext, useEffect, useState } from "react";
@@ -137,7 +137,6 @@ function Router() {
     <Switch>
       {/* Route pubbliche */}
       <Route path="/login" component={LoginPage} />
-      <Route path="/register" component={RegisterPage} />
       
       {/* Route protette */}
       {isAuthenticated ? (
