@@ -719,15 +719,18 @@ export class DatabaseStorage implements IStorage {
   // Crea l'utente admin di default
   private async createDefaultAdmin(): Promise<void> {
     try {
-      const adminUser = await this.createUser({
+      const saltRounds = 12;
+      const passwordHash = await bcrypt.hash("admin123", saltRounds);
+      
+      const [adminUser] = await db.insert(users).values({
         username: "admin",
         email: "admin@maorigroup.com",
         firstName: "Amministratore",
         lastName: "Sistema",
         role: "admin",
         isActive: true,
-        password: "admin123", // Password di default, da cambiare al primo accesso
-      });
+        passwordHash,
+      }).returning();
       
       console.log(`Admin user created: ${adminUser.username} (${adminUser.email})`);
       console.log("Default password: admin123 - Please change it after first login");

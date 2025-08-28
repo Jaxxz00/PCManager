@@ -258,6 +258,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user profile
+  app.put("/api/auth/profile", methodFilter(['PUT']), strictContentType, authenticateRequest, async (req, res) => {
+    try {
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ error: "Sessione non valida" });
+      }
+
+      const { firstName, lastName, email } = req.body;
+      
+      // Validation
+      if (!firstName || !lastName || !email) {
+        return res.status(400).json({ error: "Nome, cognome e email sono obbligatori" });
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: "Email non valida" });
+      }
+
+      const updatedUser = await storage.updateUser(userId, {
+        firstName,
+        lastName,
+        email,
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ error: "Utente non trovato" });
+      }
+
+      // Non restituisco dati sensibili
+      const { passwordHash, twoFactorSecret, backupCodes, ...safeUser } = updatedUser;
+      res.json({ 
+        message: "Profilo aggiornato con successo",
+        user: safeUser 
+      });
+    } catch (error) {
+      console.error("Error updating user profile:", error);
+      res.status(500).json({ error: "Errore interno del server" });
+    }
+  });
+
   // 2FA Routes (tutte protette da autenticazione)
   app.post("/api/auth/2fa/setup", authenticateRequest, async (req, res) => {
     try {

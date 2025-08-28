@@ -11,6 +11,7 @@ import Labels from "@/pages/labels";
 import Reports from "@/pages/reports";
 import Documents from "@/pages/documents";
 import Settings from "@/pages/settings";
+import Profile from "@/pages/profile";
 import Maintenance from "@/pages/maintenance";
 import Workflow from "@/pages/workflow";
 import LoginPage from "@/pages/login";
@@ -201,6 +202,13 @@ function Router() {
             {() => (
               <AuthenticatedLayout>
                 <Settings />
+              </AuthenticatedLayout>
+            )}
+          </Route>
+          <Route path="/profile">
+            {() => (
+              <AuthenticatedLayout>
+                <Profile />
               </AuthenticatedLayout>
             )}
           </Route>
