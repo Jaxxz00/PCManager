@@ -1,36 +1,42 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useToast } from "@/hooks/use-toast";
-import { Shield, Eye, EyeOff, Lock, User, HelpCircle, KeyRound } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { Eye, EyeOff, User, Lock, Shield, KeyRound } from "lucide-react";
 import logoUrl from "@assets/IMG_4622_1755594689547.jpeg";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+
+// Schema di validazione per il login
 const loginSchema = z.object({
-  username: z.string().min(1, "Username obbligatorio"),
-  password: z.string().min(1, "Password obbligatoria"),
+  username: z.string().min(1, "Username richiesto"),
+  password: z.string().min(1, "Password richiesta"),
   twoFactorCode: z.string().optional(),
 });
 
 type LoginData = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
-  const [requires2FA, setRequires2FA] = useState(false);
-  const [credentials, setCredentials] = useState<{username: string, password: string} | null>(null);
+export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
-
+  const [requires2FA, setRequires2FA] = useState(false);
+  const [credentials, setCredentials] = useState<{ username: string; password: string } | null>(null);
   const [usingBackupCode, setUsingBackupCode] = useState(false);
   const { toast } = useToast();
 
+  // Setup del form con validazione condizionale
   const form = useForm<LoginData>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(
+      requires2FA 
+        ? loginSchema.extend({
+            twoFactorCode: z.string().min(1, "Codice richiesto")
+          })
+        : loginSchema
+    ),
     defaultValues: {
       username: "",
       password: "",
@@ -38,46 +44,60 @@ export default function LoginPage() {
     },
   });
 
+  // Mutation per il login
   const loginMutation = useMutation({
     mutationFn: async (data: LoginData) => {
-      const response = await fetch("/api/auth/login", {
+      const response = await apiRequest("/api/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify(data),
       });
-      
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Errore durante l'accesso");
+        const error = await response.json();
+        
+        // Gestione specifica per richiesta 2FA
+        if (response.status === 206 && error.requires2FA) {
+          throw new Error("2FA_REQUIRED");
+        }
+        
+        throw new Error(error.message || "Errore di login");
       }
-      
+
       return response.json();
     },
     onSuccess: (data) => {
-      if (data.requires2FA) {
-        setRequires2FA(true);
-        setCredentials({ username: form.getValues('username'), password: form.getValues('password') });
-        toast({
-          title: "Autenticazione 2FA richiesta",
-          description: data.message,
-        });
-        return;
-      }
-      
-      // Salvo il sessionId nel sessionStorage
-      sessionStorage.setItem('sessionId', data.sessionId);
-      
       toast({
-        title: "Accesso effettuato",
-        description: "Benvenuto nel sistema Maori Group",
+        title: "Accesso completato",
+        description: "Benvenuto nel sistema PC Manager",
+        variant: "default",
       });
       
       // Redirect to dashboard
       window.location.href = "/";
     },
     onError: (error: Error) => {
+      if (error.message === "2FA_REQUIRED") {
+        setRequires2FA(true);
+        setCredentials({
+          username: form.getValues("username"),
+          password: form.getValues("password"),
+        });
+        
+        // Reset del form per il codice 2FA
+        form.reset({
+          username: form.getValues("username"),
+          password: form.getValues("password"),
+          twoFactorCode: "",
+        });
+        
+        toast({
+          title: "Autenticazione a due fattori richiesta",
+          description: "Inserisci il codice dal tuo Google Authenticator",
+          variant: "default",
+        });
+        return;
+      }
+
       toast({
         title: "Errore di accesso",
         description: error.message || "Credenziali non valide",
@@ -99,211 +119,207 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 flex">
-      {/* Left Panel - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 items-center justify-center">
-        {/* Logo desktop più grande ma stesso stile del mobile */}
-        <img 
-          src={logoUrl} 
-          alt="Maori Group Logo" 
-          className="h-64 w-auto object-contain"
-          style={{
-            mixBlendMode: 'multiply',
-            filter: 'contrast(1.1)',
-            backgroundColor: 'transparent'
-          }}
-        />
-      </div>
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-8">
+      <div className="w-full max-w-md space-y-8">
+        {/* Logo sempre visibile in alto */}
+        <div className="text-center mb-12">
+          <img 
+            src={logoUrl} 
+            alt="Maori Group Logo" 
+            className="h-32 w-auto object-contain mx-auto"
+            style={{
+              mixBlendMode: 'multiply',
+              filter: 'contrast(1.1)',
+              backgroundColor: 'transparent'
+            }}
+          />
+        </div>
 
-      {/* Right Panel - Login Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-white">
-        <div className="w-full max-w-md space-y-8">
-          {/* Mobile Logo */}
-          <div className="lg:hidden text-center mb-8">
-            <img 
-              src={logoUrl} 
-              alt="Maori Group Logo" 
-              className="h-36 w-auto object-contain mx-auto"
-              style={{
-                mixBlendMode: 'multiply',
-                filter: 'contrast(1.1)',
-                backgroundColor: 'transparent'
-              }}
-            />
+        {/* Form Header - solo per 2FA */}
+        {requires2FA && (
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl font-bold text-slate-900">Autenticazione 2FA</h2>
+            <p className="text-slate-600">Inserisci il codice di autenticazione</p>
           </div>
+        )}
 
-          {/* Form Header */}
-          <div className="text-center space-y-6">
-            <h2 className="text-3xl font-bold text-slate-900">
-              {requires2FA ? "Autenticazione 2FA" : ""}
-            </h2>
-            <p className="text-slate-600 text-lg">
-              {requires2FA && "Inserisci il codice di autenticazione"}
-            </p>
-          </div>
-
-
-
-          {/* Form di Login */}
-          <Card className="border-0 shadow-xl bg-white">
-            <CardHeader className="text-center pb-6">
-            </CardHeader>
-
-            <CardContent className="space-y-6">
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  {!requires2FA ? (
-                    <>
-                      {/* Username */}
-                      <FormField
-                        control={form.control}
-                        name="username"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-slate-700 font-medium">Username</FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
-                                <Input
-                                  {...field}
-                                  type="text"
-                                  autoComplete="username"
-                                  autoFocus
-                                  className="pl-10 h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
-                                  placeholder="Inserisci il tuo username"
-                                  data-testid="input-username"
-                                />
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Password */}
-                      <FormField
-                        control={form.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-slate-700 font-medium">Password</FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
-                                <Input
-                                  {...field}
-                                  type={showPassword ? "text" : "password"}
-                                  autoComplete="current-password"
-                                  className="pl-10 pr-12 h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
-                                  placeholder="Inserisci la tua password"
-                                  data-testid="input-password"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => setShowPassword(!showPassword)}
-                                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                                  data-testid="button-toggle-password"
-                                >
-                                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                                </button>
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </>
-                  ) : (
-                    <>
-                      {/* 2FA Code */}
-                      <FormField
-                        control={form.control}
-                        name="twoFactorCode"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-slate-700 font-medium flex items-center gap-2">
-                              {usingBackupCode ? (
-                                <>
-                                  <KeyRound className="h-4 w-4" />
-                                  Codice di Backup
-                                </>
-                              ) : (
-                                <>
-                                  <Shield className="h-4 w-4" />
-                                  Codice 2FA
-                                </>
-                              )}
-                            </FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                {usingBackupCode ? (
-                                  <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
-                                ) : (
-                                  <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
-                                )}
-                                <Input
-                                  {...field}
-                                  type="text"
-                                  autoFocus
-                                  className="pl-10 h-12 text-center text-xl tracking-widest border-slate-200 focus:border-blue-500 focus:ring-blue-500"
-                                  placeholder={usingBackupCode ? "0000000000" : "000000"}
-                                  maxLength={usingBackupCode ? 10 : 6}
-                                  data-testid={usingBackupCode ? "input-backup-code" : "input-2fa-code"}
-                                />
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                            <div className="text-center mt-3">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setUsingBackupCode(!usingBackupCode);
-                                  form.setValue('twoFactorCode', '');
-                                }}
-                                className="text-sm text-blue-600 hover:text-blue-800 underline"
-                              >
-                                {usingBackupCode ? "Usa codice 2FA" : "Usa codice di backup"}
-                              </button>
-                            </div>
-                          </FormItem>
-                        )}
-                      />
-                    </>
-                  )}
-
-
-
-                  {/* Submit Button */}
-                  <Button
-                    type="submit"
-                    className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
-                    disabled={loginMutation.isPending}
-                    data-testid="button-login"
-                  >
-                    {loginMutation.isPending ? (
-                      <div className="flex items-center gap-2">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                        Accesso in corso...
-                      </div>
-                    ) : requires2FA ? (
-                      "Verifica e Accedi"
-                    ) : (
-                      "Accedi al Sistema"
+        {/* Form di Login */}
+        <div className="space-y-6">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {!requires2FA ? (
+                <>
+                  {/* Username */}
+                  <FormField
+                    control={form.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-slate-700 font-medium">Username</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+                            <Input
+                              {...field}
+                              type="text"
+                              autoComplete="username"
+                              autoFocus
+                              className="pl-10 h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
+                              placeholder="Inserisci il tuo username"
+                              data-testid="input-username"
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
+                  />
 
-          {/* Footer */}
-          <div className="text-center">
-            <div className="text-sm text-slate-500 bg-slate-50 rounded-lg p-3">
-              <Shield className="h-4 w-4 mx-auto mb-1 text-slate-400" />
-              <p>Accesso riservato al personale autorizzato</p>
+                  {/* Password */}
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-slate-700 font-medium">Password</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+                            <Input
+                              {...field}
+                              type={showPassword ? "text" : "password"}
+                              autoComplete="current-password"
+                              className="pl-10 pr-12 h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
+                              placeholder="Inserisci la tua password"
+                              data-testid="input-password"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                              data-testid="button-toggle-password"
+                            >
+                              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                            </button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              ) : (
+                <>
+                  {/* 2FA Code */}
+                  <FormField
+                    control={form.control}
+                    name="twoFactorCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-slate-700 font-medium flex items-center gap-2">
+                          {usingBackupCode ? (
+                            <>
+                              <KeyRound className="h-4 w-4" />
+                              Codice di Backup
+                            </>
+                          ) : (
+                            <>
+                              <Shield className="h-4 w-4" />
+                              Codice 2FA
+                            </>
+                          )}
+                        </FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            {usingBackupCode ? (
+                              <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+                            ) : (
+                              <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+                            )}
+                            <Input
+                              {...field}
+                              type="text"
+                              autoComplete="one-time-code"
+                              autoFocus
+                              maxLength={usingBackupCode ? 10 : 6}
+                              className="pl-10 h-12 text-center font-mono text-lg tracking-widest border-slate-200 focus:border-blue-500 focus:ring-blue-500"
+                              placeholder={usingBackupCode ? "10 cifre" : "6 cifre"}
+                              data-testid="input-2fa-code"
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Toggle per codici di backup */}
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUsingBackupCode(!usingBackupCode);
+                        form.setValue("twoFactorCode", "");
+                      }}
+                      className="text-sm text-blue-600 hover:text-blue-700 underline"
+                      data-testid="button-toggle-backup-code"
+                    >
+                      {usingBackupCode 
+                        ? "Usa codice Google Authenticator" 
+                        : "Non hai accesso all'app? Usa codice di backup"
+                      }
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                disabled={loginMutation.isPending}
+                className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white text-lg font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+                data-testid="button-login"
+              >
+                {loginMutation.isPending ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Accesso...
+                  </div>
+                ) : requires2FA ? (
+                  "Verifica Codice"
+                ) : (
+                  "Accedi al Sistema"
+                )}
+              </Button>
+
+              {/* Torna indietro per 2FA */}
+              {requires2FA && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRequires2FA(false);
+                    setCredentials(null);
+                    setUsingBackupCode(false);
+                    form.reset({ username: "", password: "", twoFactorCode: "" });
+                  }}
+                  className="w-full text-center text-sm text-slate-600 hover:text-slate-700 underline"
+                  data-testid="button-back-to-login"
+                >
+                  Torna al login
+                </button>
+              )}
+            </form>
+          </Form>
+
+          {/* Footer Privacy Notice */}
+          {!requires2FA && (
+            <div className="text-center pt-6 border-t border-slate-100">
+              <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
+                <Shield className="h-3 w-3" />
+                <p>Accesso riservato al personale autorizzato</p>
+              </div>
             </div>
-
-          </div>
+          )}
         </div>
       </div>
     </div>
