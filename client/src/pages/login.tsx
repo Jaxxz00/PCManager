@@ -102,11 +102,16 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 flex">
       {/* Left Panel - Branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 items-center justify-center">
-        {/* Logo completamente pulito senza effetti */}
+        {/* Logo con sfondo rimosso tramite CSS */}
         <img 
           src={logoUrl} 
           alt="Maori Group Logo" 
-          className="max-w-[70%] max-h-[50%] w-auto h-auto object-contain opacity-70"
+          className="max-w-[70%] max-h-[50%] w-auto h-auto object-contain opacity-80"
+          style={{
+            mixBlendMode: 'multiply',
+            filter: 'contrast(1.2) brightness(1.1)',
+            backgroundColor: 'transparent'
+          }}
         />
       </div>
 
@@ -118,7 +123,12 @@ export default function LoginPage() {
             <img 
               src={logoUrl} 
               alt="Maori Group Logo" 
-              className="h-24 w-auto object-contain mx-auto filter drop-shadow-lg"
+              className="h-24 w-auto object-contain mx-auto"
+              style={{
+                mixBlendMode: 'multiply',
+                filter: 'contrast(1.1)',
+                backgroundColor: 'transparent'
+              }}
             />
           </div>
 
