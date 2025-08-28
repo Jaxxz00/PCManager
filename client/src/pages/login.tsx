@@ -6,14 +6,17 @@ import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, Eye, EyeOff, User, Lock } from "lucide-react";
+import { Shield, Eye, EyeOff, User, Lock, KeyRound, HelpCircle } from "lucide-react";
 import { loginSchema, type LoginData } from "@shared/schema";
 import logoUrl from "@assets/IMG_4622_1755594689547.jpeg";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [showBackupCode, setShowBackupCode] = useState(false);
   const { toast } = useToast();
 
   const [requires2FA, setRequires2FA] = useState(false);
@@ -56,8 +59,13 @@ export default function LoginPage() {
         return;
       }
       
-      // Salvo il sessionId nel localStorage
-      localStorage.setItem('sessionId', data.sessionId);
+      // Salvo il sessionId nel localStorage (con opzione remember me)
+      if (rememberMe) {
+        localStorage.setItem('sessionId', data.sessionId);
+        localStorage.setItem('rememberLogin', 'true');
+      } else {
+        sessionStorage.setItem('sessionId', data.sessionId);
+      }
       
       toast({
         title: "Accesso effettuato",
@@ -137,6 +145,8 @@ export default function LoginPage() {
                                 placeholder="Inserisci username"
                                 className="pl-10 py-3 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                                 data-testid="input-username"
+                                autoComplete="username"
+                                autoFocus
                                 {...field}
                               />
                             </div>
@@ -160,6 +170,7 @@ export default function LoginPage() {
                                 placeholder="Inserisci password"
                                 className="pl-10 pr-10 py-3 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                                 data-testid="input-password"
+                                autoComplete="current-password"
                                 {...field}
                               />
                               <button
@@ -192,17 +203,33 @@ export default function LoginPage() {
                       name="twoFactorCode"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-gray-700 font-medium">Codice 2FA</FormLabel>
+                          <div className="flex items-center justify-between">
+                            <FormLabel className="text-gray-700 font-medium">
+                              {showBackupCode ? "Codice di Backup" : "Codice 2FA"}
+                            </FormLabel>
+                            <button
+                              type="button"
+                              onClick={() => setShowBackupCode(!showBackupCode)}
+                              className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                            >
+                              <KeyRound className="h-3 w-3" />
+                              {showBackupCode ? "Usa codice 2FA" : "Usa backup code"}
+                            </button>
+                          </div>
                           <FormControl>
                             <div className="relative">
-                              <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                              {showBackupCode ? (
+                                <KeyRound className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                              ) : (
+                                <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                              )}
                               <Input
                                 {...field}
                                 type="text"
-                                maxLength={8}
+                                maxLength={showBackupCode ? 10 : 8}
                                 className="pl-10 py-3 border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-center tracking-widest font-mono"
-                                placeholder="000000"
-                                data-testid="input-2fa-code"
+                                placeholder={showBackupCode ? "0000000000" : "000000"}
+                                data-testid={showBackupCode ? "input-backup-code" : "input-2fa-code"}
                                 autoFocus
                               />
                             </div>
@@ -225,6 +252,33 @@ export default function LoginPage() {
                         Torna al login
                       </button>
                     </div>
+                  </div>
+                )}
+
+                {!requires2FA && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="remember"
+                        checked={rememberMe}
+                        onCheckedChange={setRememberMe}
+                        data-testid="checkbox-remember-me"
+                      />
+                      <label
+                        htmlFor="remember"
+                        className="text-sm font-medium text-gray-700 cursor-pointer"
+                      >
+                        Ricordami
+                      </label>
+                    </div>
+                    <button
+                      type="button"
+                      className="text-sm text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-1"
+                      data-testid="button-forgot-password"
+                    >
+                      <HelpCircle className="h-4 w-4" />
+                      Password dimenticata?
+                    </button>
                   </div>
                 )}
 
