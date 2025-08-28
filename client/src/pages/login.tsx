@@ -101,31 +101,27 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 flex">
       {/* Left Panel - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900">
-        {/* Logo integrato completamente nello sfondo */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <img 
-            src={logoUrl} 
-            alt="Maori Group Logo" 
-            className="max-w-[70%] max-h-[50%] w-auto h-auto object-contain opacity-80 mix-blend-screen filter drop-shadow-2xl"
-          />
-        </div>
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 items-center justify-center">
+        {/* Logo integrato direttamente nello sfondo senza contenitori */}
+        <img 
+          src={logoUrl} 
+          alt="Maori Group Logo" 
+          className="max-w-[70%] max-h-[50%] w-auto h-auto object-contain opacity-70 filter drop-shadow-2xl"
+        />
         {/* Decorative elements */}
         <div className="absolute top-20 left-20 w-32 h-32 bg-blue-400/10 rounded-full blur-xl"></div>
         <div className="absolute bottom-32 right-16 w-48 h-48 bg-blue-500/10 rounded-full blur-2xl"></div>
-        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-blue-900/10 to-slate-900/20"></div>
       </div>
 
       {/* Right Panel - Login Form */}
       <div className="flex-1 flex items-center justify-center p-8 bg-white">
         <div className="w-full max-w-md space-y-8">
           {/* Mobile Logo */}
-          <div className="lg:hidden text-center mb-8 relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-100 to-white rounded-3xl opacity-50 blur-sm"></div>
+          <div className="lg:hidden text-center mb-8">
             <img 
               src={logoUrl} 
               alt="Maori Group Logo" 
-              className="h-24 w-auto object-contain mx-auto relative z-10 mix-blend-multiply filter drop-shadow-lg"
+              className="h-24 w-auto object-contain mx-auto filter drop-shadow-lg"
             />
           </div>
 
