@@ -267,7 +267,7 @@ function UserManagementCard() {
 
       {/* Dialog per creare nuovo utente */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-md" style={{ zIndex: 9999 }}>
+        <DialogContent className="max-w-md bg-white border border-gray-200 shadow-xl" style={{ zIndex: 9999 }}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Plus className="h-5 w-5" />
