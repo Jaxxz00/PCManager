@@ -364,18 +364,25 @@ function UserManagementCard() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent 
-                        className="dialog-dropdown-content min-w-[180px]"
+                        className="dialog-dropdown-content"
                         position="popper"
                         side="bottom"
                         align="start"
-                        sideOffset={4}
-                        avoidCollisions={true}
+                        sideOffset={8}
+                        avoidCollisions={false}
+                        collisionPadding={16}
                       >
-                        <SelectItem value="user" className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100">
-                          Utente Standard
+                        <SelectItem 
+                          value="user" 
+                          className="cursor-pointer hover:bg-blue-50 focus:bg-blue-50 text-gray-900 font-medium py-3 px-4"
+                        >
+                          👤 Utente Standard
                         </SelectItem>
-                        <SelectItem value="admin" className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100">
-                          Amministratore
+                        <SelectItem 
+                          value="admin" 
+                          className="cursor-pointer hover:bg-blue-50 focus:bg-blue-50 text-gray-900 font-medium py-3 px-4"
+                        >
+                          🔧 Amministratore
                         </SelectItem>
                       </SelectContent>
                     </Select>

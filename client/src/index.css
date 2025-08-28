@@ -110,9 +110,22 @@
     z-index: 999999 !important;
     position: fixed !important;
     background: white !important;
-    border: 1px solid #e5e7eb !important;
+    border: 1px solid #d1d5db !important;
     border-radius: 8px !important;
-    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05) !important;
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04) !important;
+    backdrop-filter: blur(8px) !important;
+    min-width: 200px !important;
+    max-height: 200px !important;
+    overflow-y: auto !important;
+  }
+
+  /* Add backdrop for dropdown in dialogs */
+  .dialog-dropdown-backdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 999998 !important;
+    background: rgba(0, 0, 0, 0.1) !important;
+    backdrop-filter: blur(2px) !important;
   }
   
   .status-active {
