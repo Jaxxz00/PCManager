@@ -357,28 +357,25 @@ function UserManagementCard() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Ruolo</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Seleziona ruolo" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent 
-                        className="dialog-dropdown-special"
-                        position="popper"
-                        side="bottom"
-                        align="start"
-                        sideOffset={16}
-                        avoidCollisions={false}
+                    <div className="relative">
+                      <select
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        style={{
+                          appearance: 'none',
+                          backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                          backgroundPosition: 'right 8px center',
+                          backgroundRepeat: 'no-repeat',
+                          backgroundSize: '16px',
+                          paddingRight: '32px'
+                        }}
                       >
-                        <SelectItem value="user">
-                          👤 Utente Standard
-                        </SelectItem>
-                        <SelectItem value="admin">
-                          🔧 Amministratore
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                        <option value="" disabled>Seleziona ruolo</option>
+                        <option value="user">👤 Utente Standard</option>
+                        <option value="admin">🔧 Amministratore</option>
+                      </select>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
