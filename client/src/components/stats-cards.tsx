@@ -1,31 +1,34 @@
 import { useQuery } from "@tanstack/react-query";
-import { Monitor, CheckCircle, Wrench, AlertTriangle } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Monitor, User, Wrench, AlertTriangle } from "lucide-react";
 
 interface DashboardStats {
   totalPCs: number;
   activePCs: number;
   maintenancePCs: number;
   retiredPCs: number;
-  expiringWarranties: number;
+  totalEmployees: number;
+  assignedPCs: number;
+  availablePCs: number;
 }
 
 export default function StatsCards() {
-  const { data: stats, isLoading } = useQuery<DashboardStats>({
+  const { data: stats, isLoading, error } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
   });
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i} className="stats-card">
-            <CardContent className="p-6">
-              <div className="animate-pulse">
-                <div className="h-4 bg-muted rounded w-1/2 mb-2"></div>
-                <div className="h-8 bg-muted rounded w-1/3 mb-4"></div>
-                <div className="h-3 bg-muted rounded w-1/4"></div>
-              </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card key={i} className="animate-pulse">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div className="h-4 bg-gray-200 rounded w-20"></div>
+              <div className="h-4 w-4 bg-gray-200 rounded"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-8 bg-gray-200 rounded w-16 mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-24"></div>
             </CardContent>
           </Card>
         ))}
@@ -33,65 +36,75 @@ export default function StatsCards() {
     );
   }
 
-  const cards = [
+  if (error) {
+    return (
+      <Card className="border-red-200 bg-red-50">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-2 text-red-600">
+            <AlertTriangle className="h-5 w-5" />
+            <span>Errore nel caricamento delle statistiche</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const statsData = [
     {
-      title: "Totale PC",
+      title: "PC Totali",
       value: stats?.totalPCs || 0,
       icon: Monitor,
-      change: "+12",
-      changeLabel: "questo mese",
-      iconBg: "bg-blue-100 dark:bg-blue-900",
-      iconColor: "text-primary",
+      description: "Computer nel sistema",
+      color: "text-blue-600",
+      bgColor: "bg-blue-100",
     },
     {
       title: "PC Attivi",
       value: stats?.activePCs || 0,
-      icon: CheckCircle,
-      change: `${stats?.totalPCs ? Math.round((stats.activePCs / stats.totalPCs) * 100) : 0}%`,
-      changeLabel: "operativi",
-      iconBg: "bg-green-100 dark:bg-green-900",
-      iconColor: "text-green-600 dark:text-green-400",
+      icon: Monitor,
+      description: "Operativi",
+      color: "text-green-600",
+      bgColor: "bg-green-100",
     },
     {
-      title: "In Manutenzione",
+      title: "Dipendenti",
+      value: stats?.totalEmployees || 0,
+      icon: User,
+      description: "Totale registrati",
+      color: "text-purple-600",
+      bgColor: "bg-purple-100",
+    },
+    {
+      title: "Manutenzione",
       value: stats?.maintenancePCs || 0,
       icon: Wrench,
-      change: `${stats?.totalPCs ? Math.round((stats.maintenancePCs / stats.totalPCs) * 100) : 0}%`,
-      changeLabel: "del totale",
-      iconBg: "bg-orange-100 dark:bg-orange-900",
-      iconColor: "text-orange-600 dark:text-orange-400",
-    },
-    {
-      title: "Garanzie in Scadenza",
-      value: stats?.expiringWarranties || 0,
-      icon: AlertTriangle,
-      change: "30 giorni",
-      changeLabel: "rimanenti",
-      iconBg: "bg-red-100 dark:bg-red-900",
-      iconColor: "text-red-600 dark:text-red-400",
+      description: "PC in riparazione",
+      color: "text-orange-600",
+      bgColor: "bg-orange-100",
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      {cards.map((card) => {
-        const Icon = card.icon;
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {statsData.map((stat) => {
+        const Icon = stat.icon;
         return (
-          <Card key={card.title} className="stats-card">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">{card.title}</p>
-                  <p className="text-3xl font-bold text-foreground">{card.value}</p>
-                </div>
-                <div className={`w-12 h-12 ${card.iconBg} rounded-lg flex items-center justify-center`}>
-                  <Icon className={`${card.iconColor} text-xl`} />
-                </div>
+          <Card key={stat.title} className="hover:shadow-lg transition-shadow duration-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">
+                {stat.title}
+              </CardTitle>
+              <div className={`p-2 rounded-full ${stat.bgColor}`}>
+                <Icon className={`h-4 w-4 ${stat.color}`} />
               </div>
-              <div className="mt-4 flex items-center">
-                <span className="text-sm font-medium text-foreground">{card.change}</span>
-                <span className="text-sm text-muted-foreground ml-1">{card.changeLabel}</span>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-gray-900">
+                {stat.value}
               </div>
+              <p className="text-xs text-gray-500">
+                {stat.description}
+              </p>
             </CardContent>
           </Card>
         );
