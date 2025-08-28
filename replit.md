@@ -4,7 +4,12 @@
 
 Sistema di gestione completo per computer e dipendenti aziendali di Maori Group. L'applicazione fornisce una dashboard centralizzata per il monitoraggio dell'inventario PC, assegnazioni dipendenti, gestione documenti e statistiche del sistema. Include interfaccia React moderna, backend Node.js/Express e **database PostgreSQL completamente integrato** per persistenza dati con cloud storage per documenti.
 
-## Recent Changes (22/08/2025)
+## Recent Changes (28/08/2025)
+- ✅ **SISTEMA AUTENTICAZIONE 2FA COMPLETO**: Integrazione Google Authenticator con backend e frontend
+- ✅ **GESTIONE 2FA AVANZATA**: Setup QR code, backup codes, enable/disable, validazione sicura
+- ✅ **LOGIN 2FA INTEGRATO**: Flusso login condizionale con UI dedicata per verifica codici
+- ✅ **INTERFACCIA SETTINGS 2FA**: Dialog modali, gestione completa stato 2FA, UX intuitiva
+- ✅ **SICUREZZA SESSIONI**: Autenticazione Bearer token, validazione sessioni PostgreSQL
 - ✅ **WORKFLOW GUIDATO COMPLETO**: Processo guidato da selezione PC a consegna con manleva firmata (6 passaggi)
 - ✅ **INTERFACCIA VISUAL RICCA**: Trasformazione da design minimal a interfaccia ricca con gradienti, icone colorate, animazioni
 - ✅ **ETICHETTE OTTIMIZZATE**: Formato finale 5cm x 3cm con layout bilanciato e contenimento garantito
@@ -55,15 +60,19 @@ Color Scheme: Dark blue color scheme (blu scuro) - no purple/violet combinations
 - **Auto-Initialization**: Test data automatically seeded on first application start
 
 ### Database Schema (PostgreSQL Tables)
+- **users**: User accounts with 2FA support (twoFactorSecret, twoFactorEnabled, backupCodes)
+- **sessions**: Secure session storage with automatic expiration
 - **employees**: Employee information with UUID primary keys, unique email constraints
 - **pcs**: Comprehensive PC inventory with foreign key references to employees
 - **Relationships**: Enforced foreign key constraints with LEFT JOIN queries for PC-Employee data
 - **Timestamps**: Automatic created_at/updated_at tracking with PostgreSQL functions
 
 ### Authentication and Authorization
-- Currently implemented with basic session-based approach
-- Uses connect-pg-simple for PostgreSQL session storage
-- Ready for expansion to more sophisticated auth mechanisms
+- **Two-Factor Authentication (2FA)**: Complete Google Authenticator integration with QR code setup
+- **Session Management**: Bearer token authentication with PostgreSQL session storage
+- **Security Features**: Rate limiting, password hashing (bcrypt), secure session validation
+- **Backup Codes**: 10-digit backup codes for account recovery
+- **Multi-step Login**: Conditional 2FA verification in login flow
 
 ### Development and Deployment
 - **Development**: Hot module replacement with Vite dev server
@@ -109,6 +118,13 @@ Color Scheme: Dark blue color scheme (blu scuro) - no purple/violet combinations
 - **tsx**: TypeScript execution engine for Node.js
 - **@replit/vite-plugin-runtime-error-modal**: Development error overlay
 - **@replit/vite-plugin-cartographer**: Replit-specific development enhancements
+
+### Security and Authentication
+- **speakeasy**: TOTP generation for Google Authenticator 2FA
+- **qrcode**: QR code generation for 2FA setup
+- **bcrypt**: Secure password hashing
+- **express-rate-limit**: API rate limiting protection
+- **helmet**: HTTP security headers
 
 ### Additional Utilities
 - **date-fns**: Modern date manipulation library
