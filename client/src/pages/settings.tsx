@@ -355,22 +355,32 @@ function UserManagementCard() {
                 <label className="text-sm font-medium leading-none">
                   Ruolo
                 </label>
-                <div className="relative">
-                  <select
-                    value={createForm.watch("role") || ""}
-                    onChange={(e) => createForm.setValue("role", e.target.value as "user" | "admin")}
-                    className="w-full h-10 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm cursor-pointer appearance-none pr-10"
-                    required
+                <div style={{ position: 'relative', zIndex: 9999 }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const currentRole = createForm.watch("role");
+                      const newRole = currentRole === "admin" ? "user" : "admin";
+                      createForm.setValue("role", newRole);
+                    }}
+                    className="w-full h-10 px-3 py-2 text-sm text-left border border-gray-300 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm cursor-pointer flex items-center justify-between"
+                    style={{
+                      zIndex: 9999,
+                      position: 'relative',
+                      backgroundColor: '#ffffff !important',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '6px'
+                    }}
                   >
-                    <option value="" disabled>Seleziona ruolo</option>
-                    <option value="user">👤 Utente Standard</option>
-                    <option value="admin">🔧 Amministratore</option>
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <span>
+                      {createForm.watch("role") === "admin" ? "🔧 Amministratore" : 
+                       createForm.watch("role") === "user" ? "👤 Utente Standard" : 
+                       "Seleziona ruolo"}
+                    </span>
+                    <svg className="w-4 h-4 text-gray-400 ml-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                     </svg>
-                  </div>
+                  </button>
                 </div>
                 {createForm.formState.errors.role && (
                   <p className="text-sm text-red-600">
