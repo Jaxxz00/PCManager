@@ -33,6 +33,16 @@ const apiLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Rate limiting specifico per login (più restrittivo)
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minuti
+  max: 5, // Max 5 tentativi di login per IP ogni 15 minuti
+  message: { error: "Troppi tentativi di accesso. Riprova tra 15 minuti." },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true, // Non conta i login riusciti
+});
+
 // Middleware di autenticazione con sessioni
 const authenticateRequest = async (req: Request, res: Response, next: NextFunction) => {
   const sessionId = req.headers['authorization']?.replace('Bearer ', '') ||
@@ -143,12 +153,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/auth/login", validateInput(loginSchema), async (req, res) => {
+  app.post("/api/auth/login", loginLimiter, validateInput(loginSchema), async (req, res) => {
     try {
       const { username, password, twoFactorCode } = req.body;
       
+      // Timing attack protection - delay minimo costante
+      const startTime = Date.now();
+      
       // Validazione credenziali
       const user = await storage.validatePassword(username, password);
+      
+      // Calcolo timing per protezione da timing attack
+      const elapsed = Date.now() - startTime;
+      const minDelay = 300; // Delay minimo di 300ms
+      if (elapsed < minDelay) {
+        await new Promise(resolve => setTimeout(resolve, minDelay - elapsed));
+      }
+      
       if (!user) {
         return res.status(401).json({ error: "Credenziali non valide" });
       }
@@ -313,8 +334,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Dashboard stats
-  app.get("/api/dashboard/stats", async (req, res) => {
+  // Dashboard stats (protette da autenticazione)
+  app.get("/api/dashboard/stats", authenticateRequest, async (req, res) => {
     try {
       const stats = await storage.getDashboardStats();
       res.json(stats);
@@ -323,8 +344,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Employee routes
-  app.get("/api/employees", async (req, res) => {
+  // Employee routes (protette da autenticazione)
+  app.get("/api/employees", authenticateRequest, async (req, res) => {
     try {
       const employees = await storage.getEmployees();
       res.json(employees);
@@ -333,7 +354,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/employees/:id", async (req, res) => {
+  app.get("/api/employees/:id", authenticateRequest, async (req, res) => {
     try {
       const employee = await storage.getEmployee(req.params.id);
       if (!employee) {
@@ -345,7 +366,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/employees", async (req, res) => {
+  app.post("/api/employees", authenticateRequest, validateInput(insertEmployeeSchema), async (req, res) => {
     try {
       const validatedData = insertEmployeeSchema.parse(req.body);
       const employee = await storage.createEmployee(validatedData);
@@ -358,7 +379,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/employees/:id", async (req, res) => {
+  app.put("/api/employees/:id", authenticateRequest, validateInput(insertEmployeeSchema.partial()), async (req, res) => {
     try {
       const validatedData = insertEmployeeSchema.partial().parse(req.body);
       const employee = await storage.updateEmployee(req.params.id, validatedData);
@@ -374,7 +395,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/employees/:id", async (req, res) => {
+  app.delete("/api/employees/:id", authenticateRequest, async (req, res) => {
     try {
       const deleted = await storage.deleteEmployee(req.params.id);
       if (!deleted) {
@@ -386,8 +407,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // PC routes
-  app.get("/api/pcs", async (req, res) => {
+  // PC routes (protette da autenticazione)
+  app.get("/api/pcs", authenticateRequest, async (req, res) => {
     try {
       const pcs = await storage.getPcs();
       res.json(pcs);
@@ -396,7 +417,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/pcs/:id", async (req, res) => {
+  app.get("/api/pcs/:id", authenticateRequest, async (req, res) => {
     try {
       const pc = await storage.getPc(req.params.id);
       if (!pc) {
@@ -434,7 +455,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/pcs", async (req, res) => {
+  app.post("/api/pcs", authenticateRequest, validateInput(insertPcSchema), async (req, res) => {
     try {
       const validatedData = insertPcSchema.parse(req.body);
       
@@ -454,7 +475,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/pcs/:id", async (req, res) => {
+  app.put("/api/pcs/:id", authenticateRequest, async (req, res) => {
     try {
       const validatedData = insertPcSchema.partial().parse(req.body);
       const pc = await storage.updatePc(req.params.id, validatedData);
@@ -470,7 +491,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/pcs/:id", async (req, res) => {
+  app.delete("/api/pcs/:id", authenticateRequest, async (req, res) => {
     try {
       const deleted = await storage.deletePc(req.params.id);
       if (!deleted) {
