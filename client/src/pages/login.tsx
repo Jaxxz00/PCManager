@@ -313,8 +313,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <div className="text-center text-sm text-gray-500">
-          <p>© 2024 Maori Group S.r.l. - Sistema gestionale interno</p>
-          <p className="mt-1">Accesso riservato al personale autorizzato</p>
+          <p>Accesso riservato al personale autorizzato</p>
         </div>
       </div>
     </div>

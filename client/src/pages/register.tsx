@@ -298,8 +298,7 @@ export default function RegisterPage() {
 
         {/* Footer */}
         <div className="text-center text-sm text-gray-500">
-          <p>© 2024 Maori Group S.r.l. - Sistema gestionale interno</p>
-          <p className="mt-1">Registrazione riservata al personale autorizzato</p>
+          <p>Registrazione riservata al personale autorizzato</p>
         </div>
       </div>
     </div>
