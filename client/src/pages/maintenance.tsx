@@ -300,15 +300,23 @@ export default function Maintenance() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>PC da Mantenere</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Seleziona PC..." />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
+                          <SelectContent 
+                            className="z-[100] bg-white border border-gray-200 shadow-lg rounded-md max-h-60 overflow-y-auto"
+                            position="popper"
+                            sideOffset={4}
+                          >
                             {pcs.map((pc) => (
-                              <SelectItem key={pc.id} value={pc.id}>
+                              <SelectItem 
+                                key={pc.id} 
+                                value={pc.id}
+                                className="cursor-pointer hover:bg-gray-100"
+                              >
                                 {pc.pcId} - {pc.brand} {pc.model}
                                 {pc.employee?.name && ` (${pc.employee.name})`}
                               </SelectItem>
@@ -326,17 +334,29 @@ export default function Maintenance() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Tipo Intervento</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Seleziona tipo intervento" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="preventive">Manutenzione Preventiva</SelectItem>
-                            <SelectItem value="corrective">Manutenzione Correttiva</SelectItem>
-                            <SelectItem value="upgrade">Upgrade Hardware</SelectItem>
-                            <SelectItem value="cleaning">Pulizia Sistema</SelectItem>
+                          <SelectContent 
+                            className="z-[100] bg-white border border-gray-200 shadow-lg rounded-md"
+                            position="popper"
+                            sideOffset={4}
+                          >
+                            <SelectItem value="preventive" className="cursor-pointer hover:bg-gray-100">
+                              Manutenzione Preventiva
+                            </SelectItem>
+                            <SelectItem value="corrective" className="cursor-pointer hover:bg-gray-100">
+                              Manutenzione Correttiva
+                            </SelectItem>
+                            <SelectItem value="upgrade" className="cursor-pointer hover:bg-gray-100">
+                              Upgrade Hardware
+                            </SelectItem>
+                            <SelectItem value="cleaning" className="cursor-pointer hover:bg-gray-100">
+                              Pulizia Sistema
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />

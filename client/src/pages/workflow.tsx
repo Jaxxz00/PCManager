@@ -199,15 +199,25 @@ export default function WorkflowPage() {
                 value={workflowData.selectedPc} 
                 onValueChange={(value) => setWorkflowData(prev => ({ ...prev, selectedPc: value }))}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Scegli un PC..." />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent 
+                  className="z-[100] bg-white border border-gray-200 shadow-lg rounded-md max-h-60 overflow-y-auto"
+                  position="popper"
+                  sideOffset={4}
+                >
                   {loadingPcs ? (
-                    <SelectItem value="loading" disabled>Caricamento...</SelectItem>
+                    <SelectItem value="loading" disabled className="cursor-not-allowed opacity-50">
+                      Caricamento...
+                    </SelectItem>
                   ) : (
                     availablePcs.map((pc) => (
-                      <SelectItem key={pc.id} value={pc.id}>
+                      <SelectItem 
+                        key={pc.id} 
+                        value={pc.id}
+                        className="cursor-pointer hover:bg-gray-100"
+                      >
                         {pc.pcId} - {pc.brand} {pc.model} (S/N: {pc.serialNumber})
                       </SelectItem>
                     ))
@@ -267,15 +277,25 @@ export default function WorkflowPage() {
                 value={workflowData.selectedEmployee} 
                 onValueChange={(value) => setWorkflowData(prev => ({ ...prev, selectedEmployee: value }))}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Scegli un dipendente..." />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent 
+                  className="z-[100] bg-white border border-gray-200 shadow-lg rounded-md max-h-60 overflow-y-auto"
+                  position="popper"
+                  sideOffset={4}
+                >
                   {loadingEmployees ? (
-                    <SelectItem value="loading" disabled>Caricamento...</SelectItem>
+                    <SelectItem value="loading" disabled className="cursor-not-allowed opacity-50">
+                      Caricamento...
+                    </SelectItem>
                   ) : (
                     employees.map((employee) => (
-                      <SelectItem key={employee.id} value={employee.id}>
+                      <SelectItem 
+                        key={employee.id} 
+                        value={employee.id}
+                        className="cursor-pointer hover:bg-gray-100"
+                      >
                         {employee.name} - {employee.department}
                       </SelectItem>
                     ))

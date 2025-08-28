@@ -182,15 +182,23 @@ export default function RegisterPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-gray-700 font-medium">Ruolo</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger data-testid="select-role">
+                          <SelectTrigger className="w-full" data-testid="select-role">
                             <SelectValue placeholder="Seleziona ruolo" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="admin">Amministratore</SelectItem>
-                          <SelectItem value="user">Utente</SelectItem>
+                        <SelectContent 
+                          className="z-[100] bg-white border border-gray-200 shadow-lg rounded-md"
+                          position="popper"
+                          sideOffset={4}
+                        >
+                          <SelectItem value="admin" className="cursor-pointer hover:bg-gray-100">
+                            Amministratore
+                          </SelectItem>
+                          <SelectItem value="user" className="cursor-pointer hover:bg-gray-100">
+                            Utente
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
