@@ -267,7 +267,7 @@ function UserManagementCard() {
 
       {/* Dialog per creare nuovo utente */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-md z-50">
+        <DialogContent className="max-w-md" style={{ zIndex: 9999 }}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Plus className="h-5 w-5" />
@@ -364,14 +364,17 @@ function UserManagementCard() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent 
-                        className="z-[100] bg-white border border-gray-200 shadow-lg rounded-md"
+                        className="dialog-dropdown-content min-w-[180px]"
                         position="popper"
+                        side="bottom"
+                        align="start"
                         sideOffset={4}
+                        avoidCollisions={true}
                       >
-                        <SelectItem value="user" className="cursor-pointer hover:bg-gray-100">
+                        <SelectItem value="user" className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100">
                           Utente Standard
                         </SelectItem>
-                        <SelectItem value="admin" className="cursor-pointer hover:bg-gray-100">
+                        <SelectItem value="admin" className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100">
                           Amministratore
                         </SelectItem>
                       </SelectContent>

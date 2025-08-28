@@ -99,6 +99,21 @@
   .status-badge {
     @apply inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors;
   }
+
+  /* Dropdown fixes for dialogs */
+  [data-radix-select-content] {
+    z-index: 999999 !important;
+    position: fixed !important;
+  }
+  
+  .dialog-dropdown-content {
+    z-index: 999999 !important;
+    position: fixed !important;
+    background: white !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05) !important;
+  }
   
   .status-active {
     @apply bg-emerald-100 text-emerald-800 border-emerald-200;
