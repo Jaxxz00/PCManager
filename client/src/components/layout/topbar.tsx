@@ -42,30 +42,30 @@ export default function Topbar() {
               </Badge>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80">
-            <div className="px-3 py-2 border-b">
-              <p className="font-semibold">Notifiche (3)</p>
+          <DropdownMenuContent align="end" className="w-80 bg-gradient-to-br from-white via-blue-50 to-blue-100 border shadow-lg backdrop-blur-sm">
+            <div className="px-3 py-2 border-b border-blue-200/30">
+              <p className="font-semibold text-slate-800">Notifiche (3)</p>
             </div>
-            <DropdownMenuItem className="px-3 py-3 cursor-pointer">
+            <DropdownMenuItem className="px-3 py-3 cursor-pointer hover:bg-blue-100/50">
               <div className="flex flex-col gap-1">
-                <p className="text-sm font-medium">Garanzia in Scadenza</p>
-                <p className="text-xs text-muted-foreground">PC-001 scade tra 15 giorni</p>
+                <p className="text-sm font-medium text-slate-800">Garanzia in Scadenza</p>
+                <p className="text-xs text-slate-600">PC-001 scade tra 15 giorni</p>
               </div>
             </DropdownMenuItem>
-            <DropdownMenuItem className="px-3 py-3 cursor-pointer">
+            <DropdownMenuItem className="px-3 py-3 cursor-pointer hover:bg-blue-100/50">
               <div className="flex flex-col gap-1">
-                <p className="text-sm font-medium">Nuovo PC Aggiunto</p>
-                <p className="text-xs text-muted-foreground">PC-003 registrato da Admin</p>
+                <p className="text-sm font-medium text-slate-800">Nuovo PC Aggiunto</p>
+                <p className="text-xs text-slate-600">PC-003 registrato da Admin</p>
               </div>
             </DropdownMenuItem>
-            <DropdownMenuItem className="px-3 py-3 cursor-pointer">
+            <DropdownMenuItem className="px-3 py-3 cursor-pointer hover:bg-blue-100/50">
               <div className="flex flex-col gap-1">
-                <p className="text-sm font-medium">Backup Completato</p>
-                <p className="text-xs text-muted-foreground">Database salvato correttamente</p>
+                <p className="text-sm font-medium text-slate-800">Backup Completato</p>
+                <p className="text-xs text-slate-600">Database salvato correttamente</p>
               </div>
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="px-3 py-2 text-center text-primary cursor-pointer">
+            <DropdownMenuSeparator className="border-blue-200/30" />
+            <DropdownMenuItem className="px-3 py-2 text-center text-blue-600 hover:bg-blue-100/50 cursor-pointer font-medium">
               Vedi tutte le notifiche
             </DropdownMenuItem>
           </DropdownMenuContent>
