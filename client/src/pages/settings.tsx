@@ -267,7 +267,7 @@ function UserManagementCard() {
 
       {/* Dialog per creare nuovo utente */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md z-50">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Plus className="h-5 w-5" />
@@ -357,15 +357,23 @@ function UserManagementCard() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Ruolo</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Seleziona ruolo" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="user">Utente Standard</SelectItem>
-                        <SelectItem value="admin">Amministratore</SelectItem>
+                      <SelectContent 
+                        className="z-[100] bg-white border border-gray-200 shadow-lg rounded-md"
+                        position="popper"
+                        sideOffset={4}
+                      >
+                        <SelectItem value="user" className="cursor-pointer hover:bg-gray-100">
+                          Utente Standard
+                        </SelectItem>
+                        <SelectItem value="admin" className="cursor-pointer hover:bg-gray-100">
+                          Amministratore
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
