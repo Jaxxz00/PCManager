@@ -182,25 +182,22 @@ export default function RegisterPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-gray-700 font-medium">Ruolo</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="w-full" data-testid="select-role">
-                            <SelectValue placeholder="Seleziona ruolo" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent 
-                          className="z-[100] bg-white border border-gray-200 shadow-lg rounded-md"
-                          position="popper"
-                          sideOffset={4}
-                        >
-                          <SelectItem value="admin" className="cursor-pointer hover:bg-gray-100">
-                            Amministratore
-                          </SelectItem>
-                          <SelectItem value="user" className="cursor-pointer hover:bg-gray-100">
-                            Utente
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <select
+                        value={field.value || ""}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        className="w-full h-10 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm cursor-pointer appearance-none pr-10"
+                        data-testid="select-role"
+                        style={{
+                          backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                          backgroundPosition: 'right 8px center',
+                          backgroundRepeat: 'no-repeat',
+                          backgroundSize: '16px'
+                        }}
+                      >
+                        <option value="" disabled>Seleziona ruolo</option>
+                        <option value="admin">Amministratore</option>
+                        <option value="user">Utente</option>
+                      </select>
                       <FormMessage />
                     </FormItem>
                   )}

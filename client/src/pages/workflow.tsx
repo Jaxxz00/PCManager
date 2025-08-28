@@ -273,35 +273,28 @@ export default function WorkflowPage() {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="employee-select">Seleziona Dipendente</Label>
-              <Select 
-                value={workflowData.selectedEmployee} 
-                onValueChange={(value) => setWorkflowData(prev => ({ ...prev, selectedEmployee: value }))}
+              <select
+                value={workflowData.selectedEmployee || ""}
+                onChange={(e) => setWorkflowData(prev => ({ ...prev, selectedEmployee: e.target.value }))}
+                className="w-full h-10 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm cursor-pointer appearance-none pr-10"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 8px center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '16px'
+                }}
               >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Scegli un dipendente..." />
-                </SelectTrigger>
-                <SelectContent 
-                  className="z-[100] bg-white border border-gray-200 shadow-lg rounded-md max-h-60 overflow-y-auto"
-                  position="popper"
-                  sideOffset={4}
-                >
-                  {loadingEmployees ? (
-                    <SelectItem value="loading" disabled className="cursor-not-allowed opacity-50">
-                      Caricamento...
-                    </SelectItem>
-                  ) : (
-                    employees.map((employee) => (
-                      <SelectItem 
-                        key={employee.id} 
-                        value={employee.id}
-                        className="cursor-pointer hover:bg-gray-100"
-                      >
-                        {employee.name} - {employee.department}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
+                <option value="" disabled>Scegli un dipendente...</option>
+                {loadingEmployees ? (
+                  <option value="" disabled>Caricamento...</option>
+                ) : (
+                  employees.map((employee) => (
+                    <option key={employee.id} value={employee.id}>
+                      {employee.name} - {employee.department}
+                    </option>
+                  ))
+                )}
+              </select>
             </div>
             
             {selectedEmployeeData && (

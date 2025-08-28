@@ -300,29 +300,27 @@ export default function Maintenance() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>PC da Mantenere</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Seleziona PC..." />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent 
-                            className="z-[100] bg-white border border-gray-200 shadow-lg rounded-md max-h-60 overflow-y-auto"
-                            position="popper"
-                            sideOffset={4}
+                        <div className="space-y-2">
+                          <select
+                            value={field.value || ""}
+                            onChange={(e) => field.onChange(e.target.value)}
+                            className="w-full h-10 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm cursor-pointer appearance-none pr-10"
+                            style={{
+                              backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                              backgroundPosition: 'right 8px center',
+                              backgroundRepeat: 'no-repeat',
+                              backgroundSize: '16px'
+                            }}
                           >
+                            <option value="" disabled>Seleziona PC...</option>
                             {pcs.map((pc) => (
-                              <SelectItem 
-                                key={pc.id} 
-                                value={pc.id}
-                                className="cursor-pointer hover:bg-gray-100"
-                              >
+                              <option key={pc.id} value={pc.id}>
                                 {pc.pcId} - {pc.brand} {pc.model}
                                 {pc.employee?.name && ` (${pc.employee.name})`}
-                              </SelectItem>
+                              </option>
                             ))}
-                          </SelectContent>
-                        </Select>
+                          </select>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
