@@ -106,7 +106,7 @@ export default function LoginPage() {
         <img 
           src={logoUrl} 
           alt="Maori Group Logo" 
-          className="max-w-[70%] max-h-[50%] w-auto h-auto object-contain opacity-80"
+          className="max-w-[90%] max-h-[70%] w-auto h-auto object-contain opacity-80"
           style={{
             mixBlendMode: 'multiply',
             filter: 'contrast(1.2) brightness(1.1)',
@@ -123,7 +123,7 @@ export default function LoginPage() {
             <img 
               src={logoUrl} 
               alt="Maori Group Logo" 
-              className="h-24 w-auto object-contain mx-auto"
+              className="h-32 w-auto object-contain mx-auto"
               style={{
                 mixBlendMode: 'multiply',
                 filter: 'contrast(1.1)',
