@@ -315,11 +315,7 @@ export default function LoginPage() {
               <Shield className="h-4 w-4 mx-auto mb-1 text-slate-400" />
               <p>Accesso riservato al personale autorizzato</p>
             </div>
-            <div className="mt-4 text-center">
-              <p className="text-sm text-slate-600">
-                Per richiedere un nuovo account contatta l'amministratore di sistema
-              </p>
-            </div>
+
           </div>
         </div>
       </div>
