@@ -1,7 +1,8 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertEmployeeSchema, insertPcSchema, loginSchema, registerSchema, setup2FASchema, verify2FASchema, disable2FASchema } from "@shared/schema";
+import { insertEmployeeSchema, insertPcSchema, loginSchema, registerSchema, setup2FASchema, verify2FASchema, disable2FASchema, setPasswordSchema } from "@shared/schema";
+import { sendUserInviteEmail } from "./emailService";
 import { z } from "zod";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
@@ -325,19 +326,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Accesso negato. Solo amministratori possono creare utenti." });
       }
 
-      const { username, email, firstName, lastName, password, role } = req.body;
+      const { username, email, firstName, lastName, role } = req.body;
       
-      // Validation
-      if (!username || !email || !firstName || !lastName || !password || !role) {
+      // Validation (no password required - will be set via email invitation)
+      if (!username || !email || !firstName || !lastName || !role) {
         return res.status(400).json({ error: "Tutti i campi sono obbligatori" });
       }
 
       if (username.length < 3) {
         return res.status(400).json({ error: "Username deve essere almeno 3 caratteri" });
-      }
-
-      if (password.length < 6) {
-        return res.status(400).json({ error: "Password deve essere almeno 6 caratteri" });
       }
 
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -360,21 +357,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(409).json({ error: "Email già esistente" });
       }
 
+      // Create user with temporary password (will be changed via invite token)
+      const temporaryPassword = Math.random().toString(36).slice(-12);
       const newUser = await storage.createUser({
         username,
         email,
         firstName,
         lastName,
         role,
-        isActive: true,
-        password,
+        isActive: false, // User will be activated when they set their password
+        password: temporaryPassword,
+      });
+
+      // Create invite token
+      const inviteToken = await storage.createInviteToken(newUser.id);
+
+      // Send invitation email
+      const emailSent = await sendUserInviteEmail({
+        to: email,
+        firstName,
+        lastName,
+        inviteToken,
       });
 
       // Non restituisco dati sensibili
       const { passwordHash, twoFactorSecret, backupCodes, ...safeUser } = newUser;
+      
       res.status(201).json({ 
-        message: "Utente creato con successo",
-        user: safeUser 
+        message: emailSent 
+          ? "Utente creato con successo. Email di invito inviata."
+          : "Utente creato con successo. Email di invito non configurata - usa il token manualmente.",
+        user: safeUser,
+        inviteToken: !emailSent ? inviteToken : undefined, // Show token only if email wasn't sent
       });
     } catch (error) {
       console.error("Error creating user:", error);
@@ -805,6 +819,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error saving document metadata:", error);
       res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Routes for user invite system
+  
+  // Validate invite token (public route)
+  app.get("/api/invite/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+      if (!token) {
+        return res.status(400).json({ error: "Token mancante" });
+      }
+
+      const inviteInfo = await storage.getInviteToken(token);
+      if (!inviteInfo) {
+        return res.status(404).json({ error: "Token non valido o scaduto" });
+      }
+
+      // Get user info for display (without sensitive data)
+      const user = await storage.getUserById(inviteInfo.userId);
+      if (!user) {
+        return res.status(404).json({ error: "Utente non trovato" });
+      }
+
+      res.json({
+        valid: true,
+        userInfo: {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          expiresAt: inviteInfo.expiresAt,
+        }
+      });
+    } catch (error) {
+      console.error("Error validating invite token:", error);
+      res.status(500).json({ error: "Errore interno del server" });
+    }
+  });
+
+  // Set password via invite token (public route)
+  app.post("/api/invite/:token/set-password", methodFilter(['POST']), strictContentType, async (req, res) => {
+    try {
+      const { token } = req.params;
+      const validationResult = setPasswordSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: "Dati non validi", 
+          details: validationResult.error.errors 
+        });
+      }
+
+      const { password } = validationResult.data;
+
+      const success = await storage.useInviteToken(token, password);
+      if (!success) {
+        return res.status(400).json({ error: "Token non valido, scaduto o già utilizzato" });
+      }
+
+      // Activate user after password is set
+      const inviteInfo = await storage.getInviteToken(token);
+      if (inviteInfo) {
+        await storage.updateUser(inviteInfo.userId, { isActive: true });
+      }
+
+      res.json({ 
+        message: "Password impostata con successo. Ora puoi effettuare l'accesso." 
+      });
+    } catch (error) {
+      console.error("Error setting password via invite:", error);
+      res.status(500).json({ error: "Errore interno del server" });
     }
   });
 

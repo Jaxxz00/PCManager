@@ -59,7 +59,6 @@ const createUserSchema = z.object({
   email: z.string().email("Email non valida"),
   firstName: z.string().min(1, "Nome richiesto"),
   lastName: z.string().min(1, "Cognome richiesto"),
-  password: z.string().min(6, "Password deve essere almeno 6 caratteri"),
   role: z.enum(["admin", "user"], { errorMap: () => ({ message: "Seleziona un ruolo" }) }),
 });
 
@@ -80,7 +79,6 @@ function UserManagementCard() {
       email: "",
       firstName: "",
       lastName: "",
-      password: "",
       role: "user",
     },
   });
@@ -274,7 +272,7 @@ function UserManagementCard() {
               Crea Nuovo Utente
             </DialogTitle>
             <DialogDescription>
-              Inserisci i dati per creare un nuovo utente del sistema
+              Inserisci i dati per creare un nuovo utente. Un email di invito verrà inviata per impostare la password.
             </DialogDescription>
           </DialogHeader>
 
@@ -337,19 +335,6 @@ function UserManagementCard() {
                 )}
               />
               
-              <FormField
-                control={createForm.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input {...field} type="password" placeholder="Almeno 6 caratteri" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               
               <div className="space-y-2">
                 <label className="text-sm font-medium leading-none">

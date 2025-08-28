@@ -113,6 +113,31 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type LoginData = z.infer<typeof loginSchema>;
 export type RegisterData = z.infer<typeof registerSchema>;
 
+// Invite tokens table for password setup
+export const inviteTokens = pgTable("invite_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  token: varchar("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  used: boolean("used").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type InviteToken = typeof inviteTokens.$inferSelect;
+export type InsertInviteToken = typeof inviteTokens.$inferInsert;
+
+// Schema validation for invite tokens
+export const setPasswordSchema = z.object({
+  token: z.string().min(1, "Token richiesto"),
+  password: z.string().min(6, "Password minimo 6 caratteri"),
+  confirmPassword: z.string().min(1, "Conferma password richiesta"),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Le password non corrispondono",
+  path: ["confirmPassword"],
+});
+
+export type SetPasswordData = z.infer<typeof setPasswordSchema>;
+
 // Extended type for PC with employee data
 export type PcWithEmployee = Pc & {
   employee?: Pick<Employee, 'id' | 'name' | 'email'> | null;

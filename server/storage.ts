@@ -1,4 +1,4 @@
-import { type Employee, type InsertEmployee, type Pc, type InsertPc, type PcWithEmployee, type User, type InsertUser, employees, pcs, users, sessions } from "@shared/schema";
+import { type Employee, type InsertEmployee, type Pc, type InsertPc, type PcWithEmployee, type User, type InsertUser, type InviteToken, type InsertInviteToken, employees, pcs, users, sessions, inviteTokens } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
 import { eq, sql } from "drizzle-orm";
@@ -43,6 +43,11 @@ export interface IStorage {
   enable2FA(userId: string, secret: string, token: string): Promise<boolean>;
   disable2FA(userId: string, password: string, token: string): Promise<boolean>;
   verify2FA(userId: string, token: string): Promise<boolean>;
+
+  // Invite token methods
+  createInviteToken(userId: string): Promise<string>;
+  getInviteToken(token: string): Promise<{ userId: string; expiresAt: Date } | null>;
+  useInviteToken(token: string, password: string): Promise<boolean>;
   regenerateBackupCodes(userId: string): Promise<string[]>;
 
   // Dashboard stats
@@ -906,6 +911,72 @@ export class DatabaseStorage implements IStorage {
       codes.push(code);
     }
     return codes;
+  }
+
+  // Invite token methods
+  async createInviteToken(userId: string): Promise<string> {
+    const token = randomUUID();
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 1); // Token expires in 24 hours
+
+    await db
+      .insert(inviteTokens)
+      .values({
+        userId,
+        token,
+        expiresAt,
+        used: false,
+      });
+
+    return token;
+  }
+
+  async getInviteToken(token: string): Promise<{ userId: string; expiresAt: Date } | null> {
+    const [inviteToken] = await db
+      .select()
+      .from(inviteTokens)
+      .where(eq(inviteTokens.token, token));
+
+    if (!inviteToken || inviteToken.used || inviteToken.expiresAt < new Date()) {
+      return null;
+    }
+
+    return {
+      userId: inviteToken.userId,
+      expiresAt: inviteToken.expiresAt,
+    };
+  }
+
+  async useInviteToken(token: string, password: string): Promise<boolean> {
+    const inviteInfo = await this.getInviteToken(token);
+    if (!inviteInfo) {
+      return false;
+    }
+
+    // Hash the new password
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    // Update user with new password
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        passwordHash,
+        updatedAt: sql`now()`,
+      })
+      .where(eq(users.id, inviteInfo.userId))
+      .returning();
+
+    if (!updatedUser) {
+      return false;
+    }
+
+    // Mark token as used
+    await db
+      .update(inviteTokens)
+      .set({ used: true })
+      .where(eq(inviteTokens.token, token));
+
+    return true;
   }
 }
 

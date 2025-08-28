@@ -15,6 +15,7 @@ import Profile from "@/pages/profile";
 import Maintenance from "@/pages/maintenance";
 import Workflow from "@/pages/workflow";
 import LoginPage from "@/pages/login";
+import SetPasswordPage from "@/pages/set-password";
 // RegisterPage rimossa - registrazione disabilitata per sicurezza
 import Sidebar from "@/components/layout/sidebar";
 import Topbar from "@/components/layout/topbar";
@@ -138,6 +139,7 @@ function Router() {
     <Switch>
       {/* Route pubbliche */}
       <Route path="/login" component={LoginPage} />
+      <Route path="/invite/:token" component={SetPasswordPage} />
       
       {/* Route protette */}
       {isAuthenticated ? (
