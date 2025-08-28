@@ -121,8 +121,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rate limiting per API pubbliche
   app.use('/api/', apiLimiter);
   
+  // Blocco globale metodi non standard su endpoint auth
+  app.all('/api/auth/login', (req, res, next) => {
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: "Solo POST consentito su /api/auth/login" });
+    }
+    next();
+  });
+  
+  app.all('/api/auth/me', (req, res, next) => {
+    if (req.method !== 'GET') {
+      return res.status(405).json({ error: "Solo GET consentito su /api/auth/me" });
+    }
+    next();
+  });
+  
+  // Middleware per bloccare metodi HTTP non autorizzati su endpoint specifici
+  const methodFilter = (allowedMethods: string[]) => {
+    return (req: Request, res: Response, next: NextFunction) => {
+      if (!allowedMethods.includes(req.method)) {
+        return res.status(405).json({ 
+          error: "Metodo non consentito",
+          allowed: allowedMethods 
+        });
+      }
+      next();
+    };
+  };
+
+  // Middleware per validazione Content-Type strict
+  const strictContentType = (req: Request, res: Response, next: NextFunction) => {
+    if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+      const contentType = req.get('Content-Type');
+      if (!contentType || !contentType.includes('application/json')) {
+        return res.status(415).json({
+          error: "Content-Type non supportato",
+          required: "application/json"
+        });
+      }
+    }
+    next();
+  };
+  
   // Authentication routes (pubbliche, senza autenticazione)
-  app.post("/api/auth/register", validateInput(registerSchema), async (req, res) => {
+  app.post("/api/auth/register", methodFilter(['POST']), strictContentType, validateInput(registerSchema), async (req, res) => {
     try {
       const { username, email } = req.body;
       
@@ -153,7 +195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/auth/login", loginLimiter, validateInput(loginSchema), async (req, res) => {
+  app.post("/api/auth/login", methodFilter(['POST']), strictContentType, loginLimiter, validateInput(loginSchema), async (req, res) => {
     try {
       const { username, password, twoFactorCode } = req.body;
       
@@ -210,7 +252,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/auth/logout", authenticateRequest, async (req, res) => {
+  app.post("/api/auth/logout", methodFilter(['POST']), authenticateRequest, async (req, res) => {
     try {
       const sessionId = req.session?.id;
       if (sessionId) {
@@ -224,7 +266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/auth/me", authenticateRequest, async (req, res) => {
+  app.get("/api/auth/me", methodFilter(['GET']), authenticateRequest, async (req, res) => {
     try {
       const user = req.session?.user;
       if (!user) {
@@ -366,7 +408,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/employees", authenticateRequest, validateInput(insertEmployeeSchema), async (req, res) => {
+  app.post("/api/employees", methodFilter(['POST']), strictContentType, authenticateRequest, validateInput(insertEmployeeSchema), async (req, res) => {
     try {
       const validatedData = insertEmployeeSchema.parse(req.body);
       const employee = await storage.createEmployee(validatedData);
@@ -379,7 +421,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/employees/:id", authenticateRequest, validateInput(insertEmployeeSchema.partial()), async (req, res) => {
+  app.put("/api/employees/:id", methodFilter(['PUT']), strictContentType, authenticateRequest, validateInput(insertEmployeeSchema.partial()), async (req, res) => {
     try {
       const validatedData = insertEmployeeSchema.partial().parse(req.body);
       const employee = await storage.updateEmployee(req.params.id, validatedData);
@@ -432,11 +474,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Endpoint per ricerca PC tramite QR scan - PUBBLICO per utilizzo mobile
   app.get("/api/pcs/qr/:pcId", async (req, res) => {
     try {
-      const pc = await storage.getPcByPcId(req.params.pcId);
+      // Validazione strict del pcId per prevenire path traversal
+      const pcId = req.params.pcId;
+      if (!pcId || pcId.includes('..') || pcId.includes('/') || pcId.includes('\\') || pcId.length > 50) {
+        return res.status(400).json({ 
+          message: "ID PC non valido",
+          error: "Formato ID non consentito"
+        });
+      }
+      
+      const pc = await storage.getPcByPcId(pcId);
       if (!pc) {
         return res.status(404).json({ 
           message: "PC non trovato", 
-          pcId: req.params.pcId 
+          pcId: pcId 
         });
       }
       
@@ -455,7 +506,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/pcs", authenticateRequest, validateInput(insertPcSchema), async (req, res) => {
+  app.post("/api/pcs", methodFilter(['POST']), strictContentType, authenticateRequest, validateInput(insertPcSchema), async (req, res) => {
     try {
       const validatedData = insertPcSchema.parse(req.body);
       
@@ -475,7 +526,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/pcs/:id", authenticateRequest, async (req, res) => {
+  app.put("/api/pcs/:id", methodFilter(['PUT']), strictContentType, authenticateRequest, validateInput(insertPcSchema.partial()), async (req, res) => {
     try {
       const validatedData = insertPcSchema.partial().parse(req.body);
       const pc = await storage.updatePc(req.params.id, validatedData);
