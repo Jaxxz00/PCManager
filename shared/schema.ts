@@ -42,6 +42,10 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("admin"), // admin, user
   isActive: boolean("is_active").notNull().default(true),
   lastLogin: timestamp("last_login"),
+  // 2FA fields
+  twoFactorSecret: text("two_factor_secret"),
+  twoFactorEnabled: boolean("two_factor_enabled").notNull().default(false),
+  backupCodes: text("backup_codes").array(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -75,6 +79,21 @@ export const insertUserSchema = createInsertSchema(users).omit({
 export const loginSchema = z.object({
   username: z.string().min(1, "Username richiesto"),
   password: z.string().min(1, "Password richiesta"),
+  twoFactorCode: z.string().optional(),
+});
+
+export const setup2FASchema = z.object({
+  secret: z.string().min(1, "Secret richiesto"),
+  token: z.string().length(6, "Codice deve essere di 6 cifre"),
+});
+
+export const verify2FASchema = z.object({
+  token: z.string().length(6, "Codice deve essere di 6 cifre"),
+});
+
+export const disable2FASchema = z.object({
+  password: z.string().min(1, "Password richiesta"),
+  token: z.string().length(6, "Codice deve essere di 6 cifre"),
 });
 
 export const registerSchema = insertUserSchema.extend({

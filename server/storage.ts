@@ -3,6 +3,8 @@ import { randomUUID } from "crypto";
 import { db } from "./db";
 import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
+import speakeasy from 'speakeasy';
+import qrcode from 'qrcode';
 
 export interface IStorage {
   // Employee methods
@@ -34,6 +36,13 @@ export interface IStorage {
   validateSession(sessionId: string): Promise<User | null>;
   deleteSession(sessionId: string): Promise<boolean>;
 
+  // 2FA methods
+  setup2FA(userId: string): Promise<{ secret: string; qrCodeUrl: string; backupCodes: string[] }>;
+  enable2FA(userId: string, secret: string, token: string): Promise<boolean>;
+  disable2FA(userId: string, password: string, token: string): Promise<boolean>;
+  verify2FA(userId: string, token: string): Promise<boolean>;
+  regenerateBackupCodes(userId: string): Promise<string[]>;
+
   // Dashboard stats
   getDashboardStats(): Promise<{
     totalPCs: number;
@@ -45,6 +54,26 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
+  // 2FA stub methods for interface compliance
+  async setup2FA(userId: string): Promise<{ secret: string; qrCodeUrl: string; backupCodes: string[] }> {
+    throw new Error("2FA not supported in memory storage");
+  }
+  
+  async enable2FA(userId: string, secret: string, token: string): Promise<boolean> {
+    throw new Error("2FA not supported in memory storage");
+  }
+  
+  async disable2FA(userId: string, password: string, token: string): Promise<boolean> {
+    throw new Error("2FA not supported in memory storage");
+  }
+  
+  async verify2FA(userId: string, token: string): Promise<boolean> {
+    throw new Error("2FA not supported in memory storage");
+  }
+  
+  async regenerateBackupCodes(userId: string): Promise<string[]> {
+    throw new Error("2FA not supported in memory storage");
+  }
   private employees: Map<string, Employee>;
   private pcs: Map<string, Pc>;
   private users: Map<string, User>;
@@ -270,6 +299,9 @@ export class MemStorage implements IStorage {
       role: insertData.role || 'admin',
       isActive: insertData.isActive ?? true,
       lastLogin: null,
+      twoFactorSecret: null,
+      twoFactorEnabled: false,
+      backupCodes: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -702,6 +734,161 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error("Error creating default admin user:", error);
     }
+  }
+
+  // 2FA methods implementation
+  async setup2FA(userId: string): Promise<{ secret: string; qrCodeUrl: string; backupCodes: string[] }> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Generate secret
+    const secret = speakeasy.generateSecret({
+      name: `Maori Group PC Manager (${user.username})`,
+      issuer: 'Maori Group',
+      length: 32,
+    });
+
+    // Generate QR code URL
+    const qrCodeUrl = await qrcode.toDataURL(secret.otpauth_url!);
+
+    // Generate backup codes
+    const backupCodes = this.generateBackupCodes();
+
+    return {
+      secret: secret.base32!,
+      qrCodeUrl,
+      backupCodes,
+    };
+  }
+
+  async enable2FA(userId: string, secret: string, token: string): Promise<boolean> {
+    // Verify the token with the secret
+    const verified = speakeasy.totp.verify({
+      secret,
+      token,
+      window: 2, // Allow 2 time steps of tolerance
+    });
+
+    if (!verified) {
+      return false;
+    }
+
+    // Generate backup codes
+    const backupCodes = this.generateBackupCodes();
+
+    // Update user with 2FA enabled
+    await db
+      .update(users)
+      .set({
+        twoFactorSecret: secret,
+        twoFactorEnabled: true,
+        backupCodes,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+
+    return true;
+  }
+
+  async disable2FA(userId: string, password: string, token: string): Promise<boolean> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      return false;
+    }
+
+    // Verify password
+    const passwordValid = await bcrypt.compare(password, user.passwordHash);
+    if (!passwordValid) {
+      return false;
+    }
+
+    // Verify 2FA token
+    if (!user.twoFactorSecret) {
+      return false;
+    }
+
+    const verified = speakeasy.totp.verify({
+      secret: user.twoFactorSecret,
+      token,
+      window: 2,
+    });
+
+    if (!verified) {
+      return false;
+    }
+
+    // Disable 2FA
+    await db
+      .update(users)
+      .set({
+        twoFactorSecret: null,
+        twoFactorEnabled: false,
+        backupCodes: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+
+    return true;
+  }
+
+  async verify2FA(userId: string, token: string): Promise<boolean> {
+    const user = await this.getUser(userId);
+    if (!user || !user.twoFactorSecret) {
+      return false;
+    }
+
+    // Check if it's a backup code first
+    if (user.backupCodes && user.backupCodes.includes(token)) {
+      // Remove used backup code
+      const updatedBackupCodes = user.backupCodes.filter(code => code !== token);
+      await db
+        .update(users)
+        .set({
+          backupCodes: updatedBackupCodes,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, userId));
+      
+      return true;
+    }
+
+    // Verify TOTP token
+    return speakeasy.totp.verify({
+      secret: user.twoFactorSecret,
+      token,
+      window: 2,
+    });
+  }
+
+  async regenerateBackupCodes(userId: string): Promise<string[]> {
+    const user = await this.getUser(userId);
+    if (!user || !user.twoFactorEnabled) {
+      throw new Error("2FA not enabled for this user");
+    }
+
+    const newBackupCodes = this.generateBackupCodes();
+
+    await db
+      .update(users)
+      .set({
+        backupCodes: newBackupCodes,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+
+    return newBackupCodes;
+  }
+
+  private generateBackupCodes(): string[] {
+    const codes: string[] = [];
+    for (let i = 0; i < 10; i++) {
+      // Generate 8-digit backup codes
+      const code = Math.floor(10000000 + Math.random() * 90000000).toString();
+      codes.push(code);
+    }
+    return codes;
   }
 }
 

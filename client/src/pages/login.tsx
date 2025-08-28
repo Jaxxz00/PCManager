@@ -16,11 +16,15 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
 
+  const [requires2FA, setRequires2FA] = useState(false);
+  const [credentials, setCredentials] = useState<{ username: string; password: string } | null>(null);
+
   const form = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       username: "",
       password: "",
+      twoFactorCode: "",
     },
   });
 
@@ -42,6 +46,16 @@ export default function LoginPage() {
       return response.json();
     },
     onSuccess: (data) => {
+      if (data.requires2FA) {
+        setRequires2FA(true);
+        setCredentials({ username: form.getValues('username'), password: form.getValues('password') });
+        toast({
+          title: "Autenticazione 2FA richiesta",
+          description: data.message,
+        });
+        return;
+      }
+      
       // Salvo il sessionId nel localStorage
       localStorage.setItem('sessionId', data.sessionId);
       
@@ -63,7 +77,15 @@ export default function LoginPage() {
   });
 
   const onSubmit = (data: LoginData) => {
-    loginMutation.mutate(data);
+    // Se siamo nella fase 2FA, aggiungo le credenziali salvate
+    if (requires2FA && credentials) {
+      loginMutation.mutate({
+        ...credentials,
+        twoFactorCode: data.twoFactorCode,
+      });
+    } else {
+      loginMutation.mutate(data);
+    }
   };
 
   return (
@@ -100,58 +122,111 @@ export default function LoginPage() {
           <CardContent className="p-8">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="username"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-700 font-medium">Username</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                          <Input
-                            placeholder="Inserisci username"
-                            className="pl-10 py-3 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                            data-testid="input-username"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {!requires2FA && (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="username"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-700 font-medium">Username</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                              <Input
+                                placeholder="Inserisci username"
+                                className="pl-10 py-3 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                data-testid="input-username"
+                                {...field}
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-700 font-medium">Password</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                          <Input
-                            type={showPassword ? "text" : "password"}
-                            placeholder="Inserisci password"
-                            className="pl-10 pr-10 py-3 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                            data-testid="input-password"
-                            {...field}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                            data-testid="button-toggle-password"
-                          >
-                            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                          </button>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-700 font-medium">Password</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                              <Input
+                                type={showPassword ? "text" : "password"}
+                                placeholder="Inserisci password"
+                                className="pl-10 pr-10 py-3 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                data-testid="input-password"
+                                {...field}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                                data-testid="button-toggle-password"
+                              >
+                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                              </button>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
+                )}
+
+                {requires2FA && (
+                  <div className="space-y-4">
+                    <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <Shield className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                      <h3 className="font-semibold text-blue-900 mb-1">Autenticazione a Due Fattori</h3>
+                      <p className="text-sm text-blue-700">Inserisci il codice di 6 cifre dalla tua app di autenticazione</p>
+                    </div>
+                    
+                    <FormField
+                      control={form.control}
+                      name="twoFactorCode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-700 font-medium">Codice 2FA</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                              <Input
+                                {...field}
+                                type="text"
+                                maxLength={8}
+                                className="pl-10 py-3 border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-center tracking-widest font-mono"
+                                placeholder="000000"
+                                data-testid="input-2fa-code"
+                                autoFocus
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="text-center">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRequires2FA(false);
+                          setCredentials(null);
+                          form.reset();
+                        }}
+                        className="text-sm text-gray-600 hover:text-gray-800 underline"
+                      >
+                        Torna al login
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 <Button
                   type="submit"
@@ -162,12 +237,12 @@ export default function LoginPage() {
                   {loginMutation.isPending ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
-                      Accesso in corso...
+                      {requires2FA ? "Verifica in corso..." : "Accesso in corso..."}
                     </>
                   ) : (
                     <>
                       <Shield className="mr-2 h-5 w-5" />
-                      Accedi al Sistema
+                      {requires2FA ? "Verifica Codice 2FA" : "Accedi al Sistema"}
                     </>
                   )}
                 </Button>

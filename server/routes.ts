@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertEmployeeSchema, insertPcSchema, loginSchema, registerSchema } from "@shared/schema";
+import { insertEmployeeSchema, insertPcSchema, loginSchema, registerSchema, setup2FASchema, verify2FASchema, disable2FASchema } from "@shared/schema";
 import { z } from "zod";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
@@ -145,7 +145,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/auth/login", validateInput(loginSchema), async (req, res) => {
     try {
-      const { username, password } = req.body;
+      const { username, password, twoFactorCode } = req.body;
       
       // Validazione credenziali
       const user = await storage.validatePassword(username, password);
@@ -157,11 +157,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Account disattivato" });
       }
       
+      // Se l'utente ha 2FA abilitato, verifica il codice
+      if (user.twoFactorEnabled) {
+        if (!twoFactorCode) {
+          return res.status(200).json({
+            requires2FA: true,
+            message: "Codice di autenticazione a due fattori richiesto"
+          });
+        }
+        
+        const isValid2FA = await storage.verify2FA(user.id, twoFactorCode);
+        if (!isValid2FA) {
+          return res.status(401).json({ error: "Codice 2FA non valido" });
+        }
+      }
+      
       // Creo sessione
       const sessionId = await storage.createSession(user.id);
       
       // Rimuovo la password hash dalla risposta
-      const { passwordHash, ...userResponse } = user;
+      const { passwordHash, twoFactorSecret, backupCodes, ...userResponse } = user;
       
       res.json({
         message: "Accesso effettuato con successo",
@@ -199,6 +214,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Get user error:', error);
       res.status(500).json({ error: "Errore durante il recupero utente" });
+    }
+  });
+
+  // 2FA Routes (tutte protette da autenticazione)
+  app.post("/api/auth/2fa/setup", authenticateRequest, async (req, res) => {
+    try {
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ error: "Utente non autenticato" });
+      }
+
+      const { secret, qrCodeUrl, backupCodes } = await storage.setup2FA(userId);
+      
+      res.json({
+        secret,
+        qrCodeUrl,
+        backupCodes
+      });
+    } catch (error) {
+      console.error('2FA setup error:', error);
+      res.status(500).json({ error: "Errore durante la configurazione 2FA" });
+    }
+  });
+
+  app.post("/api/auth/2fa/enable", authenticateRequest, validateInput(setup2FASchema), async (req, res) => {
+    try {
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ error: "Utente non autenticato" });
+      }
+
+      const { secret, token } = req.body;
+      const success = await storage.enable2FA(userId, secret, token);
+      
+      if (!success) {
+        return res.status(400).json({ error: "Codice di verifica non valido" });
+      }
+
+      res.json({ message: "2FA attivato con successo" });
+    } catch (error) {
+      console.error('2FA enable error:', error);
+      res.status(500).json({ error: "Errore durante l'attivazione 2FA" });
+    }
+  });
+
+  app.post("/api/auth/2fa/disable", authenticateRequest, validateInput(disable2FASchema), async (req, res) => {
+    try {
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ error: "Utente non autenticato" });
+      }
+
+      const { password, token } = req.body;
+      const success = await storage.disable2FA(userId, password, token);
+      
+      if (!success) {
+        return res.status(400).json({ error: "Password o codice non validi" });
+      }
+
+      res.json({ message: "2FA disattivato con successo" });
+    } catch (error) {
+      console.error('2FA disable error:', error);
+      res.status(500).json({ error: "Errore durante la disattivazione 2FA" });
+    }
+  });
+
+  app.post("/api/auth/2fa/verify", authenticateRequest, validateInput(verify2FASchema), async (req, res) => {
+    try {
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ error: "Utente non autenticato" });
+      }
+
+      const { token } = req.body;
+      const isValid = await storage.verify2FA(userId, token);
+      
+      res.json({ valid: isValid });
+    } catch (error) {
+      console.error('2FA verify error:', error);
+      res.status(500).json({ error: "Errore durante la verifica 2FA" });
+    }
+  });
+
+  app.post("/api/auth/2fa/regenerate-codes", authenticateRequest, async (req, res) => {
+    try {
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ error: "Utente non autenticato" });
+      }
+
+      const newBackupCodes = await storage.regenerateBackupCodes(userId);
+      
+      res.json({ backupCodes: newBackupCodes });
+    } catch (error) {
+      console.error('2FA regenerate codes error:', error);
+      res.status(500).json({ error: "Errore durante la rigenerazione codici backup" });
     }
   });
   
