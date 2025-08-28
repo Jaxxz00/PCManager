@@ -314,10 +314,7 @@ export default function Login() {
           {/* Footer Privacy Notice */}
           {!requires2FA && (
             <div className="text-center pt-6 border-t border-slate-100">
-              <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
-                <Shield className="h-3 w-3" />
-                <p>Accesso riservato al personale autorizzato</p>
-              </div>
+              <p className="text-xs text-slate-400">Accesso riservato al personale autorizzato</p>
             </div>
           )}
         </div>
