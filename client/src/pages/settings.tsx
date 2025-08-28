@@ -73,7 +73,8 @@ function TwoFactorAuthCard() {
   // Mutation per iniziare setup 2FA
   const setup2FAMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest("/api/auth/2fa/setup", "POST");
+      const response = await apiRequest("POST", "/api/auth/2fa/setup");
+      return await response.json();
     },
     onSuccess: (data) => {
       setQrCodeUrl(data.qrCodeUrl);
@@ -93,7 +94,8 @@ function TwoFactorAuthCard() {
   // Mutation per abilitare 2FA
   const enable2FAMutation = useMutation({
     mutationFn: async (data: LocalSetup2FAData) => {
-      return await apiRequest("/api/auth/2fa/enable", "POST", { secret, token: data.token });
+      const response = await apiRequest("POST", "/api/auth/2fa/enable", { secret, token: data.token });
+      return await response.json();
     },
     onSuccess: () => {
       toast({
@@ -115,7 +117,8 @@ function TwoFactorAuthCard() {
   // Mutation per disabilitare 2FA
   const disable2FAMutation = useMutation({
     mutationFn: async (data: LocalDisable2FAData) => {
-      return await apiRequest("/api/auth/2fa/disable", "POST", data);
+      const response = await apiRequest("POST", "/api/auth/2fa/disable", data);
+      return await response.json();
     },
     onSuccess: () => {
       toast({
