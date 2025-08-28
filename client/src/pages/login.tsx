@@ -102,11 +102,11 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 flex">
       {/* Left Panel - Branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 items-center justify-center">
-        {/* Logo identico a quello mobile */}
+        {/* Logo desktop più grande ma stesso stile del mobile */}
         <img 
           src={logoUrl} 
           alt="Maori Group Logo" 
-          className="h-36 w-auto object-contain"
+          className="h-64 w-auto object-contain"
           style={{
             mixBlendMode: 'multiply',
             filter: 'contrast(1.1)',
