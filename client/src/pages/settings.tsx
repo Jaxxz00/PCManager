@@ -399,33 +399,6 @@ export default function SettingsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Componente 2FA */}
         <TwoFactorAuthCard />
-        {/* Impostazioni Aziendali */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Building2 className="mr-2 h-5 w-5" />
-              Informazioni Azienda
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Nome Azienda</Label>
-              <Input defaultValue="Maori Group S.r.l." />
-            </div>
-            <div className="space-y-2">
-              <Label>Indirizzo</Label>
-              <Input placeholder="Via della Sede, 123 - Milano" />
-            </div>
-            <div className="space-y-2">
-              <Label>Email Aziendale</Label>
-              <Input type="email" placeholder="info@maorigroup.com" />
-            </div>
-            <Button className="w-full mt-4">
-              Salva Modifiche
-            </Button>
-          </CardContent>
-        </Card>
-
         {/* Database e Backup */}
         <Card>
           <CardHeader>
