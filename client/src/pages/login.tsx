@@ -104,18 +104,12 @@ export default function LoginPage() {
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 via-transparent to-slate-900/40"></div>
         <div className="relative z-10 flex flex-col justify-center items-center p-12 text-white">
-          <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-white/20">
+          <div className="w-full h-full flex items-center justify-center">
             <img 
               src={logoUrl} 
               alt="Maori Group Logo" 
-              className="h-20 w-auto object-contain mx-auto mb-6"
+              className="max-w-[80%] max-h-[60%] w-auto h-auto object-contain opacity-90 filter drop-shadow-2xl"
             />
-            <h1 className="text-4xl font-bold mb-4 text-center bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
-              MAORI GROUP
-            </h1>
-            <p className="text-lg text-blue-100 text-center max-w-sm leading-relaxed">
-              Sistema IT Aziendale per la gestione avanzata delle risorse informatiche
-            </p>
           </div>
         </div>
         {/* Decorative elements */}
@@ -128,30 +122,20 @@ export default function LoginPage() {
         <div className="w-full max-w-md space-y-8">
           {/* Mobile Logo */}
           <div className="lg:hidden text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-100 rounded-full mb-4">
-              <img 
-                src={logoUrl} 
-                alt="Maori Group Logo" 
-                className="h-10 w-auto object-contain"
-              />
-            </div>
-            <h1 className="text-2xl font-bold text-slate-900">MAORI GROUP</h1>
-            <p className="text-slate-600 mt-1">Sistema IT Aziendale</p>
+            <img 
+              src={logoUrl} 
+              alt="Maori Group Logo" 
+              className="h-24 w-auto object-contain mx-auto filter drop-shadow-lg"
+            />
           </div>
 
           {/* Form Header */}
-          <div className="text-center space-y-3">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-50 rounded-2xl mb-4">
-              <Shield className="h-7 w-7 text-blue-600" />
-            </div>
+          <div className="text-center space-y-6">
             <h2 className="text-3xl font-bold text-slate-900">
-              {requires2FA ? "Autenticazione 2FA" : "Accesso Sicuro"}
+              {requires2FA ? "Autenticazione 2FA" : ""}
             </h2>
             <p className="text-slate-600 text-lg">
-              {requires2FA 
-                ? "Inserisci il codice di autenticazione" 
-                : "Accedi con le tue credenziali aziendali"
-              }
+              {requires2FA && "Inserisci il codice di autenticazione"}
             </p>
           </div>
 
