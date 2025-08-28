@@ -5,6 +5,11 @@
 Sistema di gestione completo per computer e dipendenti aziendali di Maori Group. L'applicazione fornisce una dashboard centralizzata per il monitoraggio dell'inventario PC, assegnazioni dipendenti, gestione documenti e statistiche del sistema. Include interfaccia React moderna, backend Node.js/Express e **database PostgreSQL completamente integrato** per persistenza dati con cloud storage per documenti.
 
 ## Recent Changes (28/08/2025)
+- ✅ **DESIGN LOGIN COMPLETATO**: Layout ultra-minimale realizzato perfettamente
+- ✅ **LOGO INTEGRATO**: Sfondo bianco rimosso con mix-blend-mode multiply, integrazione seamless  
+- ✅ **LAYOUT SINGLE-PAGE**: Trasformato da split-screen a layout centrato con logo in alto
+- ✅ **AUTENTICAZIONE FIXATA**: Risolto problema sessionId e redirect post-login
+- ✅ **UI PULITA**: Rimossi tutti elementi decorativi, scudetti, ombre e effetti non necessari
 - ✅ **PENETRATION TESTING COMPLETATO**: Sistema sottoposto a test di resistenza approfonditi
 - ✅ **VULNERABILITÀ RISOLTE**: Rate limiting login, timing attack protection, endpoint hardening  
 - ✅ **SICUREZZA ENTERPRISE**: Protezione multi-layer con autenticazione 2FA + Google Authenticator
