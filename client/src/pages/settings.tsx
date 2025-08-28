@@ -364,51 +364,17 @@ function UserManagementCard() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent 
-                        className="z-[9999] bg-white border-2 border-blue-600 rounded-xl shadow-2xl min-w-[200px]"
+                        className="dialog-dropdown-special"
                         position="popper"
                         side="bottom"
                         align="start"
-                        sideOffset={12}
+                        sideOffset={16}
                         avoidCollisions={false}
-                        style={{
-                          position: 'fixed',
-                          zIndex: 99999,
-                          backgroundColor: '#ffffff',
-                          border: '3px solid #2563eb',
-                          borderRadius: '12px',
-                          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 4px rgba(37, 99, 235, 0.2)',
-                          minWidth: '220px',
-                          maxHeight: '200px'
-                        }}
                       >
-                        <SelectItem 
-                          value="user" 
-                          className="cursor-pointer"
-                          style={{
-                            backgroundColor: '#f8fafc',
-                            margin: '4px 8px',
-                            padding: '12px 16px',
-                            borderRadius: '8px',
-                            border: '1px solid #e2e8f0',
-                            color: '#1f2937',
-                            fontWeight: '600'
-                          }}
-                        >
+                        <SelectItem value="user">
                           👤 Utente Standard
                         </SelectItem>
-                        <SelectItem 
-                          value="admin" 
-                          className="cursor-pointer"
-                          style={{
-                            backgroundColor: '#f8fafc',
-                            margin: '4px 8px',
-                            padding: '12px 16px',
-                            borderRadius: '8px',
-                            border: '1px solid #e2e8f0',
-                            color: '#1f2937',
-                            fontWeight: '600'
-                          }}
-                        >
+                        <SelectItem value="admin">
                           🔧 Amministratore
                         </SelectItem>
                       </SelectContent>
