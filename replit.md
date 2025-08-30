@@ -4,7 +4,14 @@
 
 Sistema di gestione completo per computer e dipendenti aziendali di Maori Group. L'applicazione fornisce una dashboard centralizzata per il monitoraggio dell'inventario PC, assegnazioni dipendenti, gestione documenti e statistiche del sistema. Include interfaccia React moderna, backend Node.js/Express e **database PostgreSQL completamente integrato** per persistenza dati con cloud storage per documenti.
 
-## Recent Changes (28/08/2025)
+## Recent Changes (30/08/2025)
+- ✅ **SISTEMA NOTIFICHE RIPARATO**: Sostituito sistema hardcoded con NotificationBell dinamico basato su dati reali
+- ✅ **INVITI UTENTI EMAIL**: Sistema completo per invio email inviti con token temporanei e impostazione password
+- ✅ **DATABASE INVITE TOKENS**: Tabella inviteTokens per gestione token sicuri con scadenza 24h
+- ✅ **PAGINA SET PASSWORD**: Interfaccia pubblica per impostare password tramite link di invito  
+- ✅ **SENDGRID INTEGRAZIONE**: Preparato per invio email automatiche con guida completa API setup
+- ✅ **ADMIN USER MANAGEMENT**: Form creazione utenti semplificato senza password obbligatoria
+- ✅ **NOTIFICHE DINAMICHE**: Sistema genera automaticamente notifiche per garanzie, manutenzione, PC non assegnati
 - ✅ **DESIGN LOGIN COMPLETATO**: Layout ultra-minimale realizzato perfettamente
 - ✅ **LOGO INTEGRATO**: Sfondo bianco rimosso con mix-blend-mode multiply, integrazione seamless  
 - ✅ **LAYOUT SINGLE-PAGE**: Trasformato da split-screen a layout centrato con logo in alto
