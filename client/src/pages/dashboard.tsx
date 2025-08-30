@@ -1,5 +1,4 @@
 import StatsCards from "@/components/stats-cards";
-import NotificationBell from "@/components/notification-bell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -61,13 +60,6 @@ export default function Dashboard() {
         <div>
           <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
           <p className="text-muted-foreground">Panoramica generale del sistema PC</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <Badge variant="outline" className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4 text-green-500" />
-            Sistema Operativo
-          </Badge>
-          <NotificationBell />
         </div>
       </div>
 
@@ -239,9 +231,9 @@ export default function Dashboard() {
                   <p className="text-lg font-bold text-orange-600">{activePCs}</p>
                 </div>
                 <div className="text-center p-3 bg-purple-50 rounded-lg">
-                  <Clock className="h-6 w-6 text-purple-600 mx-auto mb-1" />
-                  <p className="text-xs text-muted-foreground">Uptime</p>
-                  <p className="text-lg font-bold text-purple-600">99.9%</p>
+                  <FileText className="h-6 w-6 text-purple-600 mx-auto mb-1" />
+                  <p className="text-xs text-muted-foreground">Documenti</p>
+                  <p className="text-lg font-bold text-purple-600">15</p>
                 </div>
               </div>
             </CardContent>
