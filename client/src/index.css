@@ -6,26 +6,26 @@
 
 @layer base {
   :root {
-    /* Professional color palette */
+    /* Maori Group color palette - blu scuro design system */
     --background: 0 0% 100%;
     --foreground: 210 11% 15%;
     --card: 0 0% 100%;
     --card-foreground: 210 11% 15%;
     --popover: 0 0% 100%;
     --popover-foreground: 210 11% 15%;
-    --primary: 213 94% 68%;
+    --primary: 214 84% 31%;
     --primary-foreground: 0 0% 100%;
     --secondary: 210 40% 96%;
     --secondary-foreground: 210 11% 15%;
     --muted: 210 40% 98%;
     --muted-foreground: 215 13% 65%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 210 11% 15%;
+    --accent: 214 84% 31%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 213 94% 68%;
+    --ring: 214 84% 31%;
     --radius: 0.75rem;
     
     /* Professional spacing */
@@ -41,19 +41,19 @@
     --card-foreground: 213 31% 91%;
     --popover: 210 11% 6%;
     --popover-foreground: 213 31% 91%;
-    --primary: 213 94% 68%;
+    --primary: 214 84% 45%;
     --primary-foreground: 210 11% 4%;
     --secondary: 210 7% 12%;
     --secondary-foreground: 213 31% 91%;
     --muted: 210 7% 12%;
     --muted-foreground: 215 14% 71%;
-    --accent: 210 7% 12%;
-    --accent-foreground: 213 31% 91%;
+    --accent: 214 84% 45%;
+    --accent-foreground: 210 11% 4%;
     --destructive: 0 63% 31%;
     --destructive-foreground: 213 31% 91%;
     --border: 210 7% 12%;
     --input: 210 7% 12%;
-    --ring: 213 94% 68%;
+    --ring: 214 84% 45%;
   }
 }
 
