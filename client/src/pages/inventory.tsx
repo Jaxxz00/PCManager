@@ -94,9 +94,20 @@ export default function Inventory() {
           (pc.pcId || '').toLowerCase().includes(searchLower) ||
           (pc.brand || '').toLowerCase().includes(searchLower) ||
           (pc.model || '').toLowerCase().includes(searchLower) ||
-          (pc.employee?.name || '').toLowerCase().includes(searchLower)
+          (pc.serialNumber || '').toLowerCase().includes(searchLower) ||
+          (pc.cpu || '').toLowerCase().includes(searchLower) ||
+          (pc.operatingSystem || '').toLowerCase().includes(searchLower) ||
+          (pc.employee?.name || '').toLowerCase().includes(searchLower) ||
+          (pc.employee?.email || '').toLowerCase().includes(searchLower) ||
+          (pc.notes || '').toLowerCase().includes(searchLower)
         );
-        console.log('Search match for', pc.pcId, ':', matches);
+        console.log('Search DEBUG for', pc.pcId, '- Brand:', pc.brand, '- SearchTerm:', searchLower, '- Matches:', matches);
+        console.log('Available fields:', {
+          pcId: pc.pcId,
+          brand: pc.brand,
+          model: pc.model,
+          employee: pc.employee?.name
+        });
         if (!matches) return false;
       }
       
