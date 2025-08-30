@@ -8,26 +8,24 @@ import {
   Settings,
   Tags,
   Building2,
-  ChevronRight,
   Shield,
   GitBranch
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: BarChart3, description: "Panoramica generale" },
-  { name: "Inventario PC", href: "/inventory", icon: Monitor, description: "Gestione computer" },
-  { name: "Dipendenti", href: "/employees", icon: Users, description: "Personale aziendale" },
-  { name: "Workflow Assegnazione", href: "/workflow", icon: GitBranch, description: "Processo guidato completo" },
-  { name: "Documenti", href: "/documents", icon: Shield, description: "Manleva e contratti" },
-  { name: "Etichette", href: "/labels", icon: Tags, description: "Stampa etichette" },
-  { name: "Report", href: "/reports", icon: FileText, description: "Analisi e statistiche" },
-  { name: "Manutenzione", href: "/maintenance", icon: Wrench, description: "Gestione interventi" },
+  { name: "Dashboard", href: "/", icon: BarChart3 },
+  { name: "Inventario PC", href: "/inventory", icon: Monitor },
+  { name: "Dipendenti", href: "/employees", icon: Users },
+  { name: "Workflow", href: "/workflow", icon: GitBranch },
+  { name: "Documenti", href: "/documents", icon: Shield },
+  { name: "Etichette", href: "/labels", icon: Tags },
+  { name: "Report", href: "/reports", icon: FileText },
+  { name: "Manutenzione", href: "/maintenance", icon: Wrench },
 ];
 
 const settings = [
-  { name: "Configurazione", href: "/settings", icon: Settings, description: "Impostazioni sistema" },
+  { name: "Impostazioni", href: "/settings", icon: Settings },
 ];
 
 export default function Sidebar() {
@@ -38,26 +36,22 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-80 bg-card shadow-xl flex-shrink-0 border-r border-border/50 h-screen flex flex-col">
-      {/* Professional Header */}
-      <div className="p-8 border-b border-border/50 bg-gradient-to-br from-primary/5 to-primary/10">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg p-1">
-            <img 
-              src="/assets/maori-logo.jpeg" 
-              alt="Maori Group Logo" 
-              className="h-full w-full object-contain rounded-xl"
-            />
+    <aside className="w-64 bg-card border-r border-border h-screen flex flex-col">
+      {/* Header */}
+      <div className="p-6 border-b border-border">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+            <Building2 className="h-6 w-6 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">MAORI GROUP</h1>
-            <p className="text-sm text-muted-foreground font-medium">Sistema IT Aziendale</p>
+            <h1 className="text-lg font-semibold text-foreground">PC Manager</h1>
+            <p className="text-xs text-muted-foreground">Maori Group</p>
           </div>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-6 space-y-2">
+      <nav className="flex-1 p-4">
         <div className="space-y-1">
           {navigation.map((item) => {
             const active = isActive(item.href);
@@ -66,34 +60,13 @@ export default function Sidebar() {
             return (
               <Link key={item.name} href={item.href}>
                 <div className={cn(
-                  "group flex items-center justify-between p-4 rounded-xl text-sm font-medium transition-all duration-200",
-                  "hover:bg-accent hover:text-accent-foreground hover:shadow-sm",
+                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
                   active 
-                    ? "bg-primary text-primary-foreground shadow-md" 
-                    : "text-foreground/80 hover:text-foreground"
+                    ? "bg-primary text-primary-foreground" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
                 )}>
-                  <div className="flex items-center gap-4">
-                    <Icon className={cn(
-                      "w-5 h-5",
-                      active ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
-                    )} />
-                    <div>
-                      <div className="font-semibold">{item.name}</div>
-                      <div className={cn(
-                        "text-xs",
-                        active ? "text-primary-foreground/80" : "text-muted-foreground"
-                      )}>
-                        {item.description}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <ChevronRight className={cn(
-                      "w-4 h-4 transition-transform duration-200",
-                      active ? "text-primary-foreground transform rotate-90" : "text-muted-foreground group-hover:text-foreground"
-                    )} />
-                  </div>
+                  <Icon className="h-4 w-4" />
+                  <span>{item.name}</span>
                 </div>
               </Link>
             );
@@ -101,63 +74,27 @@ export default function Sidebar() {
         </div>
 
         {/* Settings Section */}
-        <div className="pt-6 mt-6 border-t border-border/50">
-          <h3 className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-            Configurazione
-          </h3>
-          <div className="space-y-1">
-            {settings.map((item) => {
-              const active = isActive(item.href);
-              const Icon = item.icon;
-              
-              return (
-                <Link key={item.name} href={item.href}>
-                  <div className={cn(
-                    "group flex items-center justify-between p-4 rounded-xl text-sm font-medium transition-all duration-200",
-                    "hover:bg-accent hover:text-accent-foreground hover:shadow-sm",
-                    active 
-                      ? "bg-primary text-primary-foreground shadow-md" 
-                      : "text-foreground/80 hover:text-foreground"
-                  )}>
-                    <div className="flex items-center gap-4">
-                      <Icon className={cn(
-                        "w-5 h-5",
-                        active ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
-                      )} />
-                      <div>
-                        <div className="font-semibold">{item.name}</div>
-                        <div className={cn(
-                          "text-xs",
-                          active ? "text-primary-foreground/80" : "text-muted-foreground"
-                        )}>
-                          {item.description}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <ChevronRight className={cn(
-                      "w-4 h-4 transition-transform duration-200",
-                      active ? "text-primary-foreground transform rotate-90" : "text-muted-foreground group-hover:text-foreground"
-                    )} />
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+        <div className="pt-4 mt-4 border-t border-border">
+          {settings.map((item) => {
+            const active = isActive(item.href);
+            const Icon = item.icon;
+            
+            return (
+              <Link key={item.name} href={item.href}>
+                <div className={cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                  active 
+                    ? "bg-primary text-primary-foreground" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                )}>
+                  <Icon className="h-4 w-4" />
+                  <span>{item.name}</span>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </nav>
-
-      {/* Footer */}
-      <div className="p-6 border-t border-border/50 bg-muted/30">
-        <div className="text-center">
-          <p className="text-xs text-muted-foreground font-medium">
-            PC Manager v1.0
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Sistema professionale IT
-          </p>
-        </div>
-      </div>
     </aside>
   );
 }

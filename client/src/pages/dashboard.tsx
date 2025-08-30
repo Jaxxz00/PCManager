@@ -56,36 +56,33 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-primary via-primary/90 to-primary/80 rounded-xl p-6 text-primary-foreground shadow-xl">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-white/20 rounded-full backdrop-blur-sm">
-            <Monitor className="h-8 w-8" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold">Dashboard Gestionale PC</h1>
-            <p className="text-primary-foreground/80 text-lg">Panoramica completa dell'inventario e statistiche Maori Group</p>
-          </div>
+    <div className="space-y-6">
+      {/* Header Semplificato */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
+          <p className="text-muted-foreground">Panoramica generale del sistema</p>
         </div>
+        <Button onClick={() => setShowPcForm(true)} className="bg-primary hover:bg-primary/90">
+          <Plus className="mr-2 h-4 w-4" />
+          Aggiungi PC
+        </Button>
       </div>
       
       <StatsCards />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent PC Inventory */}
         <div className="lg:col-span-2">
-          <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50">
-            <CardHeader className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-t-lg">
+          <Card>
+            <CardHeader>
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-white/20 rounded-lg">
-                    <Monitor className="h-5 w-5" />
-                  </div>
-                  <CardTitle className="text-xl font-bold">Inventario PC Recente</CardTitle>
-                </div>
+                <CardTitle className="flex items-center gap-2">
+                  <Monitor className="h-5 w-5" />
+                  PC Recenti
+                </CardTitle>
                 <Link href="/inventory">
-                  <Button variant="ghost" size="sm" className="bg-white/20 text-white hover:bg-white/30 border-white/20">
+                  <Button variant="outline" size="sm">
                     Vedi Tutto
                     <ExternalLink className="ml-2 h-4 w-4" />
                   </Button>

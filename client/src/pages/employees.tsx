@@ -119,34 +119,12 @@ export default function Employees() {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Hero Header */}
-      <div className="bg-gradient-to-r from-primary via-primary/90 to-primary/80 rounded-xl p-6 text-primary-foreground shadow-xl">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-white/20 rounded-full backdrop-blur-sm">
-            <User className="h-8 w-8" />
-          </div>
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold">Team Maori Group</h1>
-            <p className="text-primary-foreground/80 text-lg">Gestione completa dei dipendenti e assegnazioni dispositivi</p>
-            <div className="flex items-center gap-6 mt-2 text-sm text-primary-foreground/70">
-              <div className="flex items-center gap-2">
-                <User className="w-4 h-4" />
-                <span>{employees.length} Dipendenti attivi</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Monitor className="w-4 h-4" />
-                <span>{pcs.filter(pc => pc.employeeId).length} PC assegnati</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="bg-gradient-to-r from-primary/10 to-primary/20 p-4 rounded-lg border border-primary/30">
-          <h2 className="text-lg font-semibold text-primary">Gestione Dipendenti</h2>
-          <p className="text-primary/80">Ricerca e gestisci il team aziendale</p>
+    <div className="space-y-6">
+      {/* Header Semplificato */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Dipendenti</h1>
+          <p className="text-muted-foreground">{employees.length} dipendenti attivi</p>
         </div>
         <Dialog open={showEmployeeForm} onOpenChange={setShowEmployeeForm}>
           <DialogTrigger asChild>

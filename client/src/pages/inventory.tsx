@@ -155,32 +155,17 @@ export default function Inventory() {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Hero Header */}
-      <div className="bg-gradient-to-r from-primary via-primary/90 to-primary/80 rounded-xl p-6 text-primary-foreground shadow-xl">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-white/20 rounded-full backdrop-blur-sm">
-            <Monitor className="h-8 w-8" />
-          </div>
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold">Inventario PC Aziendale</h1>
-            <p className="text-primary-foreground/80 text-lg">Gestione completa dell'inventario computer Maori Group - {pcs.length} dispositivi totali</p>
-            <div className="flex items-center gap-6 mt-2 text-sm text-primary-foreground/70">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span>{filteredPcs.filter(pc => pc.status === 'active').length} Attivi</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
-                <span>{filteredPcs.filter(pc => pc.status === 'maintenance').length} In Manutenzione</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
-                <span>{filteredPcs.filter(pc => pc.status === 'retired').length} Dismessi</span>
-              </div>
-            </div>
-          </div>
+    <div className="space-y-6">
+      {/* Header Semplificato */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Inventario PC</h1>
+          <p className="text-muted-foreground">{pcs.length} computer totali</p>
         </div>
+        <Button onClick={() => setShowPcForm(true)} className="bg-primary hover:bg-primary/90">
+          <Plus className="mr-2 h-4 w-4" />
+          Aggiungi PC
+        </Button>
       </div>
       
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
