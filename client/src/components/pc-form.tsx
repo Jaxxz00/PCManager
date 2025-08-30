@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 // Select components rimossi - usando elementi HTML nativi per evitare problemi di z-index nei dialog
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+
 import type { z } from "zod";
 
 type PcFormData = InsertPc;
@@ -77,17 +77,7 @@ export default function PcForm({ open, onOpenChange }: PcFormProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-xl" style={{ zIndex: 9999 }}>
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle>Aggiungi Nuovo PC</DialogTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onOpenChange(false)}
-              className="h-6 w-6"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+          <DialogTitle>Aggiungi Nuovo PC</DialogTitle>
           <DialogDescription>
             Inserisci i dettagli per registrare un nuovo computer nel sistema di inventario.
           </DialogDescription>
@@ -191,7 +181,11 @@ export default function PcForm({ open, onOpenChange }: PcFormProps) {
                       >
                         <option value="">Seleziona...</option>
                         <option value="Windows 11 Pro">Windows 11 Pro</option>
+                        <option value="Windows 11 Home">Windows 11 Home</option>
+                        <option value="Windows 11 Enterprise">Windows 11 Enterprise</option>
                         <option value="Windows 10 Pro">Windows 10 Pro</option>
+                        <option value="Windows 10 Home">Windows 10 Home</option>
+                        <option value="Windows 10 Enterprise">Windows 10 Enterprise</option>
                         <option value="Ubuntu Linux">Ubuntu Linux</option>
                         <option value="macOS">macOS</option>
                       </select>
