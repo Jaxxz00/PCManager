@@ -78,7 +78,7 @@ export default function Inventory() {
   const maintenancePCs = pcs.filter(pc => pc.status === 'maintenance').length;
 
   // Brand unici per filtro
-  const uniqueBrands = [...new Set(pcs.map(pc => pc.brand))].filter(Boolean);
+  const uniqueBrands = Array.from(new Set(pcs.map(pc => pc.brand))).filter(Boolean);
 
   const getStatusBadge = (status: string) => {
     switch (status) {

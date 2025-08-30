@@ -87,12 +87,14 @@ export default function Employees() {
     },
   });
 
-  const filteredEmployees = employees.filter((employee) =>
-    employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    employee.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    employee.position.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredEmployees = useMemo(() => {
+    return employees.filter((employee) =>
+      employee.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      employee.email.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      employee.department.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      employee.position.toLowerCase().includes(debouncedSearch.toLowerCase())
+    );
+  }, [employees, debouncedSearch]);
 
   const getEmployeePcCount = (employeeId: string) => {
     return pcs.filter((pc: any) => pc.employeeId === employeeId).length;
@@ -120,11 +122,11 @@ export default function Employees() {
 
   return (
     <div className="space-y-6">
-      {/* Header Semplificato */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Dipendenti</h1>
-          <p className="text-muted-foreground">{employees.length} dipendenti attivi</p>
+          <h1 className="text-3xl font-bold text-foreground">Dipendenti</h1>
+          <p className="text-muted-foreground">Gestione dipendenti aziendali - {employees.length} totali</p>
         </div>
         <Dialog open={showEmployeeForm} onOpenChange={setShowEmployeeForm}>
           <DialogTrigger asChild>
@@ -214,19 +216,15 @@ export default function Employees() {
       </div>
 
       {/* Search */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Cerca per nome, email, dipartimento o posizione..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+        <Input
+          placeholder="Cerca dipendenti..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10"
+        />
+      </div>
 
       {/* Employees Table */}
       <Card>
