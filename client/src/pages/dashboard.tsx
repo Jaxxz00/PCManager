@@ -214,7 +214,7 @@ export default function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div className="text-center p-3 bg-blue-50 rounded-lg">
                   <Monitor className="h-6 w-6 text-blue-600 mx-auto mb-1" />
                   <p className="text-xs text-muted-foreground">PC Totali</p>
@@ -229,11 +229,6 @@ export default function Dashboard() {
                   <CheckCircle className="h-6 w-6 text-orange-600 mx-auto mb-1" />
                   <p className="text-xs text-muted-foreground">PC Attivi</p>
                   <p className="text-lg font-bold text-orange-600">{activePCs}</p>
-                </div>
-                <div className="text-center p-3 bg-purple-50 rounded-lg">
-                  <FileText className="h-6 w-6 text-purple-600 mx-auto mb-1" />
-                  <p className="text-xs text-muted-foreground">Documenti</p>
-                  <p className="text-lg font-bold text-purple-600">15</p>
                 </div>
               </div>
             </CardContent>
