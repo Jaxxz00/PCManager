@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Bell, AlertTriangle, Wrench, Calendar, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +22,25 @@ export default function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
   const [dismissedNotifications, setDismissedNotifications] = useState<string[]>([]);
 
+  // Carica notifiche dismissate dal localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem('dismissed-notifications');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        setDismissedNotifications(parsed);
+      } catch (error) {
+        console.error('Error parsing dismissed notifications:', error);
+      }
+    }
+  }, []);
+
+  // Salva notifiche dismissate nel localStorage
+  const saveDismissedNotifications = (newDismissed: string[]) => {
+    setDismissedNotifications(newDismissed);
+    localStorage.setItem('dismissed-notifications', JSON.stringify(newDismissed));
+  };
+
   const { data: pcs = [] } = useQuery<PcWithEmployee[]>({
     queryKey: ["/api/pcs"],
   });
@@ -30,28 +49,30 @@ export default function NotificationBell() {
     const notifications: Notification[] = [];
     const now = new Date();
     const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-    const ninetyDaysFromNow = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
 
     pcs.forEach(pc => {
-      const warrantyDate = new Date(pc.warrantyExpiry);
-      
       // Notifiche garanzia in scadenza
-      if (warrantyDate <= thirtyDaysFromNow && warrantyDate > now) {
-        notifications.push({
-          id: `warranty-${pc.id}`,
-          type: 'warranty',
-          title: 'Garanzia in Scadenza',
-          message: `La garanzia del PC ${pc.pcId} scade il ${warrantyDate.toLocaleDateString('it-IT')}`,
-          pcId: pc.pcId,
-          priority: warrantyDate <= new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) ? 'high' : 'medium',
-          date: warrantyDate
-        });
+      if (pc.warrantyExpiry) {
+        const warrantyDate = new Date(pc.warrantyExpiry);
+        if (warrantyDate <= thirtyDaysFromNow && warrantyDate > now) {
+          const notificationId = `warranty-${pc.id}-${warrantyDate.toISOString().split('T')[0]}`;
+          notifications.push({
+            id: notificationId,
+            type: 'warranty',
+            title: 'Garanzia in Scadenza',
+            message: `La garanzia del PC ${pc.pcId} scade il ${warrantyDate.toLocaleDateString('it-IT')}`,
+            pcId: pc.pcId,
+            priority: warrantyDate <= new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) ? 'high' : 'medium',
+            date: warrantyDate
+          });
+        }
       }
 
       // Notifiche manutenzione
       if (pc.status === 'maintenance') {
+        const notificationId = `maintenance-${pc.id}`;
         notifications.push({
-          id: `maintenance-${pc.id}`,
+          id: notificationId,
           type: 'maintenance',
           title: 'PC in Manutenzione',
           message: `Il PC ${pc.pcId} è attualmente in manutenzione`,
@@ -61,17 +82,22 @@ export default function NotificationBell() {
         });
       }
 
-      // Notifiche PC non assegnati
-      if (!pc.employeeId) {
-        notifications.push({
-          id: `unassigned-${pc.id}`,
-          type: 'assignment',
-          title: 'PC Non Assegnato',
-          message: `Il PC ${pc.pcId} non è assegnato a nessun dipendente`,
-          pcId: pc.pcId,
-          priority: 'low',
-          date: pc.createdAt ? new Date(pc.createdAt) : new Date()
-        });
+      // Notifiche PC non assegnati (solo se il PC è stato creato da più di 1 giorno)
+      if (!pc.employeeId && pc.createdAt) {
+        const createdDate = new Date(pc.createdAt);
+        const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        if (createdDate < oneDayAgo) {
+          const notificationId = `unassigned-${pc.id}`;
+          notifications.push({
+            id: notificationId,
+            type: 'assignment',
+            title: 'PC Non Assegnato',
+            message: `Il PC ${pc.pcId} non è assegnato a nessun dipendente`,
+            pcId: pc.pcId,
+            priority: 'low',
+            date: createdDate
+          });
+        }
       }
     });
 
@@ -82,7 +108,8 @@ export default function NotificationBell() {
   const notificationCount = notifications.length;
 
   const dismissNotification = (notificationId: string) => {
-    setDismissedNotifications(prev => [...prev, notificationId]);
+    const newDismissed = [...dismissedNotifications, notificationId];
+    saveDismissedNotifications(newDismissed);
   };
 
   const getIcon = (type: string) => {
@@ -177,7 +204,7 @@ export default function NotificationBell() {
                     variant="outline" 
                     size="sm" 
                     className="w-full"
-                    onClick={() => setDismissedNotifications(notifications.map(n => n.id))}
+                    onClick={() => saveDismissedNotifications([...dismissedNotifications, ...notifications.map(n => n.id)])}
                   >
                     Segna Tutte Come Lette
                   </Button>
