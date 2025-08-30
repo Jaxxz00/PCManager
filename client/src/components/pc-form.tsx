@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+// Select components rimossi - usando elementi HTML nativi per evitare problemi di z-index nei dialog
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
@@ -145,19 +145,20 @@ export default function PcForm({ open, onOpenChange }: PcFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>RAM (GB)</FormLabel>
-                    <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value.toString()}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleziona..." />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="8">8 GB</SelectItem>
-                        <SelectItem value="16">16 GB</SelectItem>
-                        <SelectItem value="32">32 GB</SelectItem>
-                        <SelectItem value="64">64 GB</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <select
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value))}
+                        value={field.value.toString()}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="">Seleziona...</option>
+                        <option value="8">8 GB</option>
+                        <option value="16">16 GB</option>
+                        <option value="32">32 GB</option>
+                        <option value="64">64 GB</option>
+                      </select>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -183,19 +184,18 @@ export default function PcForm({ open, onOpenChange }: PcFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Sistema Operativo</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleziona..." />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Windows 11 Pro">Windows 11 Pro</SelectItem>
-                        <SelectItem value="Windows 10 Pro">Windows 10 Pro</SelectItem>
-                        <SelectItem value="Ubuntu Linux">Ubuntu Linux</SelectItem>
-                        <SelectItem value="macOS">macOS</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <select
+                        {...field}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="">Seleziona...</option>
+                        <option value="Windows 11 Pro">Windows 11 Pro</option>
+                        <option value="Windows 10 Pro">Windows 10 Pro</option>
+                        <option value="Ubuntu Linux">Ubuntu Linux</option>
+                        <option value="macOS">macOS</option>
+                      </select>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -235,18 +235,16 @@ export default function PcForm({ open, onOpenChange }: PcFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="active">Attivo</SelectItem>
-                        <SelectItem value="maintenance">Manutenzione</SelectItem>
-                        <SelectItem value="retired">Dismesso</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <select
+                        {...field}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="active">Attivo</option>
+                        <option value="maintenance">Manutenzione</option>
+                        <option value="retired">Dismesso</option>
+                      </select>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
