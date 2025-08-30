@@ -22,7 +22,7 @@ export default function Topbar() {
   const [showSearchDialog, setShowSearchDialog] = useState(false);
 
   const handleSearchClick = () => {
-    console.log('Search clicked - opening dialog');
+    console.log('🔍 Search clicked - opening dialog, current state:', showSearchDialog);
     setShowSearchDialog(true);
   };
 

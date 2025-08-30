@@ -17,7 +17,7 @@ export function GlobalSearchDialog({ isOpen, onClose, initialSearchTerm = "" }: 
   const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
   const [, setLocation] = useLocation();
 
-  console.log('GlobalSearchDialog render:', { isOpen, initialSearchTerm });
+  console.log('🔍 GlobalSearchDialog render:', { isOpen, initialSearchTerm, searchTerm });
 
   const { data: pcs = [] } = useQuery<PcWithEmployee[]>({
     queryKey: ["/api/pcs"],
