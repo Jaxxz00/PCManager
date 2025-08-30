@@ -39,8 +39,7 @@ export default function Inventory() {
     searchTerm,
     debouncedSearch,
     statusFilter,
-    brandFilter,
-    filteredPcsLength: filteredPcs?.length
+    brandFilter
   });
 
   const deletePcMutation = useMutation({
@@ -66,9 +65,19 @@ export default function Inventory() {
 
   // Filtri e ricerca
   const filteredPcs = useMemo(() => {
-    if (!pcs) return [];
+    console.log('Filtering Debug:', { 
+      pcs: pcs?.length, 
+      search: debouncedSearch, 
+      status: statusFilter, 
+      brand: brandFilter 
+    });
     
-    return pcs.filter((pc: PcWithEmployee) => {
+    if (!pcs || pcs.length === 0) {
+      console.log('No PCs to filter');
+      return [];
+    }
+    
+    let filtered = pcs.filter((pc: PcWithEmployee) => {
       // Filtro ricerca testuale
       if (debouncedSearch.trim()) {
         const searchLower = debouncedSearch.toLowerCase().trim();
@@ -85,36 +94,32 @@ export default function Inventory() {
           pc.notes || ''
         ];
         
-        // Debug ricerca solo se necessario
-        if (debouncedSearch === 'dell' || debouncedSearch === 'Dell') {
-          console.log('Search Debug for Dell:', {
-            searchTerm: debouncedSearch,
-            searchLower,
-            pcId: pc.pcId,
-            brand: pc.brand,
-            fields: searchFields,
-            matches: searchFields.map(field => ({
-              field,
-              includes: field.toLowerCase().includes(searchLower)
-            }))
-          });
-        }
-        
         const matchesSearch = searchFields.some(field => 
           field.toLowerCase().includes(searchLower)
         );
+        
+        console.log('Search result for', pc.pcId, ':', matchesSearch, searchFields);
         
         if (!matchesSearch) return false;
       }
 
       // Filtro stato
-      if (statusFilter && pc.status !== statusFilter) return false;
+      if (statusFilter && pc.status !== statusFilter) {
+        console.log('Status filter failed for', pc.pcId, ':', pc.status, '!=', statusFilter);
+        return false;
+      }
       
       // Filtro marca
-      if (brandFilter && pc.brand !== brandFilter) return false;
+      if (brandFilter && pc.brand !== brandFilter) {
+        console.log('Brand filter failed for', pc.pcId, ':', pc.brand, '!=', brandFilter);
+        return false;
+      }
 
       return true;
     });
+    
+    console.log('Filtered result:', filtered.length, 'out of', pcs.length);
+    return filtered;
   }, [pcs, debouncedSearch, statusFilter, brandFilter]);
 
   // Statistiche per le cards
