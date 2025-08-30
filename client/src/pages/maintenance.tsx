@@ -18,7 +18,9 @@ import {
   Eye,
   Edit,
   Trash2,
-  Settings
+  Settings,
+  FileText,
+  Download
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,13 +38,14 @@ import { it } from "date-fns/locale";
 import type { PcWithEmployee } from "@shared/schema";
 import { z } from "zod";
 
-// Schema per gli interventi di manutenzione
+// Schema per intervento
 const maintenanceSchema = z.object({
   pcId: z.string().min(1, "Seleziona un PC"),
   type: z.string().min(1, "Il tipo di intervento è obbligatorio"),
   priority: z.string().min(1, "La priorità è obbligatoria"),
   description: z.string().min(1, "La descrizione è obbligatoria"),
   technician: z.string().min(1, "Il tecnico è obbligatorio"),
+  scheduledDate: z.string().optional(),
   estimatedCost: z.string().optional(),
   notes: z.string().optional(),
 });
@@ -75,7 +78,8 @@ interface MaintenanceRecord {
 }
 
 export default function Maintenance() {
-  const [showMaintenanceForm, setShowMaintenanceForm] = useState(false);
+  const [showMaintenanceDialog, setShowMaintenanceDialog] = useState(false);
+  const [viewingRecord, setViewingRecord] = useState<MaintenanceRecord | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("");
@@ -84,22 +88,22 @@ export default function Maintenance() {
 
   const debouncedSearch = useDebounce(searchTerm, 300);
 
-  // Mock data - sostituire con API reali
+  // Mock data con esempi realistici
   const { data: maintenanceRecords = [], isLoading } = useQuery<MaintenanceRecord[]>({
     queryKey: ["/api/maintenance"],
     queryFn: async () => {
       return [
         {
-          id: "1",
+          id: "maint-001",
           pcId: "49a472d5-0d12-47c4-954b-6c0a811696e3",
-          type: "Sostituzione RAM",
+          type: "Sostituzione Hardware",
           priority: "high",
           status: "in_progress",
-          description: "Aggiornamento RAM da 8GB a 16GB per migliorare le prestazioni",
+          description: "Sostituzione SSD da 256GB a 512GB per migliorare performance sistema operativo",
           technician: "Marco Bianchi",
-          estimatedCost: 120,
-          actualCost: 115,
-          notes: "RAM Kingston DDR4-3200 16GB",
+          estimatedCost: 180,
+          actualCost: 165,
+          notes: "SSD Samsung 980 PRO 512GB - installazione completata",
           createdAt: "2025-08-25T09:00:00Z",
           scheduledDate: "2025-08-30T14:00:00Z",
           pc: {
@@ -110,15 +114,16 @@ export default function Maintenance() {
           }
         },
         {
-          id: "2",
-          pcId: "pc-002",
+          id: "maint-002",
+          pcId: "pc-hp-002",
           type: "Pulizia Sistema",
           priority: "medium",
           status: "completed",
-          description: "Pulizia completa sistema operativo e rimozione malware",
+          description: "Pulizia completa del sistema operativo, rimozione malware e ottimizzazione prestazioni",
           technician: "Sara Verdi",
           estimatedCost: 50,
           actualCost: 45,
+          notes: "Sistema completamente pulito, antivirus aggiornato",
           createdAt: "2025-08-20T10:30:00Z",
           scheduledDate: "2025-08-22T09:00:00Z",
           completedDate: "2025-08-22T11:30:00Z",
@@ -129,21 +134,61 @@ export default function Maintenance() {
           }
         },
         {
-          id: "3",
+          id: "maint-003",
           pcId: "49a472d5-0d12-47c4-954b-6c0a811696e3",
-          type: "Sostituzione SSD",
+          type: "Aggiornamento Software",
           priority: "urgent",
           status: "pending",
-          description: "SSD principale danneggiato, necessaria sostituzione immediata",
+          description: "Aggiornamento critico Windows 11 e suite Office 365 per compatibilità con nuovi sistemi aziendali",
           technician: "Andrea Neri",
-          estimatedCost: 200,
+          estimatedCost: 0,
           createdAt: "2025-08-28T16:00:00Z",
           scheduledDate: "2025-08-31T08:00:00Z",
+          notes: "Aggiornamento da eseguire fuori orario lavorativo",
           pc: {
             pcId: "PC-001",
             brand: "Dell",
             model: "OptiPlex 7090",
             employee: { name: "Luca Rossi", email: "luca.rossi@maorigroup.com" }
+          }
+        },
+        {
+          id: "maint-004",
+          pcId: "pc-lenovo-003",
+          type: "Installazione",
+          priority: "low",
+          status: "completed",
+          description: "Installazione nuovo software CAD AutoCAD 2024 per ufficio tecnico",
+          technician: "Marco Bianchi",
+          estimatedCost: 25,
+          actualCost: 25,
+          createdAt: "2025-08-15T14:00:00Z",
+          scheduledDate: "2025-08-18T09:00:00Z",
+          completedDate: "2025-08-18T10:45:00Z",
+          notes: "Licenza attivata, formazione utente completata",
+          pc: {
+            pcId: "PC-003",
+            brand: "Lenovo",
+            model: "ThinkCentre M90q",
+            employee: { name: "Giuseppe Alberti", email: "giuseppe.alberti@maorigroup.com" }
+          }
+        },
+        {
+          id: "maint-005",
+          pcId: "pc-asus-004",
+          type: "Diagnosi",
+          priority: "medium",
+          status: "in_progress",
+          description: "Diagnosi problemi di surriscaldamento e rallentamenti improvvisi durante uso intensivo",
+          technician: "Sara Verdi",
+          estimatedCost: 30,
+          createdAt: "2025-08-27T11:20:00Z",
+          scheduledDate: "2025-08-29T15:30:00Z",
+          notes: "Test hardware in corso, probabile problema ventole",
+          pc: {
+            pcId: "PC-004",
+            brand: "ASUS",
+            model: "ExpertCenter D500MA"
           }
         }
       ];
@@ -162,15 +207,15 @@ export default function Maintenance() {
       priority: "",
       description: "",
       technician: "",
+      scheduledDate: "",
       estimatedCost: "",
       notes: ""
     }
   });
 
-  // Filtri interventi
+  // Filtri
   const filteredRecords = useMemo(() => {
     return maintenanceRecords.filter((record) => {
-      // Filtro ricerca
       if (debouncedSearch.trim()) {
         const searchLower = debouncedSearch.toLowerCase();
         const matches = (
@@ -183,12 +228,10 @@ export default function Maintenance() {
         if (!matches) return false;
       }
 
-      // Filtro stato
       if (statusFilter && record.status !== statusFilter) {
         return false;
       }
 
-      // Filtro priorità
       if (priorityFilter && record.priority !== priorityFilter) {
         return false;
       }
@@ -198,22 +241,26 @@ export default function Maintenance() {
   }, [maintenanceRecords, debouncedSearch, statusFilter, priorityFilter]);
 
   // Statistiche
-  const totalRecords = maintenanceRecords.length;
-  const pendingRecords = maintenanceRecords.filter(r => r.status === 'pending').length;
-  const inProgressRecords = maintenanceRecords.filter(r => r.status === 'in_progress').length;
-  const completedRecords = maintenanceRecords.filter(r => r.status === 'completed').length;
-  const totalCost = maintenanceRecords
-    .filter(r => r.actualCost || r.estimatedCost)
-    .reduce((sum, r) => sum + (r.actualCost || r.estimatedCost || 0), 0);
+  const stats = useMemo(() => {
+    const total = maintenanceRecords.length;
+    const pending = maintenanceRecords.filter(r => r.status === 'pending').length;
+    const inProgress = maintenanceRecords.filter(r => r.status === 'in_progress').length;
+    const completed = maintenanceRecords.filter(r => r.status === 'completed').length;
+    const totalCost = maintenanceRecords
+      .filter(r => r.actualCost || r.estimatedCost)
+      .reduce((sum, r) => sum + (r.actualCost || r.estimatedCost || 0), 0);
+    
+    return { total, pending, inProgress, completed, totalCost };
+  }, [maintenanceRecords]);
 
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
       case "urgent":
         return <Badge variant="destructive" className="text-xs">Urgente</Badge>;
       case "high":
-        return <Badge variant="default" className="bg-orange-100 text-orange-800 text-xs">Alta</Badge>;
+        return <Badge className="bg-orange-100 text-orange-800 text-xs">Alta</Badge>;
       case "medium":
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-xs">Media</Badge>;
+        return <Badge className="bg-yellow-100 text-yellow-800 text-xs">Media</Badge>;
       case "low":
         return <Badge variant="outline" className="text-xs">Bassa</Badge>;
       default:
@@ -224,11 +271,11 @@ export default function Maintenance() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "pending":
-        return <Badge variant="outline" className="bg-blue-100 text-blue-800 text-xs">In Attesa</Badge>;
+        return <Badge className="bg-blue-100 text-blue-800 text-xs">In Attesa</Badge>;
       case "in_progress":
-        return <Badge variant="default" className="bg-yellow-100 text-yellow-800 text-xs">In Corso</Badge>;
+        return <Badge className="bg-yellow-100 text-yellow-800 text-xs">In Corso</Badge>;
       case "completed":
-        return <Badge variant="default" className="bg-green-100 text-green-800 text-xs">Completato</Badge>;
+        return <Badge className="bg-green-100 text-green-800 text-xs">Completato</Badge>;
       case "cancelled":
         return <Badge variant="destructive" className="text-xs">Annullato</Badge>;
       default:
@@ -237,13 +284,37 @@ export default function Maintenance() {
   };
 
   const onSubmit = (data: MaintenanceFormData) => {
-    console.log("Intervento da creare:", data);
+    console.log("Nuovo intervento:", data);
     toast({
       title: "Intervento programmato",
-      description: "L'intervento di manutenzione è stato aggiunto al sistema."
+      description: "L'intervento di manutenzione è stato aggiunto con successo."
     });
-    setShowMaintenanceForm(false);
+    setShowMaintenanceDialog(false);
     form.reset();
+  };
+
+  const exportToCSV = () => {
+    const csvContent = [
+      ["PC", "Tipo", "Priorità", "Stato", "Tecnico", "Costo", "Data Programmata", "Descrizione"],
+      ...filteredRecords.map(record => [
+        record.pc?.pcId || '',
+        record.type,
+        record.priority,
+        record.status,
+        record.technician,
+        record.actualCost || record.estimatedCost || '0',
+        record.scheduledDate ? format(new Date(record.scheduledDate), "dd/MM/yyyy") : '',
+        record.description
+      ])
+    ].map(row => row.join(",")).join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `manutenzione-${format(new Date(), "dd-MM-yyyy")}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
   };
 
   return (
@@ -252,186 +323,210 @@ export default function Maintenance() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Centro Manutenzione</h1>
-          <p className="text-muted-foreground">Gestione interventi e manutenzione PC - {totalRecords} interventi totali</p>
+          <p className="text-muted-foreground">
+            Gestione completa interventi di manutenzione - {stats.total} interventi registrati
+          </p>
         </div>
-        <Dialog open={showMaintenanceForm} onOpenChange={setShowMaintenanceForm}>
-          <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90">
-              <Plus className="mr-2 h-4 w-4" />
-              Nuovo Intervento
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Programma Nuovo Intervento</DialogTitle>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="pcId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>PC</FormLabel>
-                        <FormControl>
-                          <select
-                            {...field}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                          >
-                            <option value="">Seleziona PC</option>
-                            {pcs.map(pc => (
-                              <option key={pc.id} value={pc.id}>
-                                {pc.pcId} - {pc.brand} {pc.model}
-                              </option>
-                            ))}
-                          </select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Tipo Intervento</FormLabel>
-                        <FormControl>
-                          <select
-                            {...field}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                          >
-                            <option value="">Seleziona tipo</option>
-                            <option value="Sostituzione Hardware">Sostituzione Hardware</option>
-                            <option value="Aggiornamento Software">Aggiornamento Software</option>
-                            <option value="Pulizia Sistema">Pulizia Sistema</option>
-                            <option value="Installazione">Installazione</option>
-                            <option value="Diagnosi">Diagnosi</option>
-                          </select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="priority"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Priorità</FormLabel>
-                        <FormControl>
-                          <select
-                            {...field}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                          >
-                            <option value="">Seleziona priorità</option>
-                            <option value="low">Bassa</option>
-                            <option value="medium">Media</option>
-                            <option value="high">Alta</option>
-                            <option value="urgent">Urgente</option>
-                          </select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="technician"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Tecnico Assegnato</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Nome del tecnico" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Descrizione Intervento</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Descrivi dettagliatamente l'intervento da eseguire" 
-                          className="min-h-[80px]"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="estimatedCost"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Costo Stimato (€)</FormLabel>
-                        <FormControl>
-                          <Input type="number" placeholder="0.00" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="flex items-end">
+        <div className="flex gap-3">
+          <Button 
+            variant="outline" 
+            onClick={exportToCSV}
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Esporta CSV
+          </Button>
+          <Dialog open={showMaintenanceDialog} onOpenChange={setShowMaintenanceDialog}>
+            <DialogTrigger asChild>
+              <Button className="bg-primary hover:bg-primary/90 flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Nuovo Intervento
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Programma Nuovo Intervento di Manutenzione</DialogTitle>
+              </DialogHeader>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
-                      name="notes"
+                      name="pcId"
                       render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormLabel>Note Aggiuntive</FormLabel>
+                        <FormItem>
+                          <FormLabel>PC da Manutenere</FormLabel>
                           <FormControl>
-                            <Input placeholder="Note opzionali" {...field} />
+                            <select
+                              {...field}
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            >
+                              <option value="">Seleziona PC</option>
+                              {pcs.map(pc => (
+                                <option key={pc.id} value={pc.id}>
+                                  {pc.pcId} - {pc.brand} {pc.model}
+                                  {pc.employee && ` (${pc.employee.name})`}
+                                </option>
+                              ))}
+                            </select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Tipo Intervento</FormLabel>
+                          <FormControl>
+                            <select
+                              {...field}
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            >
+                              <option value="">Seleziona tipo</option>
+                              <option value="Sostituzione Hardware">Sostituzione Hardware</option>
+                              <option value="Aggiornamento Software">Aggiornamento Software</option>
+                              <option value="Pulizia Sistema">Pulizia Sistema</option>
+                              <option value="Installazione">Installazione</option>
+                              <option value="Diagnosi">Diagnosi</option>
+                            </select>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   </div>
-                </div>
 
-                <div className="flex justify-end space-x-3 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowMaintenanceForm(false)}
-                  >
-                    Annulla
-                  </Button>
-                  <Button type="submit" className="bg-primary hover:bg-primary/90">
-                    Programma Intervento
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+                  <div className="grid grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="priority"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Priorità</FormLabel>
+                          <FormControl>
+                            <select
+                              {...field}
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            >
+                              <option value="">Seleziona priorità</option>
+                              <option value="low">Bassa</option>
+                              <option value="medium">Media</option>
+                              <option value="high">Alta</option>
+                              <option value="urgent">Urgente</option>
+                            </select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="technician"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Tecnico Assegnato</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Nome del tecnico" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="scheduledDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Data Programmata</FormLabel>
+                          <FormControl>
+                            <Input type="datetime-local" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Descrizione Dettagliata Intervento</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Descrivi in dettaglio l'intervento da eseguire, componenti coinvolti, procedure da seguire..." 
+                            className="min-h-[100px]"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="estimatedCost"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Costo Stimato (€)</FormLabel>
+                          <FormControl>
+                            <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="notes"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Note Aggiuntive</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Note specifiche, contatti, orari..." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="flex justify-end space-x-3 pt-4 border-t">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowMaintenanceDialog(false)}
+                    >
+                      Annulla
+                    </Button>
+                    <Button type="submit" className="bg-primary hover:bg-primary/90">
+                      Programma Intervento
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
-      {/* Statistiche */}
+      {/* Statistiche Dashboard */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card>
           <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
               <div className="p-2 bg-blue-100 rounded-lg">
                 <Settings className="h-5 w-5 text-blue-600" />
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Totali</p>
-                <p className="text-2xl font-bold">{totalRecords}</p>
+                <p className="text-2xl font-bold">{stats.total}</p>
               </div>
             </div>
           </CardContent>
@@ -439,13 +534,13 @@ export default function Maintenance() {
 
         <Card>
           <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
               <div className="p-2 bg-orange-100 rounded-lg">
                 <Clock className="h-5 w-5 text-orange-600" />
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">In Attesa</p>
-                <p className="text-2xl font-bold">{pendingRecords}</p>
+                <p className="text-2xl font-bold">{stats.pending}</p>
               </div>
             </div>
           </CardContent>
@@ -453,13 +548,13 @@ export default function Maintenance() {
 
         <Card>
           <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
               <div className="p-2 bg-yellow-100 rounded-lg">
                 <Wrench className="h-5 w-5 text-yellow-600" />
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">In Corso</p>
-                <p className="text-2xl font-bold">{inProgressRecords}</p>
+                <p className="text-2xl font-bold">{stats.inProgress}</p>
               </div>
             </div>
           </CardContent>
@@ -467,13 +562,13 @@ export default function Maintenance() {
 
         <Card>
           <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
               <div className="p-2 bg-green-100 rounded-lg">
                 <CheckCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Completati</p>
-                <p className="text-2xl font-bold">{completedRecords}</p>
+                <p className="text-2xl font-bold">{stats.completed}</p>
               </div>
             </div>
           </CardContent>
@@ -481,13 +576,13 @@ export default function Maintenance() {
 
         <Card>
           <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
               <div className="p-2 bg-purple-100 rounded-lg">
                 <Euro className="h-5 w-5 text-purple-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Costi Totali</p>
-                <p className="text-2xl font-bold">€{totalCost}</p>
+                <p className="text-sm font-medium text-muted-foreground">Costi</p>
+                <p className="text-2xl font-bold">€{stats.totalCost}</p>
               </div>
             </div>
           </CardContent>
@@ -499,7 +594,7 @@ export default function Maintenance() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
-            Filtri e Ricerca
+            Ricerca e Filtri Avanzati
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -507,7 +602,7 @@ export default function Maintenance() {
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Cerca interventi..."
+                placeholder="Cerca per PC, tecnico, tipo intervento..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -556,8 +651,11 @@ export default function Maintenance() {
       {/* Tabella Interventi */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg font-medium">
-            Interventi di Manutenzione ({filteredRecords.length})
+          <CardTitle className="text-lg font-medium flex items-center justify-between">
+            <span>Interventi di Manutenzione ({filteredRecords.length})</span>
+            <span className="text-sm font-normal text-muted-foreground">
+              Costo totale filtrati: €{filteredRecords.reduce((sum, r) => sum + (r.actualCost || r.estimatedCost || 0), 0)}
+            </span>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -565,23 +663,23 @@ export default function Maintenance() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
-                  <TableHead className="font-medium min-w-[150px]">PC</TableHead>
-                  <TableHead className="font-medium min-w-[120px]">Tipo</TableHead>
-                  <TableHead className="font-medium min-w-[100px]">Priorità</TableHead>
-                  <TableHead className="font-medium min-w-[100px]">Stato</TableHead>
-                  <TableHead className="font-medium min-w-[120px]">Tecnico</TableHead>
-                  <TableHead className="font-medium min-w-[100px]">Costo</TableHead>
-                  <TableHead className="font-medium min-w-[120px]">Data</TableHead>
-                  <TableHead className="min-w-[120px]">Azioni</TableHead>
+                  <TableHead className="font-medium w-[180px]">PC e Dipendente</TableHead>
+                  <TableHead className="font-medium w-[150px]">Tipo Intervento</TableHead>
+                  <TableHead className="font-medium w-[120px]">Priorità</TableHead>
+                  <TableHead className="font-medium w-[120px]">Stato</TableHead>
+                  <TableHead className="font-medium w-[130px]">Tecnico</TableHead>
+                  <TableHead className="font-medium w-[100px]">Costi</TableHead>
+                  <TableHead className="font-medium w-[120px]">Date</TableHead>
+                  <TableHead className="w-[120px]">Azioni</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  [...Array(5)].map((_, i) => (
+                  [...Array(6)].map((_, i) => (
                     <TableRow key={i}>
                       {[...Array(8)].map((_, j) => (
                         <TableCell key={j} className="animate-pulse">
-                          <div className="h-4 bg-muted rounded w-20"></div>
+                          <div className="h-4 bg-muted rounded w-24"></div>
                         </TableCell>
                       ))}
                     </TableRow>
@@ -591,22 +689,24 @@ export default function Maintenance() {
                     <TableRow key={record.id} className="hover:bg-muted/50">
                       <TableCell>
                         <div>
-                          <p className="font-medium">{record.pc?.pcId}</p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="font-medium text-sm">{record.pc?.pcId}</p>
+                          <p className="text-xs text-muted-foreground">
                             {record.pc?.brand} {record.pc?.model}
                           </p>
                           {record.pc?.employee && (
-                            <p className="text-xs text-blue-600">
+                            <p className="text-xs text-blue-600 font-medium">
                               {record.pc.employee.name}
                             </p>
                           )}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <p className="font-medium text-sm">{record.type}</p>
-                        <p className="text-xs text-muted-foreground truncate max-w-[120px]">
-                          {record.description}
-                        </p>
+                        <div>
+                          <p className="font-medium text-sm">{record.type}</p>
+                          <p className="text-xs text-muted-foreground truncate max-w-[140px]" title={record.description}>
+                            {record.description}
+                          </p>
+                        </div>
                       </TableCell>
                       <TableCell>
                         {getPriorityBadge(record.priority)}
@@ -614,16 +714,19 @@ export default function Maintenance() {
                       <TableCell>
                         {getStatusBadge(record.status)}
                       </TableCell>
-                      <TableCell className="text-sm">
+                      <TableCell className="text-sm font-medium">
                         {record.technician}
                       </TableCell>
                       <TableCell className="text-sm">
                         <div>
                           {record.actualCost && (
-                            <p className="font-medium">€{record.actualCost}</p>
+                            <p className="font-medium text-green-600">€{record.actualCost}</p>
                           )}
-                          {record.estimatedCost && (
-                            <p className="text-muted-foreground text-xs">
+                          {record.estimatedCost && !record.actualCost && (
+                            <p className="text-muted-foreground">Est. €{record.estimatedCost}</p>
+                          )}
+                          {record.estimatedCost && record.actualCost && (
+                            <p className="text-xs text-muted-foreground">
                               Est. €{record.estimatedCost}
                             </p>
                           )}
@@ -632,24 +735,25 @@ export default function Maintenance() {
                       <TableCell className="text-sm">
                         <div>
                           {record.scheduledDate && (
-                            <p className="font-medium">
-                              {format(new Date(record.scheduledDate), "dd/MM/yyyy", { locale: it })}
+                            <p className="font-medium text-xs">
+                              {format(new Date(record.scheduledDate), "dd/MM/yy HH:mm", { locale: it })}
                             </p>
                           )}
                           {record.completedDate && (
                             <p className="text-xs text-green-600">
-                              Completato: {format(new Date(record.completedDate), "dd/MM", { locale: it })}
+                              ✓ {format(new Date(record.completedDate), "dd/MM/yy", { locale: it })}
                             </p>
                           )}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-1">
                           <Button
                             variant="ghost"
                             size="sm"
                             className="h-8 w-8 p-0"
-                            title="Visualizza"
+                            onClick={() => setViewingRecord(record)}
+                            title="Visualizza dettagli"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
@@ -657,7 +761,7 @@ export default function Maintenance() {
                             variant="ghost"
                             size="sm"
                             className="h-8 w-8 p-0"
-                            title="Modifica"
+                            title="Modifica intervento"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -665,7 +769,7 @@ export default function Maintenance() {
                             variant="ghost"
                             size="sm"
                             className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                            title="Elimina"
+                            title="Elimina intervento"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -675,15 +779,23 @@ export default function Maintenance() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8">
-                      <div className="flex flex-col items-center space-y-2">
-                        <Wrench className="h-12 w-12 text-muted-foreground/50" />
-                        <p className="text-muted-foreground">
-                          {searchTerm || statusFilter || priorityFilter 
-                            ? "Nessun intervento trovato con i filtri applicati" 
-                            : "Nessun intervento di manutenzione presente"
-                          }
-                        </p>
+                    <TableCell colSpan={8} className="text-center py-12">
+                      <div className="flex flex-col items-center space-y-3">
+                        <Wrench className="h-16 w-16 text-muted-foreground/30" />
+                        <div>
+                          <p className="text-lg font-medium text-muted-foreground">
+                            {searchTerm || statusFilter || priorityFilter 
+                              ? "Nessun intervento trovato" 
+                              : "Nessun intervento presente"
+                            }
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {searchTerm || statusFilter || priorityFilter 
+                              ? "Prova a modificare i filtri di ricerca" 
+                              : "Inizia programmando il primo intervento"
+                            }
+                          </p>
+                        </div>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -693,6 +805,105 @@ export default function Maintenance() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Dialog Dettagli Intervento */}
+      <Dialog open={!!viewingRecord} onOpenChange={() => setViewingRecord(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Dettagli Intervento - {viewingRecord?.type}</DialogTitle>
+          </DialogHeader>
+          {viewingRecord && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground">PC</h4>
+                  <p className="font-medium">{viewingRecord.pc?.pcId}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {viewingRecord.pc?.brand} {viewingRecord.pc?.model}
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground">Dipendente</h4>
+                  <p className="font-medium">
+                    {viewingRecord.pc?.employee?.name || 'Non assegnato'}
+                  </p>
+                  {viewingRecord.pc?.employee?.email && (
+                    <p className="text-sm text-muted-foreground">
+                      {viewingRecord.pc.employee.email}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground">Priorità</h4>
+                  {getPriorityBadge(viewingRecord.priority)}
+                </div>
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground">Stato</h4>
+                  {getStatusBadge(viewingRecord.status)}
+                </div>
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground">Tecnico</h4>
+                  <p className="font-medium">{viewingRecord.technician}</p>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-medium text-sm text-muted-foreground mb-2">Descrizione</h4>
+                <p className="text-sm bg-muted/50 p-3 rounded-lg">{viewingRecord.description}</p>
+              </div>
+
+              {viewingRecord.notes && (
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground mb-2">Note</h4>
+                  <p className="text-sm bg-blue-50 p-3 rounded-lg">{viewingRecord.notes}</p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground">Costo Stimato</h4>
+                  <p className="font-medium">€{viewingRecord.estimatedCost || '0'}</p>
+                </div>
+                {viewingRecord.actualCost && (
+                  <div>
+                    <h4 className="font-medium text-sm text-muted-foreground">Costo Effettivo</h4>
+                    <p className="font-medium text-green-600">€{viewingRecord.actualCost}</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground">Data Creazione</h4>
+                  <p className="text-sm">
+                    {format(new Date(viewingRecord.createdAt), "dd/MM/yyyy HH:mm", { locale: it })}
+                  </p>
+                </div>
+                {viewingRecord.scheduledDate && (
+                  <div>
+                    <h4 className="font-medium text-sm text-muted-foreground">Data Programmata</h4>
+                    <p className="text-sm font-medium">
+                      {format(new Date(viewingRecord.scheduledDate), "dd/MM/yyyy HH:mm", { locale: it })}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {viewingRecord.completedDate && (
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground">Data Completamento</h4>
+                  <p className="text-sm font-medium text-green-600">
+                    {format(new Date(viewingRecord.completedDate), "dd/MM/yyyy HH:mm", { locale: it })}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
