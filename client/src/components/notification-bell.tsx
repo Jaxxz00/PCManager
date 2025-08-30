@@ -134,7 +134,7 @@ export default function NotificationBell() {
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
+          <Bell className={`h-5 w-5 ${notificationCount > 0 ? 'text-yellow-500' : ''}`} />
           {notificationCount > 0 && (
             <Badge 
               variant="destructive" 

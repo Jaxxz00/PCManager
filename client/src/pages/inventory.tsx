@@ -1,37 +1,26 @@
 import { useState, useMemo } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Edit, Trash2, Monitor, User, Calendar } from "lucide-react";
+import { Plus, Edit, Trash2, Monitor, User, Calendar, Search, Filter, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import PcForm from "@/components/pc-form";
-import AdvancedFilters, { type FilterState } from "@/components/advanced-filters";
-import DataExport from "@/components/data-export";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { PcWithEmployee, Employee } from "@shared/schema";
 
 export default function Inventory() {
   const [showPcForm, setShowPcForm] = useState(false);
-  const [filters, setFilters] = useState<FilterState>({
-    search: '',
-    status: '',
-    brand: '',
-    ramMin: '',
-    ramMax: '',
-    warrantyExpiring: false,
-    assignmentStatus: '',
-    purchaseDateFrom: '',
-    purchaseDateTo: ''
-  });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [brandFilter, setBrandFilter] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Ottimizzazione: debounce per la ricerca
-  const debouncedSearch = useDebounce(filters.search, 300);
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   const { data: pcs = [], isLoading } = useQuery<PcWithEmployee[]>({
     queryKey: ["/api/pcs"],
@@ -62,9 +51,9 @@ export default function Inventory() {
     },
   });
 
+  // Filtri e ricerca
   const filteredPcs = useMemo(() => {
     return pcs.filter((pc: PcWithEmployee) => {
-      // Usa ricerca con debounce per performance
       if (debouncedSearch.trim()) {
         const searchLower = debouncedSearch.toLowerCase();
         const matchesSearch = pc.pcId.toLowerCase().includes(searchLower) ||
@@ -75,46 +64,21 @@ export default function Inventory() {
         if (!matchesSearch) return false;
       }
 
-      // Filtro stato
-      if (filters.status && pc.status !== filters.status) return false;
-
-      // Filtro marca
-      if (filters.brand && pc.brand !== filters.brand) return false;
-
-      // Filtro RAM
-      if (filters.ramMin && pc.ram < parseInt(filters.ramMin)) return false;
-      if (filters.ramMax && pc.ram > parseInt(filters.ramMax)) return false;
-
-      // Filtro garanzia in scadenza (prossimi 30 giorni)
-      if (filters.warrantyExpiring) {
-        const today = new Date();
-        const warrantyDate = new Date(pc.warrantyExpiry);
-        const diffTime = warrantyDate.getTime() - today.getTime();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        if (diffDays > 30 || diffDays < 0) return false;
-      }
-
-      // Filtro stato assegnazione
-      if (filters.assignmentStatus) {
-        if (filters.assignmentStatus === 'assigned' && !pc.employee) return false;
-        if (filters.assignmentStatus === 'unassigned' && pc.employee) return false;
-      }
-
-      // Filtro data acquisto
-      if (filters.purchaseDateFrom) {
-        const fromDate = new Date(filters.purchaseDateFrom);
-        const purchaseDate = new Date(pc.purchaseDate);
-        if (purchaseDate < fromDate) return false;
-      }
-      if (filters.purchaseDateTo) {
-        const toDate = new Date(filters.purchaseDateTo);
-        const purchaseDate = new Date(pc.purchaseDate);
-        if (purchaseDate > toDate) return false;
-      }
+      if (statusFilter && pc.status !== statusFilter) return false;
+      if (brandFilter && pc.brand !== brandFilter) return false;
 
       return true;
     });
-  }, [pcs, filters, debouncedSearch]);
+  }, [pcs, debouncedSearch, statusFilter, brandFilter]);
+
+  // Statistiche per le cards
+  const totalPCs = pcs.length;
+  const activePCs = pcs.filter(pc => pc.status === 'active').length;
+  const unassignedPCs = pcs.filter(pc => !pc.employeeId).length;
+  const maintenancePCs = pcs.filter(pc => pc.status === 'maintenance').length;
+
+  // Brand unici per filtro
+  const uniqueBrands = [...new Set(pcs.map(pc => pc.brand))].filter(Boolean);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -123,182 +87,235 @@ export default function Inventory() {
       case "maintenance":
         return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Manutenzione</Badge>;
       case "retired":
-        return <Badge variant="destructive">Dismesso</Badge>;
+        return <Badge variant="outline" className="bg-gray-100 text-gray-800">Dismesso</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
   };
 
-  const getWarrantyStatus = (warrantyExpiry: string) => {
-    const today = new Date();
-    const warrantyDate = new Date(warrantyExpiry);
-    const diffTime = warrantyDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays < 0) {
-      return { text: "Scaduta", variant: "destructive" as const };
-    } else if (diffDays <= 30) {
-      return { text: "In scadenza", variant: "secondary" as const };
-    } else {
-      return { text: "Valida", variant: "default" as const };
+  const getAssignmentBadge = (employee: any) => {
+    if (!employee) {
+      return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Non Assegnato</Badge>;
     }
-  };
-
-  const handleDeletePc = (id: string) => {
-    if (window.confirm("Sei sicuro di voler eliminare questo PC?")) {
-      deletePcMutation.mutate(id);
-    }
-  };
-
-  const handleExport = () => {
-    // Funzione implementata nel componente DataExport
+    return <Badge variant="default" className="bg-blue-50 text-blue-700 border-blue-200">{employee.name}</Badge>;
   };
 
   return (
     <div className="space-y-6">
-      {/* Header Semplificato */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Inventario PC</h1>
-          <p className="text-muted-foreground">{pcs.length} computer totali</p>
+          <h1 className="text-3xl font-bold text-foreground">Inventario PC</h1>
+          <p className="text-muted-foreground">Gestione completa del parco computer aziendale</p>
         </div>
-        <Button onClick={() => setShowPcForm(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
-          <Plus className="mr-2 h-4 w-4" />
+        <Button 
+          onClick={() => setShowPcForm(true)} 
+          className="bg-blue-600 hover:bg-blue-700 text-white"
+        >
+          <Plus className="h-4 w-4 mr-2" />
           Nuovo PC
         </Button>
       </div>
-      
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-100 p-4 rounded-lg border border-blue-200">
-          <h2 className="text-lg font-semibold text-blue-900">Riepilogo Inventario</h2>
-          <p className="text-blue-700">
-            Risultati filtrati: <span className="font-bold">{filteredPcs.length}</span> di <span className="font-bold">{pcs.length}</span> dispositivi
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <DataExport pcs={pcs} employees={employees} filteredPcs={filteredPcs} />
-        </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Monitor className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">PC Totali</p>
+                <p className="text-2xl font-bold">{totalPCs}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Monitor className="h-5 w-5 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">PC Attivi</p>
+                <p className="text-2xl font-bold">{activePCs}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <User className="h-5 w-5 text-orange-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Non Assegnati</p>
+                <p className="text-2xl font-bold">{unassignedPCs}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <div className="p-2 bg-yellow-100 rounded-lg">
+                <Monitor className="h-5 w-5 text-yellow-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Manutenzione</p>
+                <p className="text-2xl font-bold">{maintenancePCs}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      <AdvancedFilters 
-        filters={filters}
-        onFiltersChange={setFilters}
-        onExport={handleExport}
-      />
-
+      {/* Filtri e Ricerca */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <Monitor className="mr-2 h-5 w-5" />
-            Elenco PC ({filteredPcs.length})
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Filtri e Ricerca
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Cerca PC, modello, serial..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <option value="">Tutti gli stati</option>
+              <option value="active">Attivo</option>
+              <option value="maintenance">Manutenzione</option>
+              <option value="retired">Dismesso</option>
+            </select>
+
+            <select
+              value={brandFilter}
+              onChange={(e) => setBrandFilter(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <option value="">Tutte le marche</option>
+              {uniqueBrands.map(brand => (
+                <option key={brand} value={brand}>{brand}</option>
+              ))}
+            </select>
+
+            <Button variant="outline" className="flex items-center gap-2">
+              <Download className="h-4 w-4" />
+              Esporta
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tabella PC */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Monitor className="h-5 w-5" />
+              Elenco PC ({filteredPcs.length})
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">Caricamento inventario...</p>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="text-muted-foreground mt-2">Caricamento...</p>
             </div>
           ) : filteredPcs.length === 0 ? (
             <div className="text-center py-8">
-              <Monitor className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-lg font-medium text-foreground mb-2">Nessun PC trovato</p>
-              <p className="text-sm text-muted-foreground">
-                {pcs.length === 0 
-                  ? "Inizia aggiungendo il primo PC al sistema"
-                  : "Prova a modificare i filtri di ricerca"
-                }
-              </p>
+              <Monitor className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">Nessun PC trovato</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="min-w-[120px]">ID PC</TableHead>
-                    <TableHead className="min-w-[200px]">Specifiche</TableHead>
-                    <TableHead className="min-w-[180px]">Assegnazione</TableHead>
-                    <TableHead className="min-w-[120px]">Stato</TableHead>
-                    <TableHead className="min-w-[140px]">Garanzia</TableHead>
-                    <TableHead className="min-w-[120px]">Azioni</TableHead>
+                    <TableHead>ID PC</TableHead>
+                    <TableHead>Marca/Modello</TableHead>
+                    <TableHead>Specifiche</TableHead>
+                    <TableHead>Assegnazione</TableHead>
+                    <TableHead>Stato</TableHead>
+                    <TableHead>Garanzia</TableHead>
+                    <TableHead>Azioni</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredPcs.map((pc) => {
-                    const warrantyStatus = getWarrantyStatus(pc.warrantyExpiry);
+                    const warrantyDate = pc.warrantyExpiry ? new Date(pc.warrantyExpiry) : null;
+                    const isWarrantyExpiring = warrantyDate && 
+                      warrantyDate <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) &&
+                      warrantyDate > new Date();
+
                     return (
-                      <TableRow key={pc.id}>
-                        <TableCell className="font-medium">
-                          <div>
-                            <p className="font-medium">{pc.pcId}</p>
-                            <p className="text-sm text-muted-foreground">{pc.serialNumber}</p>
-                          </div>
-                        </TableCell>
+                      <TableRow key={pc.id} className="hover:bg-muted/50">
+                        <TableCell className="font-medium">{pc.pcId}</TableCell>
                         <TableCell>
                           <div>
                             <p className="font-medium">{pc.brand} {pc.model}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {pc.cpu} • {pc.ram}GB RAM • {pc.storage}
-                            </p>
+                            <p className="text-xs text-muted-foreground">S/N: {pc.serialNumber}</p>
                           </div>
                         </TableCell>
                         <TableCell>
-                          {pc.employee ? (
-                            <div className="flex items-center gap-2">
-                              <User className="h-4 w-4 text-muted-foreground" />
-                              <div>
-                                <p className="font-medium">{pc.employee.name}</p>
-                                <p className="text-sm text-muted-foreground">{pc.employee.email}</p>
-                              </div>
-                            </div>
-                          ) : (
-                            <p className="text-muted-foreground">Non assegnato</p>
-                          )}
+                          <div className="text-sm">
+                            <p>{pc.cpu}</p>
+                            <p className="text-muted-foreground">RAM: {pc.ram}GB • {pc.storage}</p>
+                            <p className="text-muted-foreground">{pc.operatingSystem}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {getAssignmentBadge(pc.employee)}
                         </TableCell>
                         <TableCell>
                           {getStatusBadge(pc.status)}
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-muted-foreground" />
-                            <div>
-                              <Badge variant={warrantyStatus.variant}>
-                                {warrantyStatus.text}
-                              </Badge>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                {new Date(pc.warrantyExpiry).toLocaleDateString('it-IT')}
-                              </p>
+                          {warrantyDate ? (
+                            <div className={`text-sm ${isWarrantyExpiring ? 'text-orange-600 font-medium' : ''}`}>
+                              {warrantyDate.toLocaleDateString('it-IT')}
+                              {isWarrantyExpiring && (
+                                <p className="text-xs text-orange-600">In scadenza</p>
+                              )}
                             </div>
-                          </div>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">N/A</span>
+                          )}
                         </TableCell>
                         <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                Azioni
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="dropdown-menu-enhanced">
-                              <DropdownMenuItem 
-                                onClick={() => {
-                                  // TODO: Implementare modifica PC
-                                  toast({
-                                    title: "Funzione in sviluppo",
-                                    description: "La modifica PC sarà disponibile prossimamente.",
-                                  });
-                                }}
-                              >
-                                <Edit className="mr-2 h-4 w-4" />
-                                Modifica
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={() => handleDeletePc(pc.id)}
-                                className="text-destructive"
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Elimina
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <div className="flex items-center gap-2">
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-red-600 hover:text-red-700"
+                              onClick={() => deletePcMutation.mutate(pc.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -310,10 +327,7 @@ export default function Inventory() {
         </CardContent>
       </Card>
 
-      <PcForm 
-        open={showPcForm} 
-        onOpenChange={setShowPcForm}
-      />
+      <PcForm open={showPcForm} onOpenChange={setShowPcForm} />
     </div>
   );
 }
