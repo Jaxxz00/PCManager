@@ -93,13 +93,29 @@ export default function Employees() {
   });
 
   const filteredEmployees = useMemo(() => {
-    return employees.filter((employee) =>
-      employee.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-      employee.email.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-      employee.department.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-      employee.position.toLowerCase().includes(debouncedSearch.toLowerCase())
-    );
-  }, [employees, debouncedSearch]);
+    if (!debouncedSearch.trim()) {
+      return employees;
+    }
+    
+    const result = employees.filter((employee) => {
+      const searchLower = debouncedSearch.toLowerCase();
+      const matches = (
+        (employee.name || '').toLowerCase().includes(searchLower) ||
+        (employee.email || '').toLowerCase().includes(searchLower) ||
+        (employee.department || '').toLowerCase().includes(searchLower) ||
+        (employee.position || '').toLowerCase().includes(searchLower) ||
+        (employee.id || '').toLowerCase().includes(searchLower)
+      );
+      return matches;
+    });
+    
+    // Debug per ricerca globale
+    if (globalSearchTerm) {
+      console.log('Employees Global Search Active:', globalSearchTerm, '-> Found:', result.length, 'dipendenti');
+    }
+    
+    return result;
+  }, [employees, debouncedSearch, globalSearchTerm]);
 
   const getEmployeePcCount = (employeeId: string) => {
     return pcs.filter((pc: any) => pc.employeeId === employeeId).length;
@@ -224,10 +240,11 @@ export default function Employees() {
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
         <Input
-          placeholder="Cerca dipendenti..."
+          placeholder={globalSearchTerm ? `Ricerca globale attiva: "${globalSearchTerm}"` : "Cerca dipendenti..."}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
+          className={`pl-10 ${globalSearchTerm ? 'bg-blue-50 border-blue-200' : ''}`}
+          disabled={!!globalSearchTerm}
         />
       </div>
 
