@@ -53,7 +53,7 @@ export default function Inventory() {
 
   // Filtri e ricerca
   const filteredPcs = useMemo(() => {
-    if (!pcs || pcs.length === 0) return [];
+    if (!pcs) return [];
     
     return pcs.filter((pc: PcWithEmployee) => {
       // Filtro ricerca testuale
@@ -256,10 +256,36 @@ export default function Inventory() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
               <p className="text-muted-foreground mt-2">Caricamento...</p>
             </div>
+          ) : !pcs || pcs.length === 0 ? (
+            <div className="text-center py-8">
+              <Monitor className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">
+                {!pcs ? "Errore nel caricamento dei dati" : 
+                 pcs.length === 0 ? "Nessun PC nel sistema" : "Nessun PC corrisponde ai filtri"}
+              </p>
+              <p className="text-xs text-muted-foreground mt-2">
+                PCs caricati: {pcs?.length || 0} | Filtrati: {filteredPcs.length}
+              </p>
+            </div>
           ) : filteredPcs.length === 0 ? (
             <div className="text-center py-8">
               <Monitor className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Nessun PC trovato</p>
+              <p className="text-muted-foreground">Nessun PC corrisponde ai filtri di ricerca</p>
+              <p className="text-xs text-muted-foreground mt-2">
+                PCs totali: {pcs.length} | Termine ricerca: "{debouncedSearch}"
+              </p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-3"
+                onClick={() => {
+                  setSearchTerm("");
+                  setStatusFilter("");
+                  setBrandFilter("");
+                }}
+              >
+                Rimuovi Filtri
+              </Button>
             </div>
           ) : (
             <div className="overflow-x-auto">
