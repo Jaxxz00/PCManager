@@ -335,13 +335,33 @@ export default function Inventory() {
               </p>
             </div>
           ) : filteredPcs.length === 0 ? (
-            <div className="text-center py-8">
-              <Monitor className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Nessun PC corrisponde ai filtri di ricerca</p>
-              <p className="text-xs text-muted-foreground mt-2">
-                PC totali: {pcs.length} | Filtrati: {filteredPcs.length} | Ricerca: "{debouncedSearch}" | Status: "{statusFilter}" | Brand: "{brandFilter}"
+            <div className="text-center py-12">
+              <Monitor className="h-16 w-16 text-muted-foreground mx-auto mb-6" />
+              <h3 className="text-xl font-semibold text-muted-foreground mb-2">
+                Nessun risultato trovato
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                {debouncedSearch ? 
+                  `Nessun PC corrisponde alla ricerca "${debouncedSearch}"` :
+                  "Nessun PC corrisponde ai filtri selezionati"
+                }
               </p>
-              <div className="mt-4 space-y-2">
+              
+              {debouncedSearch && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 max-w-md mx-auto">
+                  <p className="text-sm text-blue-800 mb-2">
+                    <strong>Suggerimenti per la ricerca:</strong>
+                  </p>
+                  <ul className="text-xs text-blue-700 space-y-1">
+                    <li>• Prova "Dell" o "HP" per la marca</li>
+                    <li>• Cerca "PC-001" o "PC-002" per l'ID</li>
+                    <li>• Inserisci "Luca" o "Sara" per il dipendente</li>
+                    <li>• Usa "OptiPlex" o "EliteDesk" per il modello</li>
+                  </ul>
+                </div>
+              )}
+              
+              <div className="space-x-2">
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -350,14 +370,23 @@ export default function Inventory() {
                     setStatusFilter("");
                     setBrandFilter("");
                   }}
-                  className="mr-2"
                 >
                   Rimuovi Tutti i Filtri
                 </Button>
-                <div className="text-xs text-muted-foreground">
-                  Prova a cercare: "Dell", "PC-001", "Luca", "OptiPlex"
-                </div>
+                {debouncedSearch && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setSearchTerm("")}
+                  >
+                    Cancella Ricerca
+                  </Button>
+                )}
               </div>
+              
+              <p className="text-xs text-muted-foreground mt-4">
+                PC disponibili nel sistema: {pcs.length}
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
