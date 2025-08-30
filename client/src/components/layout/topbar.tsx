@@ -27,7 +27,10 @@ export default function Topbar() {
           <Input
             placeholder="Ricerca globale: PC, dipendenti, tutto..."
             value={globalSearchTerm}
-            onChange={(e) => setGlobalSearchTerm(e.target.value)}
+            onChange={(e) => {
+              console.log('Global search changed to:', e.target.value);
+              setGlobalSearchTerm(e.target.value);
+            }}
             className="pl-10 bg-muted/30 border-0 focus:bg-background"
             data-testid="input-global-search"
           />

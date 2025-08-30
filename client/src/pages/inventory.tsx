@@ -34,14 +34,16 @@ export default function Inventory() {
     queryKey: ["/api/employees"],
   });
 
-  // Debug temporaneo
+  // Debug ricerca globale
   console.log('Inventory Debug:', {
     pcs,
     pcsLength: pcs?.length,
     isLoading,
     error: error?.message,
-    searchTerm,
-    debouncedSearch,
+    searchTerm: searchTerm,
+    globalSearchTerm: globalSearchTerm,
+    effectiveSearchTerm: effectiveSearchTerm,
+    debouncedSearch: debouncedSearch,
     statusFilter,
     brandFilter
   });
@@ -91,16 +93,22 @@ export default function Inventory() {
     const result = pcs.filter((pc: PcWithEmployee) => {
       console.log('Checking PC:', pc.pcId, pc.brand, pc.model);
       
-      // Filtro ricerca
+      // Filtro ricerca (globale e locale)
       if (debouncedSearch.trim()) {
         const searchLower = debouncedSearch.toLowerCase();
+        console.log('Applying search filter:', searchLower, 'to PC:', pc.pcId);
         const matches = (
           (pc.pcId || '').toLowerCase().includes(searchLower) ||
           (pc.brand || '').toLowerCase().includes(searchLower) ||
           (pc.model || '').toLowerCase().includes(searchLower) ||
           (pc.serialNumber || '').toLowerCase().includes(searchLower) ||
-          (pc.employee?.name || '').toLowerCase().includes(searchLower)
+          (pc.cpu || '').toLowerCase().includes(searchLower) ||
+          (pc.operatingSystem || '').toLowerCase().includes(searchLower) ||
+          (pc.employee?.name || '').toLowerCase().includes(searchLower) ||
+          (pc.employee?.email || '').toLowerCase().includes(searchLower) ||
+          (pc.notes || '').toLowerCase().includes(searchLower)
         );
+        console.log('Search match result:', matches);
         if (!matches) return false;
       }
       
