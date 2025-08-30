@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { insertPcSchema, type Employee } from "@shared/schema";
+import { insertPcSchema, type Employee, type InsertPc } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import type { z } from "zod";
 
-type PcFormData = z.infer<typeof insertPcSchema>;
+type PcFormData = InsertPc;
 
 interface PcFormProps {
   open: boolean;
@@ -31,8 +31,6 @@ export default function PcForm({ open, onOpenChange }: PcFormProps) {
   const form = useForm<PcFormData>({
     resolver: zodResolver(insertPcSchema),
     defaultValues: {
-      pcId: "",
-      employeeId: "",
       brand: "",
       model: "",
       cpu: "",
@@ -98,48 +96,6 @@ export default function PcForm({ open, onOpenChange }: PcFormProps) {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="pcId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>ID PC</FormLabel>
-                    <FormControl>
-                      <Input placeholder="PC-XXX" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="employeeId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Dipendente Assegnato</FormLabel>
-                    <Select 
-                      onValueChange={(value) => field.onChange(value === "unassigned" ? null : value)} 
-                      value={field.value || "unassigned"}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleziona dipendente..." />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="unassigned">Nessuno</SelectItem>
-                        {employees.map((employee) => (
-                          <SelectItem key={employee.id} value={employee.id}>
-                            {employee.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
               <FormField
                 control={form.control}

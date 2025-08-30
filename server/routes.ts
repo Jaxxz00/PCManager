@@ -688,13 +688,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertPcSchema.parse(req.body);
       
+      // Genera automaticamente pcId dal serialNumber
+      const pcId = `PC-${validatedData.serialNumber.substring(-6).toUpperCase()}`;
+      
       // Check if PC ID already exists
-      const existingPc = await storage.getPcByPcId(validatedData.pcId);
+      const existingPc = await storage.getPcByPcId(pcId);
       if (existingPc) {
-        return res.status(400).json({ message: "PC ID already exists" });
+        return res.status(400).json({ message: "PC ID già esistente per questo serial number" });
       }
 
-      const pc = await storage.createPc(validatedData);
+      // Crea PC senza dipendente assegnato (sarà gestito dal workflow)
+      const pcData = {
+        ...validatedData,
+        pcId,
+        employeeId: null
+      };
+
+      const pc = await storage.createPc(pcData);
       res.status(201).json(pc);
     } catch (error) {
       if (error instanceof z.ZodError) {

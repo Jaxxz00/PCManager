@@ -374,19 +374,29 @@ select.native-dropdown {
   color: white !important;
 }
 
-/* Fix dropdown trasparenti dentro dialog - ULTRA AGGRESSIVO */
+/* Fix dropdown trasparenti dentro dialog */
 [data-radix-dialog-content] [data-radix-select-content],
-[data-radix-select-content] {
+[data-radix-select-content],
+[data-radix-popper-content-wrapper] [data-radix-select-content] {
   background: white !important;
   background-color: white !important;
-  border: 3px solid #dc2626 !important;
-  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.3), 0 25px 50px -12px rgba(0, 0, 0, 0.8) !important;
-  z-index: 999999 !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  z-index: 50 !important;
   opacity: 1 !important;
   backdrop-filter: none !important;
-  position: fixed !important;
   min-width: 200px !important;
   border-radius: 8px !important;
+}
+
+/* Dark mode dropdown fix */
+.dark [data-radix-dialog-content] [data-radix-select-content],
+.dark [data-radix-select-content],
+.dark [data-radix-popper-content-wrapper] [data-radix-select-content] {
+  background: #1f2937 !important;
+  background-color: #1f2937 !important;
+  border: 1px solid #374151 !important;
+  color: white !important;
 }
 
 .dark [data-radix-dialog-content] [data-radix-select-content],
