@@ -53,18 +53,31 @@ export default function Inventory() {
 
   // Filtri e ricerca
   const filteredPcs = useMemo(() => {
+    if (!pcs || pcs.length === 0) return [];
+    
     return pcs.filter((pc: PcWithEmployee) => {
+      // Filtro ricerca testuale
       if (debouncedSearch.trim()) {
         const searchLower = debouncedSearch.toLowerCase();
-        const matchesSearch = pc.pcId.toLowerCase().includes(searchLower) ||
-                             pc.brand.toLowerCase().includes(searchLower) ||
-                             pc.model.toLowerCase().includes(searchLower) ||
-                             pc.serialNumber.toLowerCase().includes(searchLower) ||
-                             pc.employee?.name?.toLowerCase().includes(searchLower);
+        const searchFields = [
+          pc.pcId || '',
+          pc.brand || '',
+          pc.model || '',
+          pc.serialNumber || '',
+          pc.employee?.name || ''
+        ];
+        
+        const matchesSearch = searchFields.some(field => 
+          field.toLowerCase().includes(searchLower)
+        );
+        
         if (!matchesSearch) return false;
       }
 
+      // Filtro stato
       if (statusFilter && pc.status !== statusFilter) return false;
+      
+      // Filtro marca
       if (brandFilter && pc.brand !== brandFilter) return false;
 
       return true;
@@ -189,10 +202,11 @@ export default function Inventory() {
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Cerca PC, modello, serial..."
+                placeholder="Cerca PC, modello, serial, dipendente..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
+                data-testid="input-search-pc"
               />
             </div>
             
