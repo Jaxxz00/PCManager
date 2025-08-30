@@ -118,8 +118,8 @@ export default function NotificationBell() {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
-        <Card className="border-0 shadow-none">
+      <PopoverContent className="w-80 p-0 bg-white border border-gray-200 shadow-xl" align="end" style={{ zIndex: 9999 }}>
+        <Card className="border-0 shadow-none bg-white">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center justify-between">
               Notifiche

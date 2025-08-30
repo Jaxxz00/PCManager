@@ -333,3 +333,12 @@ select.native-dropdown {
   background-color: rgba(0, 0, 0, 0.5) !important;
   backdrop-filter: blur(2px) !important;
 }
+
+/* Popover background fix to ensure visibility */
+[data-radix-popover-content] {
+  background-color: white !important;
+  border: 1px solid #d1d5db !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  border-radius: 0.5rem !important;
+  z-index: 9999 !important;
+}
