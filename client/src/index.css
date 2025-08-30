@@ -452,6 +452,37 @@ div[data-radix-select-content],
   background: #374151 !important;
 }
 
+/* FIX GLOBALE DIALOG TRASPARENTI - SOLUZIONE DEFINITIVA */
+[data-radix-dialog-content],
+[data-radix-alert-dialog-content],
+div[data-radix-dialog-content],
+div[data-radix-alert-dialog-content] {
+  background: white !important;
+  background-color: white !important;
+  border: 1px solid #e5e7eb !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  z-index: 50 !important;
+}
+
+/* Dark mode per tutti i dialog */
+.dark [data-radix-dialog-content],
+.dark [data-radix-alert-dialog-content],
+.dark div[data-radix-dialog-content],
+.dark div[data-radix-alert-dialog-content] {
+  background: #1f2937 !important;
+  background-color: #1f2937 !important;
+  border: 1px solid #374151 !important;
+  color: white !important;
+}
+
+/* Fix overlay per assicurare non interferisca */
+[data-radix-dialog-overlay],
+[data-radix-alert-dialog-overlay] {
+  background: rgba(0, 0, 0, 0.8) !important;
+  backdrop-filter: blur(2px) !important;
+}
+
 .dark [data-radix-dialog-content] [data-radix-select-content],
 .dark [data-radix-select-content] {
   background: #1f2937 !important;
