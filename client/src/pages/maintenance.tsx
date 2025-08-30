@@ -306,10 +306,8 @@ export default function Maintenance() {
                             <option value="Sostituzione Hardware">Sostituzione Hardware</option>
                             <option value="Aggiornamento Software">Aggiornamento Software</option>
                             <option value="Pulizia Sistema">Pulizia Sistema</option>
-                            <option value="Riparazione">Riparazione</option>
                             <option value="Installazione">Installazione</option>
                             <option value="Diagnosi">Diagnosi</option>
-                            <option value="Manutenzione Preventiva">Manutenzione Preventiva</option>
                           </select>
                         </FormControl>
                         <FormMessage />
