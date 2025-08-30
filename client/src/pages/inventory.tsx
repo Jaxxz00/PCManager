@@ -162,7 +162,7 @@ export default function Inventory() {
           <h1 className="text-2xl font-semibold text-foreground">Inventario PC</h1>
           <p className="text-muted-foreground">{pcs.length} computer totali</p>
         </div>
-        <Button onClick={() => setShowPcForm(true)} className="bg-primary hover:bg-primary/90">
+        <Button onClick={() => setShowPcForm(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
           <Plus className="mr-2 h-4 w-4" />
           Aggiungi PC
         </Button>
