@@ -17,7 +17,7 @@ const navigation = [
   { name: "Dashboard", href: "/", icon: BarChart3 },
   { name: "Inventario PC", href: "/inventory", icon: Monitor },
   { name: "Dipendenti", href: "/employees", icon: Users },
-  { name: "Workflow", href: "/workflow", icon: GitBranch },
+  { name: "Assegnazione PC", href: "/workflow", icon: GitBranch },
   { name: "Documenti", href: "/documents", icon: Shield },
   { name: "Etichette", href: "/labels", icon: Tags },
   { name: "Report", href: "/reports", icon: FileText },
