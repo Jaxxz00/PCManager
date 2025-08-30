@@ -115,14 +115,17 @@ export default function PcForm({ open, onOpenChange }: PcFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Dipendente Assegnato</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <Select 
+                      onValueChange={(value) => field.onChange(value === "unassigned" ? null : value)} 
+                      value={field.value || "unassigned"}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Seleziona dipendente..." />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Nessuno</SelectItem>
+                        <SelectItem value="unassigned">Nessuno</SelectItem>
                         {employees.map((employee) => (
                           <SelectItem key={employee.id} value={employee.id}>
                             {employee.name}

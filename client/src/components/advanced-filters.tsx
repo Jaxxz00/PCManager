@@ -37,12 +37,12 @@ export default function AdvancedFilters({ filters, onFiltersChange, onExport }: 
   const clearAllFilters = () => {
     onFiltersChange({
       search: '',
-      status: '',
-      brand: '',
+      status: 'all',
+      brand: 'all',
       ramMin: '',
       ramMax: '',
       warrantyExpiring: false,
-      assignmentStatus: '',
+      assignmentStatus: 'all',
       purchaseDateFrom: '',
       purchaseDateTo: ''
     });
@@ -52,7 +52,7 @@ export default function AdvancedFilters({ filters, onFiltersChange, onExport }: 
     return Object.entries(filters).filter(([key, value]) => {
       if (key === 'search') return value.trim() !== '';
       if (typeof value === 'boolean') return value;
-      return value !== '';
+      return value !== '' && value !== 'all';
     }).length;
   };
 
@@ -127,7 +127,7 @@ export default function AdvancedFilters({ filters, onFiltersChange, onExport }: 
                     <SelectValue placeholder="Tutti gli stati" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tutti gli stati</SelectItem>
+                    <SelectItem value="all">Tutti gli stati</SelectItem>
                     <SelectItem value="active">Attivo</SelectItem>
                     <SelectItem value="maintenance">Manutenzione</SelectItem>
                     <SelectItem value="retired">Dismesso</SelectItem>
@@ -143,7 +143,7 @@ export default function AdvancedFilters({ filters, onFiltersChange, onExport }: 
                     <SelectValue placeholder="Tutte le marche" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tutte le marche</SelectItem>
+                    <SelectItem value="all">Tutte le marche</SelectItem>
                     {brands.map(brand => (
                       <SelectItem key={brand} value={brand}>{brand}</SelectItem>
                     ))}
@@ -159,7 +159,7 @@ export default function AdvancedFilters({ filters, onFiltersChange, onExport }: 
                     <SelectValue placeholder="Tutte le assegnazioni" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tutte le assegnazioni</SelectItem>
+                    <SelectItem value="all">Tutte le assegnazioni</SelectItem>
                     <SelectItem value="assigned">Assegnato</SelectItem>
                     <SelectItem value="unassigned">Non Assegnato</SelectItem>
                   </SelectContent>

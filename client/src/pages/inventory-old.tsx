@@ -19,15 +19,19 @@ export default function Inventory() {
   const [showPcForm, setShowPcForm] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     search: '',
-    status: '',
-    brand: '',
+    status: 'all',
+    brand: 'all',
     ramMin: '',
     ramMax: '',
     warrantyExpiring: false,
-    assignmentStatus: '',
+    assignmentStatus: 'all',
     purchaseDateFrom: '',
     purchaseDateTo: ''
   });
+
+  const onFiltersChange = (newFilters: FilterState) => {
+    setFilters(newFilters);
+  };
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -74,18 +78,20 @@ export default function Inventory() {
       }
 
       // Filtro stato
-      if (filters.status && pc.status !== filters.status) return false;
+      if (filters.status && filters.status !== 'all' && pc.status !== filters.status) return false;
 
       // Filtro marca
-      if (filters.brand && pc.brand !== filters.brand) return false;
+      if (filters.brand && filters.brand !== 'all' && pc.brand !== filters.brand) return false;
 
       // Filtro RAM
       if (filters.ramMin && pc.ram < parseInt(filters.ramMin)) return false;
       if (filters.ramMax && pc.ram > parseInt(filters.ramMax)) return false;
 
       // Filtro assegnazione
-      if (filters.assignmentStatus === 'assigned' && !pc.employeeId) return false;
-      if (filters.assignmentStatus === 'unassigned' && pc.employeeId) return false;
+      if (filters.assignmentStatus && filters.assignmentStatus !== 'all') {
+        if (filters.assignmentStatus === 'assigned' && !pc.employeeId) return false;
+        if (filters.assignmentStatus === 'unassigned' && pc.employeeId) return false;
+      }
 
       // Filtro data acquisto
       if (filters.purchaseDateFrom && pc.purchaseDate < filters.purchaseDateFrom) return false;
@@ -161,14 +167,14 @@ export default function Inventory() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
                   placeholder="Cerca per ID, marca, modello o dipendente..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  value={filters.search}
+                  onChange={(e) => onFiltersChange({ ...filters, search: e.target.value })}
                   className="pl-10"
                 />
               </div>
             </div>
             <div className="sm:w-48">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select value={filters.status} onValueChange={(value) => onFiltersChange({ ...filters, status: value })}>
                 <SelectTrigger>
                   <Filter className="mr-2 h-4 w-4" />
                   <SelectValue />
@@ -270,7 +276,7 @@ export default function Inventory() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
-                      {searchTerm || statusFilter !== "all" 
+                      {filters.search || filters.status !== "all" 
                         ? "Nessun PC corrisponde ai filtri selezionati" 
                         : "Nessun PC trovato"}
                     </TableCell>
