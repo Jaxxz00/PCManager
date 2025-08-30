@@ -77,7 +77,7 @@ export default function PcForm({ open, onOpenChange }: PcFormProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-xl" style={{ zIndex: 9999 }}>
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle>Aggiungi Nuovo PC</DialogTitle>
