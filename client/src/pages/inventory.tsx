@@ -87,28 +87,48 @@ export default function Inventory() {
     const result = pcs.filter((pc: PcWithEmployee) => {
       console.log('Checking PC:', pc.pcId, pc.brand, pc.model);
       
-      // Filtro ricerca
+      // Ricerca globale - cerca in TUTTI i campi
       if (debouncedSearch.trim()) {
-        const searchLower = debouncedSearch.toLowerCase();
-        const matches = (
-          (pc.pcId || '').toLowerCase().includes(searchLower) ||
-          (pc.brand || '').toLowerCase().includes(searchLower) ||
-          (pc.model || '').toLowerCase().includes(searchLower) ||
-          (pc.serialNumber || '').toLowerCase().includes(searchLower) ||
-          (pc.cpu || '').toLowerCase().includes(searchLower) ||
-          (pc.operatingSystem || '').toLowerCase().includes(searchLower) ||
-          (pc.employee?.name || '').toLowerCase().includes(searchLower) ||
-          (pc.employee?.email || '').toLowerCase().includes(searchLower) ||
-          (pc.notes || '').toLowerCase().includes(searchLower)
+        const searchTerms = debouncedSearch.toLowerCase().split(' ').filter(term => term.length > 0);
+        
+        // Crea un testo combinato con tutti i dati del PC per la ricerca
+        const searchableText = [
+          pc.pcId,
+          pc.brand,
+          pc.model,
+          pc.serialNumber,
+          pc.cpu,
+          pc.ram ? `${pc.ram}gb` : '',
+          pc.ram ? `${pc.ram} gb` : '',
+          pc.storage,
+          pc.operatingSystem,
+          pc.status,
+          pc.notes,
+          pc.employee?.name,
+          pc.employee?.email,
+          pc.purchaseDate,
+          pc.warrantyExpiry,
+          `${pc.brand} ${pc.model}`,
+          // Aggiungi anche le traduzioni dello status
+          pc.status === 'active' ? 'attivo' : '',
+          pc.status === 'maintenance' ? 'manutenzione' : '',
+          pc.status === 'retired' ? 'dismesso' : '',
+          // Altri sinonimi utili
+          pc.brand?.toLowerCase() === 'dell' ? 'dell computer' : '',
+          pc.brand?.toLowerCase() === 'hp' ? 'hewlett packard' : ''
+        ].filter(Boolean).join(' ').toLowerCase();
+        
+        // Verifica che tutti i termini di ricerca siano presenti
+        const allTermsMatch = searchTerms.every(term => 
+          searchableText.includes(term)
         );
-        console.log('Search DEBUG for', pc.pcId, '- Brand:', pc.brand, '- SearchTerm:', searchLower, '- Matches:', matches);
-        console.log('Available fields:', {
-          pcId: pc.pcId,
-          brand: pc.brand,
-          model: pc.model,
-          employee: pc.employee?.name
-        });
-        if (!matches) return false;
+        
+        console.log('Global Search DEBUG for', pc.pcId);
+        console.log('Search terms:', searchTerms);
+        console.log('Searchable text:', searchableText.substring(0, 200) + '...');
+        console.log('All terms match:', allTermsMatch);
+        
+        if (!allTermsMatch) return false;
       }
       
       // Filtro stato
@@ -253,7 +273,7 @@ export default function Inventory() {
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Cerca PC, modello, serial, dipendente..."
+                placeholder="Ricerca globale: ID, marca, modello, dipendente, stato..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
