@@ -27,9 +27,8 @@ export default function Employees() {
   const queryClient = useQueryClient();
   const { globalSearchTerm, setGlobalSearchTerm } = useGlobalSearch();
   
-  // Usa la ricerca globale se presente, altrimenti la ricerca locale
-  const effectiveSearchTerm = globalSearchTerm || searchTerm;
-  const debouncedSearch = useDebounce(effectiveSearchTerm, 300);
+  // Usa solo la ricerca locale ora che abbiamo il dialog globale
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   const { data: employees = [], isLoading } = useQuery<Employee[]>({
     queryKey: ["/api/employees"],
@@ -240,11 +239,10 @@ export default function Employees() {
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
         <Input
-          placeholder={globalSearchTerm ? `Ricerca globale attiva: "${globalSearchTerm}"` : "Cerca dipendenti..."}
+          placeholder="Cerca dipendenti..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className={`pl-10 ${globalSearchTerm ? 'bg-blue-50 border-blue-200' : ''}`}
-          disabled={!!globalSearchTerm}
+          className="pl-10"
         />
       </div>
 
