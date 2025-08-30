@@ -39,7 +39,8 @@ export default function Inventory() {
     searchTerm,
     debouncedSearch,
     statusFilter,
-    brandFilter
+    brandFilter,
+    filteredPcsLength: filteredPcs?.length
   });
 
   const deletePcMutation = useMutation({
@@ -84,17 +85,20 @@ export default function Inventory() {
           pc.notes || ''
         ];
         
-        // Debug ricerca
-        console.log('Search Debug:', {
-          searchTerm: debouncedSearch,
-          searchLower,
-          pcId: pc.pcId,
-          fields: searchFields,
-          matches: searchFields.map(field => ({
-            field,
-            includes: field.toLowerCase().includes(searchLower)
-          }))
-        });
+        // Debug ricerca solo se necessario
+        if (debouncedSearch === 'dell' || debouncedSearch === 'Dell') {
+          console.log('Search Debug for Dell:', {
+            searchTerm: debouncedSearch,
+            searchLower,
+            pcId: pc.pcId,
+            brand: pc.brand,
+            fields: searchFields,
+            matches: searchFields.map(field => ({
+              field,
+              includes: field.toLowerCase().includes(searchLower)
+            }))
+          });
+        }
         
         const matchesSearch = searchFields.some(field => 
           field.toLowerCase().includes(searchLower)
@@ -315,22 +319,27 @@ export default function Inventory() {
           ) : filteredPcs.length === 0 ? (
             <div className="text-center py-8">
               <Monitor className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Nessun PC corrisponde ai filtri</p>
+              <p className="text-muted-foreground">Nessun PC corrisponde ai filtri di ricerca</p>
               <p className="text-xs text-muted-foreground mt-2">
-                Totali: {pcs.length} | Ricerca: "{debouncedSearch}" | Status: "{statusFilter}" | Brand: "{brandFilter}"
+                PC totali: {pcs.length} | Filtrati: {filteredPcs.length} | Ricerca: "{debouncedSearch}" | Status: "{statusFilter}" | Brand: "{brandFilter}"
               </p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="mt-3"
-                onClick={() => {
-                  setSearchTerm("");
-                  setStatusFilter("");
-                  setBrandFilter("");
-                }}
-              >
-                Rimuovi Filtri
-              </Button>
+              <div className="mt-4 space-y-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    setSearchTerm("");
+                    setStatusFilter("");
+                    setBrandFilter("");
+                  }}
+                  className="mr-2"
+                >
+                  Rimuovi Tutti i Filtri
+                </Button>
+                <div className="text-xs text-muted-foreground">
+                  Prova a cercare: "Dell", "PC-001", "Luca", "OptiPlex"
+                </div>
+              </div>
             </div>
           ) : (
             <div className="overflow-x-auto">
