@@ -8,7 +8,6 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,42 +15,32 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { z } from "zod";
-import { type User, setup2FASchema, disable2FASchema } from "@shared/schema";
+import { type User } from "@shared/schema";
 import { 
-  Settings, 
+  Settings as SettingsIcon, 
   Building2, 
   Database, 
   Shield, 
   Mail, 
   Bell,
-  Palette,
-  HardDrive,
   Users,
   Monitor,
-  QrCode,
   Key,
   Download,
-  Check,
-  X,
+  Upload,
   Plus,
-  Edit,
   Trash2,
   Eye,
-  EyeOff
+  EyeOff,
+  Server,
+  HardDrive,
+  Activity,
+  FileText,
+  Globe,
+  Lock,
+  Smartphone,
+  AlertTriangle
 } from "lucide-react";
-
-// Tipi per i form locali (diversi dagli schemi completi del backend)
-const localSetup2FASchema = z.object({
-  token: z.string().min(6, "Il codice deve essere di almeno 6 cifre"),
-});
-
-const localDisable2FASchema = z.object({
-  password: z.string().min(1, "Password richiesta"),
-  token: z.string().min(6, "Il codice deve essere di almeno 6 cifre"),
-});
-
-type LocalSetup2FAData = z.infer<typeof localSetup2FASchema>;
-type LocalDisable2FAData = z.infer<typeof localDisable2FASchema>;
 
 // Schema per creazione utente
 const createUserSchema = z.object({
@@ -64,11 +53,162 @@ const createUserSchema = z.object({
 
 type CreateUserData = z.infer<typeof createUserSchema>;
 
-// Componente per gestire gli utenti
-function UserManagementCard() {
+export default function Settings() {
+  const [activeTab, setActiveTab] = useState("general");
+
+  const tabs = [
+    { id: "general", label: "Generale", icon: SettingsIcon },
+    { id: "users", label: "Utenti", icon: Users },
+    { id: "security", label: "Sicurezza", icon: Shield },
+    { id: "system", label: "Sistema", icon: Server },
+    { id: "backup", label: "Backup", icon: Database },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Configurazioni</h1>
+          <p className="text-muted-foreground">Gestione e configurazione del sistema PC Manager</p>
+        </div>
+      </div>
+
+      {/* Tabs Navigation */}
+      <div className="flex space-x-1 bg-muted p-1 rounded-lg">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === tab.id
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Tab Content */}
+      <div className="space-y-6">
+        {activeTab === "general" && <GeneralSettings />}
+        {activeTab === "users" && <UserManagement />}
+        {activeTab === "security" && <SecuritySettings />}
+        {activeTab === "system" && <SystemSettings />}
+        {activeTab === "backup" && <BackupSettings />}
+      </div>
+    </div>
+  );
+}
+
+function GeneralSettings() {
+  const [settings, setSettings] = useState({
+    companyName: "Maori Group",
+    emailNotifications: true,
+    autoBackup: true,
+    maintenanceMode: false,
+  });
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Informazioni Azienda */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Building2 className="h-5 w-5" />
+            Informazioni Azienda
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="companyName">Nome Azienda</Label>
+            <Input
+              id="companyName"
+              value={settings.companyName}
+              onChange={(e) => setSettings({...settings, companyName: e.target.value})}
+            />
+          </div>
+          <div>
+            <Label htmlFor="companyEmail">Email Aziendale</Label>
+            <Input
+              id="companyEmail"
+              type="email"
+              placeholder="info@maorigroup.com"
+            />
+          </div>
+          <div>
+            <Label htmlFor="companyAddress">Indirizzo</Label>
+            <Input
+              id="companyAddress"
+              placeholder="Via Roma 123, Milano"
+            />
+          </div>
+          <Button className="w-full">Salva Modifiche</Button>
+        </CardContent>
+      </Card>
+
+      {/* Preferenze Sistema */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Monitor className="h-5 w-5" />
+            Preferenze Sistema
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Notifiche Email</Label>
+              <p className="text-sm text-muted-foreground">Ricevi notifiche via email</p>
+            </div>
+            <Switch
+              checked={settings.emailNotifications}
+              onCheckedChange={(checked) => setSettings({...settings, emailNotifications: checked})}
+            />
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Backup Automatico</Label>
+              <p className="text-sm text-muted-foreground">Backup giornaliero automatico</p>
+            </div>
+            <Switch
+              checked={settings.autoBackup}
+              onCheckedChange={(checked) => setSettings({...settings, autoBackup: checked})}
+            />
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-orange-500" />
+                Modalità Manutenzione
+              </Label>
+              <p className="text-sm text-muted-foreground">Disabilita accesso temporaneamente</p>
+            </div>
+            <Switch
+              checked={settings.maintenanceMode}
+              onCheckedChange={(checked) => setSettings({...settings, maintenanceMode: checked})}
+            />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function UserManagement() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const { toast } = useToast();
 
   // Form per creare utente
@@ -97,7 +237,7 @@ function UserManagementCard() {
     onSuccess: () => {
       toast({
         title: "Utente creato",
-        description: "Il nuovo utente è stato creato con successo",
+        description: "Email di invito inviata con successo",
       });
       setShowCreateDialog(false);
       createForm.reset();
@@ -115,13 +255,12 @@ function UserManagementCard() {
   // Mutation per eliminare utente
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      const response = await apiRequest("DELETE", `/api/users/${userId}`);
-      return await response.json();
+      await apiRequest("DELETE", `/api/users/${userId}`);
     },
     onSuccess: () => {
       toast({
         title: "Utente eliminato",
-        description: "L'utente è stato eliminato dal sistema",
+        description: "L'utente è stato rimosso dal sistema",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
     },
@@ -137,40 +276,77 @@ function UserManagementCard() {
   // Mutation per toggle attivo/inattivo
   const toggleUserMutation = useMutation({
     mutationFn: async ({ userId, isActive }: { userId: string; isActive: boolean }) => {
-      const response = await apiRequest("PATCH", `/api/users/${userId}`, { isActive });
-      return await response.json();
+      await apiRequest("PATCH", `/api/users/${userId}`, { isActive });
     },
     onSuccess: () => {
       toast({
         title: "Stato aggiornato",
-        description: "Lo stato dell'utente è stato aggiornato",
+        description: "Lo stato dell'utente è stato modificato",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
-    },
-    onError: () => {
-      toast({
-        title: "Errore",
-        description: "Impossibile aggiornare lo stato",
-        variant: "destructive",
-      });
     },
   });
 
   return (
-    <>
+    <div className="space-y-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Users className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Utenti Totali</p>
+                <p className="text-2xl font-bold">{users.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Eye className="h-5 w-5 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Utenti Attivi</p>
+                <p className="text-2xl font-bold">{users.filter(u => u.isActive).length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Shield className="h-5 w-5 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Amministratori</p>
+                <p className="text-2xl font-bold">{users.filter(u => u.role === 'admin').length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* User Management */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center">
-              <Users className="mr-2 h-5 w-5" />
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
               Gestione Utenti
             </CardTitle>
             <Button
               onClick={() => setShowCreateDialog(true)}
-              size="sm"
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+              className="bg-blue-600 hover:bg-blue-700"
             >
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="h-4 w-4 mr-2" />
               Nuovo Utente
             </Button>
           </div>
@@ -178,86 +354,87 @@ function UserManagementCard() {
         <CardContent>
           {isLoading ? (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
-              <p className="text-gray-600">Caricamento utenti...</p>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="text-muted-foreground mt-2">Caricamento...</p>
+            </div>
+          ) : users.length === 0 ? (
+            <div className="text-center py-8">
+              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">Nessun utente trovato</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">
-                  {users.length} utent{users.length !== 1 ? 'i' : 'e'} registrat{users.length !== 1 ? 'i' : 'o'}
-                </p>
-                <Badge variant="outline">{users.length}</Badge>
-              </div>
-              
-              {users.length > 0 && (
-                <div className="border rounded-lg overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Utente</TableHead>
-                        <TableHead>Ruolo</TableHead>
-                        <TableHead>Stato</TableHead>
-                        <TableHead className="text-right">Azioni</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {users.map((user) => (
-                        <TableRow key={user.id}>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">{user.firstName} {user.lastName}</p>
-                              <p className="text-sm text-gray-500">@{user.username}</p>
-                              <p className="text-xs text-gray-400">{user.email}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                              {user.role === 'admin' ? 'Amministratore' : 'Utente'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Badge variant={user.isActive ? 'default' : 'secondary'}>
-                                {user.isActive ? 'Attivo' : 'Sospeso'}
-                              </Badge>
-                              {user.twoFactorEnabled && (
-                                <Badge variant="outline" className="text-xs">
-                                  2FA
-                                </Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => toggleUserMutation.mutate({ 
-                                  userId: user.id, 
-                                  isActive: !user.isActive 
-                                })}
-                                disabled={toggleUserMutation.isPending}
-                              >
-                                {user.isActive ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => deleteUserMutation.mutate(user.id)}
-                                disabled={deleteUserMutation.isPending}
-                                className="text-red-600 hover:text-red-700"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Utente</TableHead>
+                    <TableHead>Ruolo</TableHead>
+                    <TableHead>Stato</TableHead>
+                    <TableHead>2FA</TableHead>
+                    <TableHead>Azioni</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{user.firstName} {user.lastName}</p>
+                          <p className="text-sm text-muted-foreground">@{user.username}</p>
+                          <p className="text-xs text-muted-foreground">{user.email}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                          {user.role === 'admin' ? 'Admin' : 'User'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={user.isActive ? 'default' : 'outline'} 
+                               className={user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                          {user.isActive ? 'Attivo' : 'Sospeso'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {user.twoFactorEnabled ? (
+                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                            <Smartphone className="h-3 w-3 mr-1" />
+                            Attivo
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="bg-gray-50 text-gray-600">
+                            Disattivo
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleUserMutation.mutate({ 
+                              userId: user.id, 
+                              isActive: !user.isActive 
+                            })}
+                            disabled={toggleUserMutation.isPending}
+                          >
+                            {user.isActive ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteUserMutation.mutate(user.id)}
+                            disabled={deleteUserMutation.isPending}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           )}
         </CardContent>
@@ -265,14 +442,14 @@ function UserManagementCard() {
 
       {/* Dialog per creare nuovo utente */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-md bg-white border border-gray-200 shadow-xl" style={{ zIndex: 9999 }}>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Plus className="h-5 w-5" />
               Crea Nuovo Utente
             </DialogTitle>
             <DialogDescription>
-              Inserisci i dati per creare un nuovo utente. Un email di invito verrà inviata per impostare la password.
+              Inserisci i dati per creare un nuovo utente. Verrà inviata un'email di invito.
             </DialogDescription>
           </DialogHeader>
 
@@ -335,38 +512,16 @@ function UserManagementCard() {
                 )}
               />
               
-              
               <div className="space-y-2">
-                <label className="text-sm font-medium leading-none">
-                  Ruolo
-                </label>
-                <div style={{ position: 'relative', zIndex: 9999 }}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const currentRole = createForm.watch("role");
-                      const newRole = currentRole === "admin" ? "user" : "admin";
-                      createForm.setValue("role", newRole);
-                    }}
-                    className="w-full h-10 px-3 py-2 text-sm text-left border border-gray-300 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm cursor-pointer flex items-center justify-between"
-                    style={{
-                      zIndex: 9999,
-                      position: 'relative',
-                      backgroundColor: '#ffffff !important',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '6px'
-                    }}
-                  >
-                    <span>
-                      {createForm.watch("role") === "admin" ? "🔧 Amministratore" : 
-                       createForm.watch("role") === "user" ? "👤 Utente Standard" : 
-                       "Seleziona ruolo"}
-                    </span>
-                    <svg className="w-4 h-4 text-gray-400 ml-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                </div>
+                <Label>Ruolo</Label>
+                <select
+                  value={createForm.watch("role")}
+                  onChange={(e) => createForm.setValue("role", e.target.value as "admin" | "user")}
+                  className="w-full h-10 px-3 py-2 text-sm border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="user">👤 Utente Standard</option>
+                  <option value="admin">🔧 Amministratore</option>
+                </select>
                 {createForm.formState.errors.role && (
                   <p className="text-sm text-red-600">
                     {createForm.formState.errors.role.message}
@@ -386,15 +541,12 @@ function UserManagementCard() {
                 <Button 
                   type="submit" 
                   disabled={createUserMutation.isPending}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
                 >
                   {createUserMutation.isPending ? (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
                   ) : (
-                    <>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Crea Utente
-                    </>
+                    "Crea Utente"
                   )}
                 </Button>
               </div>
@@ -402,527 +554,299 @@ function UserManagementCard() {
           </Form>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }
 
-// Componente per gestire 2FA
-function TwoFactorAuthCard() {
-  const [showSetupDialog, setShowSetupDialog] = useState(false);
-  const [showDisableDialog, setShowDisableDialog] = useState(false);
-  const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
-  const [secret, setSecret] = useState<string>("");
-  const [backupCodes, setBackupCodes] = useState<string[]>([]);
-  const { toast } = useToast();
-
-  // Query per verificare se 2FA è abilitato
-  const { data: user } = useQuery<User>({
-    queryKey: ["/api/auth/me"],
-  });
-
-  const setupForm = useForm<LocalSetup2FAData>({
-    resolver: zodResolver(localSetup2FASchema),
-    defaultValues: { token: "" },
-  });
-
-  const disableForm = useForm<LocalDisable2FAData>({
-    resolver: zodResolver(localDisable2FASchema),
-    defaultValues: { password: "", token: "" },
-  });
-
-  // Mutation per iniziare setup 2FA
-  const setup2FAMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/auth/2fa/setup");
-      return await response.json();
-    },
-    onSuccess: (data) => {
-      setQrCodeUrl(data.qrCodeUrl);
-      setSecret(data.secret);
-      setBackupCodes(data.backupCodes);
-      setShowSetupDialog(true);
-    },
-    onError: () => {
-      toast({
-        title: "Errore",
-        description: "Impossibile configurare 2FA",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Mutation per abilitare 2FA
-  const enable2FAMutation = useMutation({
-    mutationFn: async (data: LocalSetup2FAData) => {
-      const response = await apiRequest("POST", "/api/auth/2fa/enable", { secret, token: data.token });
-      return await response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "2FA Attivato",
-        description: "Autenticazione a due fattori configurata con successo",
-      });
-      setShowSetupDialog(false);
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-    },
-    onError: () => {
-      toast({
-        title: "Errore",
-        description: "Codice non valido",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Mutation per disabilitare 2FA
-  const disable2FAMutation = useMutation({
-    mutationFn: async (data: LocalDisable2FAData) => {
-      const response = await apiRequest("POST", "/api/auth/2fa/disable", data);
-      return await response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "2FA Disattivato",
-        description: "Autenticazione a due fattori disabilitata",
-      });
-      setShowDisableDialog(false);
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-    },
-    onError: () => {
-      toast({
-        title: "Errore",
-        description: "Password o codice non validi",
-        variant: "destructive",
-      });
-    },
+function SecuritySettings() {
+  const [securitySettings, setSecuritySettings] = useState({
+    enforceStrongPasswords: true,
+    require2FA: false,
+    sessionTimeout: 30,
+    maxLoginAttempts: 5,
   });
 
   return (
-    <>
+    <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <Shield className="mr-2 h-5 w-5" />
-            Autenticazione a Due Fattori (2FA)
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Politiche di Sicurezza
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-full ${user?.twoFactorEnabled ? 'bg-green-100' : 'bg-gray-100'}`}>
-                {user?.twoFactorEnabled ? (
-                  <Check className="h-4 w-4 text-green-600" />
-                ) : (
-                  <X className="h-4 w-4 text-gray-400" />
-                )}
-              </div>
-              <div>
-                <p className="font-medium">
-                  {user?.twoFactorEnabled ? "2FA Attivo" : "2FA Non Configurato"}
-                </p>
-                <p className="text-sm text-gray-600">
-                  {user?.twoFactorEnabled 
-                    ? "Il tuo account è protetto con autenticazione a due fattori"
-                    : "Aggiungi un livello extra di sicurezza al tuo account"
-                  }
-                </p>
-              </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Password Forti Obbligatorie</Label>
+              <p className="text-sm text-muted-foreground">Richiedi password complesse</p>
             </div>
-            <div className="flex gap-2">
-              {!user?.twoFactorEnabled ? (
-                <Button 
-                  onClick={() => setup2FAMutation.mutate()}
-                  disabled={setup2FAMutation.isPending}
-                >
-                  <Key className="mr-2 h-4 w-4" />
-                  Configura 2FA
-                </Button>
-              ) : (
-                <Button 
-                  variant="outline"
-                  onClick={() => setShowDisableDialog(true)}
-                >
-                  <X className="mr-2 h-4 w-4" />
-                  Disabilita 2FA
-                </Button>
-              )}
-            </div>
+            <Switch
+              checked={securitySettings.enforceStrongPasswords}
+              onCheckedChange={(checked) => setSecuritySettings({...securitySettings, enforceStrongPasswords: checked})}
+            />
           </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>2FA Obbligatorio</Label>
+              <p className="text-sm text-muted-foreground">Forza autenticazione a due fattori</p>
+            </div>
+            <Switch
+              checked={securitySettings.require2FA}
+              onCheckedChange={(checked) => setSecuritySettings({...securitySettings, require2FA: checked})}
+            />
+          </div>
+
+          <Separator />
+
+          <div className="space-y-2">
+            <Label>Timeout Sessione (minuti)</Label>
+            <Input
+              type="number"
+              value={securitySettings.sessionTimeout}
+              onChange={(e) => setSecuritySettings({...securitySettings, sessionTimeout: parseInt(e.target.value)})}
+              min="5"
+              max="480"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Tentativi Login Massimi</Label>
+            <Input
+              type="number"
+              value={securitySettings.maxLoginAttempts}
+              onChange={(e) => setSecuritySettings({...securitySettings, maxLoginAttempts: parseInt(e.target.value)})}
+              min="3"
+              max="10"
+            />
+          </div>
+
+          <Button className="w-full">Salva Configurazioni</Button>
         </CardContent>
       </Card>
 
-      {/* Dialog per setup 2FA */}
-      <Dialog open={showSetupDialog} onOpenChange={setShowSetupDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <QrCode className="h-5 w-5" />
-              Configura Autenticazione 2FA
-            </DialogTitle>
-            <DialogDescription>
-              Scansiona il QR code con Google Authenticator o Authy
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            {qrCodeUrl && (
-              <div className="flex justify-center p-4 bg-gray-50 rounded-lg">
-                <img src={qrCodeUrl} alt="QR Code 2FA" className="w-48 h-48" />
-              </div>
-            )}
-            
-            <div className="text-center text-sm text-gray-600">
-              <p>Chiave manuale:</p>
-              <code className="bg-gray-100 px-2 py-1 rounded text-xs break-all">
-                {secret}
-              </code>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5" />
+            Log e Monitoraggio
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="text-center p-4 border rounded-lg">
+              <p className="text-2xl font-bold text-green-600">127</p>
+              <p className="text-sm text-muted-foreground">Login Riusciti</p>
             </div>
-
-            <Form {...setupForm}>
-              <form onSubmit={setupForm.handleSubmit((data) => enable2FAMutation.mutate(data))} className="space-y-4">
-                <FormField
-                  control={setupForm.control}
-                  name="token"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Codice di verifica</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="123456"
-                          className="text-center tracking-widest font-mono"
-                          maxLength={6}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="flex gap-2">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setShowSetupDialog(false)}
-                    className="flex-1"
-                  >
-                    Annulla
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    disabled={enable2FAMutation.isPending}
-                    className="flex-1"
-                  >
-                    Attiva 2FA
-                  </Button>
-                </div>
-              </form>
-            </Form>
-
-            {backupCodes.length > 0 && (
-              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <h4 className="font-medium text-yellow-800 mb-2">
-                  <Download className="inline w-4 h-4 mr-1" />
-                  Codici di Backup
-                </h4>
-                <p className="text-sm text-yellow-700 mb-2">
-                  Salva questi codici in un posto sicuro. Puoi usarli se perdi l'accesso al tuo dispositivo.
-                </p>
-                <div className="grid grid-cols-2 gap-1 text-xs font-mono">
-                  {backupCodes.map((code, index) => (
-                    <div key={index} className="bg-white p-1 rounded text-center">
-                      {code}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            <div className="text-center p-4 border rounded-lg">
+              <p className="text-2xl font-bold text-red-600">3</p>
+              <p className="text-sm text-muted-foreground">Tentativi Falliti</p>
+            </div>
           </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog per disabilitare 2FA */}
-      <Dialog open={showDisableDialog} onOpenChange={setShowDisableDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <X className="h-5 w-5" />
-              Disabilita Autenticazione 2FA
-            </DialogTitle>
-            <DialogDescription>
-              Inserisci la tua password e un codice 2FA per disabilitare l'autenticazione a due fattori
-            </DialogDescription>
-          </DialogHeader>
-
-          <Form {...disableForm}>
-            <form onSubmit={disableForm.handleSubmit((data) => disable2FAMutation.mutate(data))} className="space-y-4">
-              <FormField
-                control={disableForm.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input {...field} type="password" placeholder="La tua password" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={disableForm.control}
-                name="token"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Codice 2FA</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="123456"
-                        className="text-center tracking-widest font-mono"
-                        maxLength={6}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="flex gap-2">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setShowDisableDialog(false)}
-                  className="flex-1"
-                >
-                  Annulla
-                </Button>
-                <Button 
-                  type="submit" 
-                  variant="destructive"
-                  disabled={disable2FAMutation.isPending}
-                  className="flex-1"
-                >
-                  Disabilita 2FA
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-    </>
+          <Button variant="outline" className="w-full">
+            <FileText className="h-4 w-4 mr-2" />
+            Visualizza Log Completi
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
-export default function SettingsPage() {
+function SystemSettings() {
   return (
-    <div className="space-y-8">
-      {/* Hero Header */}
-      <div className="bg-gradient-to-r from-blue-800 via-blue-700 to-blue-900 rounded-xl p-6 text-white shadow-xl">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-white/20 rounded-full backdrop-blur-sm">
-            <Settings className="h-8 w-8" />
-          </div>
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold">Centro Configurazione</h1>
-            <p className="text-blue-100 text-lg">Gestione avanzata impostazioni sistema Maori Group</p>
-            <div className="flex items-center gap-6 mt-2 text-sm text-blue-200">
-              <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4" />
-                <span>Sicurezza avanzata</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Database className="w-4 h-4" />
-                <span>Backup automatico</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                <span>Gestione utenti</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="bg-gradient-to-r from-gray-50 to-slate-100 p-4 rounded-lg border border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Pannello Amministrazione</h2>
-          <p className="text-gray-700">Configura parametri avanzati del sistema</p>
-        </div>
-        <Badge variant="outline" className="w-fit">
-          <Settings className="w-3 h-3 mr-1" />
-          Amministratore
-        </Badge>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Componente 2FA */}
-        <TwoFactorAuthCard />
-        
-        {/* Gestione Utenti */}
-        <UserManagementCard />
-        
-        {/* Database e Backup */}
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <Database className="mr-2 h-5 w-5" />
-              Database e Backup
+            <CardTitle className="flex items-center gap-2">
+              <Server className="h-5 w-5" />
+              Stato Sistema
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Backup Automatico</p>
-                <p className="text-sm text-muted-foreground">Backup giornaliero dei dati</p>
-              </div>
-              <Switch defaultChecked />
+            <div className="flex justify-between items-center">
+              <span className="text-sm">CPU</span>
+              <Badge variant="outline" className="bg-green-50 text-green-700">23%</Badge>
             </div>
-            <Separator />
-            <div className="space-y-2">
-              <Label>Frequenza Backup</Label>
-              <select className="w-full p-2 border rounded">
-                <option>Giornaliero</option>
-                <option>Settimanale</option>
-                <option>Mensile</option>
-              </select>
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Memoria</span>
+              <Badge variant="outline" className="bg-blue-50 text-blue-700">67%</Badge>
             </div>
-            <div className="flex items-center justify-between pt-2">
-              <span className="text-sm text-muted-foreground">Ultimo backup</span>
-              <Badge variant="outline">2 giorni fa</Badge>
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Disco</span>
+              <Badge variant="outline" className="bg-orange-50 text-orange-700">45%</Badge>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Uptime</span>
+              <span className="text-sm text-muted-foreground">7 giorni, 3 ore</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Database className="h-5 w-5" />
+              Database
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Connessioni Attive</span>
+              <Badge variant="outline">12</Badge>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Dimensione DB</span>
+              <span className="text-sm text-muted-foreground">245 MB</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Ultima Ottimizzazione</span>
+              <span className="text-sm text-muted-foreground">2 giorni fa</span>
             </div>
             <Button variant="outline" className="w-full">
-              <HardDrive className="mr-2 h-4 w-4" />
-              Esegui Backup Ora
+              Ottimizza Database
             </Button>
-          </CardContent>
-        </Card>
-
-        {/* Sicurezza */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Shield className="mr-2 h-5 w-5" />
-              Sicurezza Sistema
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Autenticazione Obbligatoria</p>
-                <p className="text-sm text-muted-foreground">Richiedi login per accedere</p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Rate Limiting</p>
-                <p className="text-sm text-muted-foreground">Protezione da attacchi</p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Log Attività</p>
-                <p className="text-sm text-muted-foreground">Registra tutte le azioni</p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-            <Button variant="outline" className="w-full mt-4">
-              <Shield className="mr-2 h-4 w-4" />
-              Visualizza Log Sicurezza
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Notifiche */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Bell className="mr-2 h-5 w-5" />
-              Notifiche e Avvisi
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Garanzia in Scadenza</p>
-                <p className="text-sm text-muted-foreground">Avvisa 30 giorni prima</p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Nuovi PC Aggiunti</p>
-                <p className="text-sm text-muted-foreground">Email per nuove aggiunte</p>
-              </div>
-              <Switch />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Report Settimanali</p>
-                <p className="text-sm text-muted-foreground">Statistiche via email</p>
-              </div>
-              <Switch />
-            </div>
-            <div className="space-y-2 pt-2">
-              <Label>Email Amministratore</Label>
-              <Input type="email" placeholder="admin@maorigroup.com" />
-            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Statistiche Sistema */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <Monitor className="mr-2 h-5 w-5" />
-            Statistiche Sistema
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="h-5 w-5" />
+            Configurazioni Avanzate
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>URL Base Applicazione</Label>
+            <Input defaultValue="https://pcmanager.maorigroup.com" />
+          </div>
+          <div className="space-y-2">
+            <Label>Porta Server</Label>
+            <Input type="number" defaultValue="5000" />
+          </div>
+          <div className="space-y-2">
+            <Label>Fuso Orario</Label>
+            <select className="w-full h-10 px-3 py-2 text-sm border border-input bg-background rounded-md">
+              <option>Europe/Rome</option>
+              <option>Europe/London</option>
+              <option>America/New_York</option>
+            </select>
+          </div>
+          <Button className="w-full">Salva Configurazioni</Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function BackupSettings() {
+  const [backupSettings, setBackupSettings] = useState({
+    autoBackup: true,
+    backupFrequency: 'daily',
+    retentionDays: 30,
+  });
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Database className="h-5 w-5" />
+            Configurazioni Backup
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Backup Automatico</Label>
+              <p className="text-sm text-muted-foreground">Esegui backup automatici</p>
+            </div>
+            <Switch
+              checked={backupSettings.autoBackup}
+              onCheckedChange={(checked) => setBackupSettings({...backupSettings, autoBackup: checked})}
+            />
+          </div>
+
+          <Separator />
+
+          <div className="space-y-2">
+            <Label>Frequenza Backup</Label>
+            <select
+              value={backupSettings.backupFrequency}
+              onChange={(e) => setBackupSettings({...backupSettings, backupFrequency: e.target.value})}
+              className="w-full h-10 px-3 py-2 text-sm border border-input bg-background rounded-md"
+            >
+              <option value="hourly">Ogni Ora</option>
+              <option value="daily">Giornaliero</option>
+              <option value="weekly">Settimanale</option>
+              <option value="monthly">Mensile</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Giorni di Conservazione</Label>
+            <Input
+              type="number"
+              value={backupSettings.retentionDays}
+              onChange={(e) => setBackupSettings({...backupSettings, retentionDays: parseInt(e.target.value)})}
+              min="1"
+              max="365"
+            />
+          </div>
+
+          <Button className="w-full">Salva Configurazioni</Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <HardDrive className="h-5 w-5" />
+            Backup Recenti
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="text-center p-4 bg-muted/30 rounded-lg">
-              <Database className="w-8 h-8 mx-auto text-primary mb-2" />
-              <p className="text-2xl font-bold">PostgreSQL</p>
-              <p className="text-sm text-muted-foreground">Database Attivo</p>
-            </div>
-            <div className="text-center p-4 bg-muted/30 rounded-lg">
-              <Shield className="w-8 h-8 mx-auto text-green-600 mb-2" />
-              <p className="text-2xl font-bold">Sicuro</p>
-              <p className="text-sm text-muted-foreground">Sistema Protetto</p>
-            </div>
-            <div className="text-center p-4 bg-muted/30 rounded-lg">
-              <HardDrive className="w-8 h-8 mx-auto text-blue-600 mb-2" />
-              <p className="text-2xl font-bold">78%</p>
-              <p className="text-sm text-muted-foreground">Spazio Utilizzato</p>
-            </div>
-            <div className="text-center p-4 bg-muted/30 rounded-lg">
-              <Users className="w-8 h-8 mx-auto text-orange-600 mb-2" />
-              <p className="text-2xl font-bold">24/7</p>
-              <p className="text-sm text-muted-foreground">Monitoraggio</p>
-            </div>
+          <div className="space-y-3">
+            {[
+              { date: "30/08/2025 04:00", size: "125 MB", status: "Completato" },
+              { date: "29/08/2025 04:00", size: "123 MB", status: "Completato" },
+              { date: "28/08/2025 04:00", size: "121 MB", status: "Completato" },
+            ].map((backup, index) => (
+              <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                <div>
+                  <p className="font-medium">{backup.date}</p>
+                  <p className="text-sm text-muted-foreground">{backup.size}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="bg-green-50 text-green-700">
+                    {backup.status}
+                  </Badge>
+                  <Button variant="ghost" size="sm">
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Danger Zone */}
-      <Card className="border-destructive/50">
-        <CardHeader>
-          <CardTitle className="text-destructive">Zona Pericolosa</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Queste azioni sono irreversibili e possono causare perdita di dati
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Button variant="destructive" className="w-full">
-            Reset Database
-          </Button>
-          <Button variant="destructive" className="w-full">
-            Elimina Tutti i Dati
-          </Button>
+          
+          <Separator className="my-4" />
+          
+          <div className="flex gap-2">
+            <Button className="flex-1">
+              <Download className="h-4 w-4 mr-2" />
+              Backup Manuale
+            </Button>
+            <Button variant="outline" className="flex-1">
+              <Upload className="h-4 w-4 mr-2" />
+              Ripristina
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
