@@ -104,6 +104,49 @@ export default function Inventory() {
     },
   });
 
+  // Filtri e ricerca ottimizzati
+  const filteredPcs = useMemo(() => {
+    if (!pcs || pcs.length === 0) {
+      return [];
+    }
+    
+    // Se non ci sono filtri attivi, mostra tutto
+    if (!debouncedSearch.trim() && !statusFilter && !brandFilter) {
+      return pcs;
+    }
+    
+    // Applica filtri
+    return pcs.filter((pc: PcWithEmployee) => {
+      // Filtro ricerca (globale e locale)
+      if (debouncedSearch.trim()) {
+        const searchLower = debouncedSearch.toLowerCase();
+        const matches = (
+          (pc.pcId || '').toLowerCase().includes(searchLower) ||
+          (pc.brand || '').toLowerCase().includes(searchLower) ||
+          (pc.model || '').toLowerCase().includes(searchLower) ||
+          (pc.serialNumber || '').toLowerCase().includes(searchLower) ||
+          (pc.cpu || '').toLowerCase().includes(searchLower) ||
+          (pc.operatingSystem || '').toLowerCase().includes(searchLower) ||
+          (pc.employee?.name || '').toLowerCase().includes(searchLower) ||
+          (pc.employee?.email || '').toLowerCase().includes(searchLower) ||
+          (pc.notes || '').toLowerCase().includes(searchLower)
+        );
+        if (!matches) return false;
+      }
+      
+      // Filtro stato
+      if (statusFilter && pc.status !== statusFilter) {
+        return false;
+      }
+      
+      // Filtro marca  
+      if (brandFilter && pc.brand !== brandFilter) {
+        return false;
+      }
+      
+      return true;
+    });
+  }, [pcs, debouncedSearch, statusFilter, brandFilter]);
 
   // Statistiche per le cards
   const totalPCs = pcs.length;
