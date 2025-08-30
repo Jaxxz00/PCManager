@@ -1,619 +1,495 @@
-import { useState, useMemo, useRef } from "react";
-import { useDebounce } from "@/hooks/use-debounce";
+import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { 
-  QrCode, 
-  Search, 
-  Download, 
-  Printer, 
-  Settings, 
-  Filter,
-  Monitor,
-  User,
-  Check,
-  Package,
-  Grid3X3,
-  Palette,
-  Maximize
-} from "lucide-react";
+import { Printer, Download, Eye, Barcode, Settings, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import JsBarcode from "jsbarcode";
 import type { PcWithEmployee } from "@shared/schema";
 
 export default function Labels() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [selectedPcs, setSelectedPcs] = useState<Set<string>>(new Set());
-  const [labelSettings, setLabelSettings] = useState({
-    format: "5x3cm",
-    includeQR: true,
-    includeLogo: true,
-    includeSerial: false,
-    includeEmployee: false,
-    layout: "compact"
-  });
-  const { toast } = useToast();
-  const printRef = useRef<HTMLDivElement>(null);
-
-  const debouncedSearch = useDebounce(searchTerm, 300);
+  const [selectedPc, setSelectedPc] = useState<string>("");
+  const [labelType, setLabelType] = useState<string>("standard");
+  const [includeBarcode, setIncludeBarcode] = useState(true);
+  const [includeLogo, setIncludeLogo] = useState(true);
+  const [customText, setCustomText] = useState("");
 
   const { data: pcs = [], isLoading } = useQuery<PcWithEmployee[]>({
-    queryKey: ["/api/pcs"]
+    queryKey: ["/api/pcs"],
   });
 
-  // Filtri PC
-  const filteredPcs = useMemo(() => {
-    return pcs.filter((pc) => {
-      // Filtro ricerca
-      if (debouncedSearch.trim()) {
-        const searchLower = debouncedSearch.toLowerCase();
-        const matches = (
-          (pc.pcId || '').toLowerCase().includes(searchLower) ||
-          (pc.brand || '').toLowerCase().includes(searchLower) ||
-          (pc.model || '').toLowerCase().includes(searchLower) ||
-          (pc.serialNumber || '').toLowerCase().includes(searchLower) ||
-          (pc.employee?.name || '').toLowerCase().includes(searchLower)
-        );
-        if (!matches) return false;
-      }
+  const selectedPcData = pcs.find(pc => pc.id === selectedPc);
 
-      // Filtro stato
-      if (statusFilter && pc.status !== statusFilter) {
-        return false;
-      }
-
-      return true;
-    });
-  }, [pcs, debouncedSearch, statusFilter]);
-
-  // Statistiche
-  const totalPcs = pcs.length;
-  const activePcs = pcs.filter(pc => pc.status === 'active').length;
-  const selectedCount = selectedPcs.size;
-
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedPcs(new Set(filteredPcs.map(pc => pc.id)));
-    } else {
-      setSelectedPcs(new Set());
+  const labelTemplates = {
+    standard: {
+      name: "Standard",
+      size: "62x29mm",
+      description: "Etichetta standard per asset IT"
+    },
+    small: {
+      name: "Piccola",
+      size: "38x21mm", 
+      description: "Etichetta compatta per dispositivi piccoli"
+    },
+    large: {
+      name: "Grande",
+      size: "89x36mm",
+      description: "Etichetta grande con informazioni dettagliate"
     }
   };
 
-  const handleSelectPc = (pcId: string, checked: boolean) => {
-    const newSelected = new Set(selectedPcs);
-    if (checked) {
-      newSelected.add(pcId);
-    } else {
-      newSelected.delete(pcId);
-    }
-    setSelectedPcs(newSelected);
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "active":
-        return <Badge variant="default" className="bg-green-100 text-green-800 text-xs">Attivo</Badge>;
-      case "maintenance":
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-xs">Manutenzione</Badge>;
-      case "retired":
-        return <Badge variant="outline" className="bg-gray-100 text-gray-800 text-xs">Dismesso</Badge>;
-      default:
-        return <Badge variant="outline" className="text-xs">{status}</Badge>;
-    }
-  };
-
-  const generateQRContent = (pc: PcWithEmployee) => {
-    return `https://maorigroup.com/pc/${pc.id}`;
-  };
-
-  const handlePrintLabels = () => {
-    if (selectedPcs.size === 0) {
-      toast({
-        title: "Nessun PC selezionato",
-        description: "Seleziona almeno un PC per stampare le etichette.",
-        variant: "destructive"
+  const generateBarcode = async (pcData: PcWithEmployee): Promise<string> => {
+    try {
+      // Genera un codice a barre usando l'ID del PC (più semplice e leggibile)
+      const canvas = document.createElement('canvas');
+      
+      JsBarcode(canvas, pcData.serialNumber || pcData.pcId, {
+        format: "CODE128",
+        width: 1.2,
+        height: 25,
+        displayValue: true,
+        fontSize: 7,
+        textAlign: "center",
+        textPosition: "bottom",
+        textMargin: 1,
+        fontOptions: "bold",
+        font: "Arial",
+        background: "#ffffff",
+        lineColor: "#000000"
       });
-      return;
+      
+      return canvas.toDataURL();
+    } catch (error) {
+      console.error('Errore generazione codice a barre:', error);
+      return '';
     }
-
-    toast({
-      title: "Stampa avviata",
-      description: `Generazione di ${selectedPcs.size} etichette in corso...`
-    });
-
-    setTimeout(() => {
-      window.print();
-    }, 500);
   };
 
-  const handleDownloadLabels = () => {
-    if (selectedPcs.size === 0) {
-      toast({
-        title: "Nessun PC selezionato",
-        description: "Seleziona almeno un PC per scaricare le etichette.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    toast({
-      title: "Download avviato",
-      description: `Download di ${selectedPcs.size} etichette PDF in corso...`
-    });
+  const printLabel = async () => {
+    if (!selectedPcData) return;
+    
+    const barcodeDataUrl = await generateBarcode(selectedPcData);
+    const labelContent = generateProfessionalLabel(barcodeDataUrl);
+    
+    const printWindow = window.open('', '_blank');
+    printWindow?.document.write(`
+      <html>
+        <head>
+          <title>Etichetta PC - ${selectedPcData.pcId}</title>
+          <style>
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+            body { 
+              margin: 0; 
+              padding: 20px; 
+              font-family: 'Inter', 'Segoe UI', sans-serif; 
+              background: white;
+            }
+            .label { 
+              page-break-after: always; 
+              margin-bottom: 20px;
+            }
+            @media print {
+              body { margin: 0; padding: 5mm; }
+              .label { margin: 0; }
+            }
+          </style>
+        </head>
+        <body>
+          ${labelContent}
+        </body>
+      </html>
+    `);
+    
+    printWindow?.document.close();
+    printWindow?.print();
   };
 
-  const selectedPcsData = pcs.filter(pc => selectedPcs.has(pc.id));
+  const generateProfessionalLabel = (barcodeUrl: string) => {
+    if (!selectedPcData) return "";
+
+    return `
+      <div class="label" style="
+        width: 50mm; 
+        height: 30mm; 
+        border: 1px solid #e0e0e0; 
+        padding: 2mm; 
+        display: flex; 
+        flex-direction: column;
+        justify-content: space-between;
+        background: white;
+        font-family: 'Inter', sans-serif;
+        position: relative;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        overflow: hidden;
+      ">
+        <!-- Informazioni Principali -->
+        <div style="
+          text-align: center;
+          padding: 1mm;
+        ">
+          <div style="
+            font-size: 8pt; 
+            color: #475569;
+            font-weight: 600;
+            margin-bottom: 0.5mm;
+            line-height: 1.1;
+          ">
+            ${selectedPcData.brand?.toUpperCase()} ${selectedPcData.model}
+          </div>
+          
+          <div style="
+            font-size: 6pt; 
+            color: #64748b;
+            font-weight: 500;
+            margin-bottom: 1mm;
+          ">
+            S/N: ${selectedPcData.serialNumber || 'N/A'}
+          </div>
+          
+          <div style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1mm;
+            margin-bottom: 1mm;
+          ">
+            <img src="/assets/maori-logo.jpeg" alt="Maori Group Logo" style="
+              height: 2.5mm;
+              width: auto;
+              object-fit: contain;
+            "/>
+            <div style="
+              font-size: 5pt; 
+              color: #475569;
+              font-weight: 500;
+            ">
+              info@maorigroup.it
+            </div>
+          </div>
+          
+          ${customText ? `
+            <div style="
+              font-size: 5pt; 
+              color: #475569;
+              font-weight: 500;
+              margin-bottom: 1mm;
+              font-style: italic;
+            ">
+              ${customText}
+            </div>
+          ` : ''}
+        </div>
+        
+        <!-- Codice a Barre -->
+        ${barcodeUrl ? `
+          <div style="
+            display: flex;
+            justify-content: center;
+            align-items: center;
+          ">
+            <img src="${barcodeUrl}" style="
+              width: 22mm; 
+              height: 6mm; 
+              object-fit: contain;
+            " />
+          </div>
+        ` : ''}
+      </div>
+      </div>
+    `;
+  };
+
+  const generateLabelHTML = () => {
+    if (!selectedPcData) return "";
+
+    const template = labelTemplates[labelType as keyof typeof labelTemplates];
+    
+    return `
+      <div class="label" style="
+        width: ${template.size.split('x')[0]}; 
+        height: ${template.size.split('x')[1]}; 
+        border: 2px solid #333; 
+        padding: 8px; 
+        display: flex; 
+        flex-direction: column; 
+        justify-content: space-between;
+        background: white;
+      ">
+        <div style="text-align: center; flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
+          <div style="font-weight: bold; font-size: 16px; margin-bottom: 4px;">
+            ${selectedPcData.brand?.toUpperCase()} ${selectedPcData.model}
+          </div>
+          <div style="font-size: 12px; color: #666; margin-bottom: 8px;">
+            S/N: ${selectedPcData.serialNumber || 'N/A'}
+          </div>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 8px;">
+            <img src="/assets/maori-logo.jpeg" alt="Logo" style="height: 14px; width: auto; object-fit: contain;">
+            <div style="font-size: 10px; color: #666;">
+              info@maorigroup.it
+            </div>
+          </div>
+          ${customText ? `
+            <div style="font-size: 10px; color: #333; margin-bottom: 8px;">
+              ${customText}
+            </div>
+          ` : ''}
+          ${includeBarcode ? `
+            <div style="display: flex; justify-content: center;">
+              <div style="width: 50px; height: 14px; background: #333; color: white; display: flex; align-items: center; justify-content: center; font-size: 6px; border-radius: 2px;">||||||||</div>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Etichette QR</h1>
-          <p className="text-muted-foreground">Genera e stampa etichette QR per PC aziendali - {totalPcs} PC totali</p>
+    <div className="space-y-8">
+      {/* Hero Header */}
+      <div className="bg-gradient-to-r from-blue-800 via-blue-700 to-blue-900 rounded-xl p-6 text-white shadow-xl">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-white/20 rounded-full backdrop-blur-sm">
+            <Printer className="h-8 w-8" />
+          </div>
+          <div className="flex-1">
+            <h1 className="text-3xl font-bold">Centro Stampa Etichette</h1>
+            <p className="text-blue-100 text-lg">Sistema professionale per etichettatura dispositivi Maori Group</p>
+            <div className="flex items-center gap-6 mt-2 text-sm text-blue-200">
+              <div className="flex items-center gap-2">
+                <Barcode className="w-4 h-4" />
+                <span>Codici a barre CODE128</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Settings className="w-4 h-4" />
+                <span>Formato 5cm x 3cm</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Building2 className="w-4 h-4" />
+                <span>Logo aziendale incluso</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            onClick={handleDownloadLabels}
-            disabled={selectedPcs.size === 0}
-            className="flex items-center gap-2"
-          >
-            <Download className="h-4 w-4" />
-            Download PDF ({selectedPcs.size})
-          </Button>
-          <Button 
-            onClick={handlePrintLabels}
-            disabled={selectedPcs.size === 0}
-            className="bg-primary hover:bg-primary/90 flex items-center gap-2"
-          >
-            <Printer className="h-4 w-4" />
-            Stampa Etichette ({selectedPcs.size})
-          </Button>
+      </div>
+      
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="bg-gradient-to-r from-amber-50 to-orange-100 p-4 rounded-lg border border-amber-200">
+          <h2 className="text-lg font-semibold text-amber-900">Generazione Etichette</h2>
+          <p className="text-amber-700">Crea etichette personalizzate per identificazione asset IT</p>
         </div>
       </div>
 
-      {/* Statistiche */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Configurazione Etichetta */}
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Monitor className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">PC Totali</p>
-                <p className="text-2xl font-bold">{totalPcs}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <QrCode className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">PC Attivi</p>
-                <p className="text-2xl font-bold">{activePcs}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Check className="h-5 w-5 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Selezionati</p>
-                <p className="text-2xl font-bold">{selectedCount}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <Package className="h-5 w-5 text-orange-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Etichette Pronte</p>
-                <p className="text-2xl font-bold">{selectedCount}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Tabs defaultValue="selection" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="selection" className="flex items-center gap-2">
-            <Monitor className="h-4 w-4" />
-            Selezione PC
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Impostazioni
-          </TabsTrigger>
-          <TabsTrigger value="preview" className="flex items-center gap-2">
-            <Grid3X3 className="h-4 w-4" />
-            Anteprima
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="selection" className="space-y-6">
-          {/* Filtri e Ricerca */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Filter className="h-5 w-5" />
-                Filtri e Ricerca
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Cerca PC..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                >
-                  <option value="">Tutti gli stati</option>
-                  <option value="active">Attivo</option>
-                  <option value="maintenance">Manutenzione</option>
-                  <option value="retired">Dismesso</option>
-                </select>
-
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setSearchTerm("");
-                    setStatusFilter("");
-                    setSelectedPcs(new Set());
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  Reset Filtri
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Tabella PC */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-medium">
-                  PC Disponibili ({filteredPcs.length})
-                </CardTitle>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    checked={filteredPcs.length > 0 && filteredPcs.every(pc => selectedPcs.has(pc.id))}
-                    onCheckedChange={handleSelectAll}
-                  />
-                  <span className="text-sm">Seleziona tutti</span>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/50">
-                      <TableHead className="w-12">
-                        <Checkbox
-                          checked={filteredPcs.length > 0 && filteredPcs.every(pc => selectedPcs.has(pc.id))}
-                          onCheckedChange={handleSelectAll}
-                        />
-                      </TableHead>
-                      <TableHead className="font-medium">PC ID</TableHead>
-                      <TableHead className="font-medium">Marca/Modello</TableHead>
-                      <TableHead className="font-medium">Serial Number</TableHead>
-                      <TableHead className="font-medium">Stato</TableHead>
-                      <TableHead className="font-medium">Dipendente</TableHead>
-                      <TableHead className="font-medium">QR Code</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {isLoading ? (
-                      [...Array(5)].map((_, i) => (
-                        <TableRow key={i}>
-                          {[...Array(7)].map((_, j) => (
-                            <TableCell key={j} className="animate-pulse">
-                              <div className="h-4 bg-muted rounded w-20"></div>
-                            </TableCell>
-                          ))}
-                        </TableRow>
-                      ))
-                    ) : filteredPcs.length > 0 ? (
-                      filteredPcs.map((pc) => (
-                        <TableRow key={pc.id} className="hover:bg-muted/50">
-                          <TableCell>
-                            <Checkbox
-                              checked={selectedPcs.has(pc.id)}
-                              onCheckedChange={(checked) => handleSelectPc(pc.id, checked as boolean)}
-                            />
-                          </TableCell>
-                          <TableCell className="font-medium">{pc.pcId}</TableCell>
-                          <TableCell>{pc.brand} {pc.model}</TableCell>
-                          <TableCell className="font-mono text-sm">{pc.serialNumber}</TableCell>
-                          <TableCell>
-                            {getStatusBadge(pc.status)}
-                          </TableCell>
-                          <TableCell>
-                            {pc.employee ? (
-                              <div className="flex items-center gap-1 text-sm">
-                                <User className="h-3 w-3" />
-                                <span>{pc.employee.name}</span>
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground text-sm">Non assegnato</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <QrCode className="h-4 w-4 text-blue-600" />
-                              <span className="text-xs text-muted-foreground">
-                                {generateQRContent(pc).slice(-12)}...
-                              </span>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8">
-                          <div className="flex flex-col items-center space-y-2">
-                            <Monitor className="h-12 w-12 text-muted-foreground/50" />
-                            <p className="text-muted-foreground">
-                              {searchTerm || statusFilter 
-                                ? "Nessun PC trovato con i filtri applicati" 
-                                : "Nessun PC disponibile"
-                              }
-                            </p>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="settings" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Palette className="h-5 w-5" />
-                Impostazioni Etichette
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h3 className="font-medium">Formato Etichetta</h3>
-                  <div className="space-y-2">
-                    <label className="flex items-center space-x-2">
-                      <input
-                        type="radio"
-                        value="5x3cm"
-                        checked={labelSettings.format === "5x3cm"}
-                        onChange={(e) => setLabelSettings(prev => ({ ...prev, format: e.target.value }))}
-                      />
-                      <span>5cm x 3cm (Standard)</span>
-                    </label>
-                    <label className="flex items-center space-x-2">
-                      <input
-                        type="radio"
-                        value="4x2cm"
-                        checked={labelSettings.format === "4x2cm"}
-                        onChange={(e) => setLabelSettings(prev => ({ ...prev, format: e.target.value }))}
-                      />
-                      <span>4cm x 2cm (Compatto)</span>
-                    </label>
-                    <label className="flex items-center space-x-2">
-                      <input
-                        type="radio"
-                        value="6x4cm"
-                        checked={labelSettings.format === "6x4cm"}
-                        onChange={(e) => setLabelSettings(prev => ({ ...prev, format: e.target.value }))}
-                      />
-                      <span>6cm x 4cm (Grande)</span>
-                    </label>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="font-medium">Contenuto Etichetta</h3>
-                  <div className="space-y-2">
-                    <label className="flex items-center space-x-2">
-                      <Checkbox
-                        checked={labelSettings.includeQR}
-                        onCheckedChange={(checked) => 
-                          setLabelSettings(prev => ({ ...prev, includeQR: checked as boolean }))
-                        }
-                      />
-                      <span>QR Code (obbligatorio)</span>
-                    </label>
-                    <label className="flex items-center space-x-2">
-                      <Checkbox
-                        checked={labelSettings.includeLogo}
-                        onCheckedChange={(checked) => 
-                          setLabelSettings(prev => ({ ...prev, includeLogo: checked as boolean }))
-                        }
-                      />
-                      <span>Logo Maori Group</span>
-                    </label>
-                    <label className="flex items-center space-x-2">
-                      <Checkbox
-                        checked={labelSettings.includeSerial}
-                        onCheckedChange={(checked) => 
-                          setLabelSettings(prev => ({ ...prev, includeSerial: checked as boolean }))
-                        }
-                      />
-                      <span>Serial Number</span>
-                    </label>
-                    <label className="flex items-center space-x-2">
-                      <Checkbox
-                        checked={labelSettings.includeEmployee}
-                        onCheckedChange={(checked) => 
-                          setLabelSettings(prev => ({ ...prev, includeEmployee: checked as boolean }))
-                        }
-                      />
-                      <span>Nome Dipendente</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="font-medium">Layout</h3>
-                <div className="grid grid-cols-3 gap-4">
-                  <label className="flex flex-col items-center space-y-2 p-4 border rounded-lg cursor-pointer hover:bg-muted/50">
-                    <input
-                      type="radio"
-                      value="compact"
-                      checked={labelSettings.layout === "compact"}
-                      onChange={(e) => setLabelSettings(prev => ({ ...prev, layout: e.target.value }))}
-                    />
-                    <div className="text-center">
-                      <Grid3X3 className="h-6 w-6 mx-auto mb-1" />
-                      <span className="text-sm">Compatto</span>
-                    </div>
-                  </label>
-                  <label className="flex flex-col items-center space-y-2 p-4 border rounded-lg cursor-pointer hover:bg-muted/50">
-                    <input
-                      type="radio"
-                      value="detailed"
-                      checked={labelSettings.layout === "detailed"}
-                      onChange={(e) => setLabelSettings(prev => ({ ...prev, layout: e.target.value }))}
-                    />
-                    <div className="text-center">
-                      <Maximize className="h-6 w-6 mx-auto mb-1" />
-                      <span className="text-sm">Dettagliato</span>
-                    </div>
-                  </label>
-                  <label className="flex flex-col items-center space-y-2 p-4 border rounded-lg cursor-pointer hover:bg-muted/50">
-                    <input
-                      type="radio"
-                      value="minimal"
-                      checked={labelSettings.layout === "minimal"}
-                      onChange={(e) => setLabelSettings(prev => ({ ...prev, layout: e.target.value }))}
-                    />
-                    <div className="text-center">
-                      <QrCode className="h-6 w-6 mx-auto mb-1" />
-                      <span className="text-sm">Minimale</span>
-                    </div>
-                  </label>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="preview" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Grid3X3 className="h-5 w-5" />
-                Anteprima Etichette ({selectedPcsData.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {selectedPcsData.length === 0 ? (
-                <div className="text-center py-12">
-                  <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
-                  <h3 className="text-lg font-medium mb-2">Nessuna etichetta selezionata</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Seleziona uno o più PC dalla tab "Selezione PC" per visualizzare l'anteprima delle etichette.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">
-                      Formato: {labelSettings.format} • Layout: {labelSettings.layout}
-                    </p>
-                    <Button variant="outline" size="sm">
-                      <Download className="h-4 w-4 mr-2" />
-                      Scarica Anteprima
-                    </Button>
-                  </div>
-                  
-                  {/* Anteprima etichette */}
-                  <div 
-                    ref={printRef}
-                    className="grid grid-cols-4 gap-4 p-4 border rounded-lg bg-white"
-                  >
-                    {selectedPcsData.slice(0, 12).map((pc) => (
-                      <div 
-                        key={pc.id}
-                        className={`border border-gray-300 bg-white p-2 flex flex-col items-center justify-center text-center ${
-                          labelSettings.format === "5x3cm" ? "h-24 w-32" :
-                          labelSettings.format === "4x2cm" ? "h-16 w-24" :
-                          "h-32 w-40"
-                        }`}
-                      >
-                        {labelSettings.includeLogo && (
-                          <div className="text-xs font-bold text-blue-800 mb-1">MAORI GROUP</div>
-                        )}
-                        
-                        {labelSettings.includeQR && (
-                          <div className="bg-black text-white text-xs p-1 mb-1 font-mono">
-                            [QR {pc.pcId}]
-                          </div>
-                        )}
-                        
-                        {labelSettings.layout !== "minimal" && (
-                          <>
-                            <div className="text-xs font-semibold truncate w-full">{pc.pcId}</div>
-                            {labelSettings.includeSerial && (
-                              <div className="text-xs text-gray-600 truncate w-full">{pc.serialNumber}</div>
-                            )}
-                            {labelSettings.includeEmployee && pc.employee && (
-                              <div className="text-xs text-gray-500 truncate w-full">{pc.employee.name}</div>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {selectedPcsData.length > 12 && (
-                    <p className="text-sm text-muted-foreground text-center">
-                      ... e altre {selectedPcsData.length - 12} etichette
-                    </p>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Settings className="mr-2 h-5 w-5" />
+              Configurazione Etichetta
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Selezione PC */}
+            <div className="space-y-2">
+              <Label htmlFor="pc-select">Seleziona PC</Label>
+              <Select value={selectedPc} onValueChange={setSelectedPc}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Scegli un PC..." />
+                </SelectTrigger>
+                <SelectContent className="dropdown-menu-enhanced">
+                  {isLoading ? (
+                    <SelectItem value="loading" disabled>Caricamento...</SelectItem>
+                  ) : (
+                    pcs.map((pc) => (
+                      <SelectItem key={pc.id} value={pc.id}>
+                        {pc.pcId} - {pc.brand} {pc.model}
+                        {pc.employee?.name && ` (${pc.employee.name})`}
+                      </SelectItem>
+                    ))
                   )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Separator />
+
+            {/* Opzioni */}
+            <div className="space-y-4">
+              <Label className="text-base font-medium">Opzioni Etichetta</Label>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="include-barcode"
+                  checked={includeBarcode}
+                  onCheckedChange={(checked) => setIncludeBarcode(checked as boolean)}
+                />
+                <Label htmlFor="include-barcode" className="flex items-center">
+                  <Barcode className="mr-2 h-4 w-4" />
+                  Includi Codice a Barre
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="include-logo"
+                  checked={includeLogo}
+                  onCheckedChange={(checked) => setIncludeLogo(checked as boolean)}
+                />
+                <Label htmlFor="include-logo">
+                  Includi Logo Maori Group
+                </Label>
+              </div>
+            </div>
+
+            {/* Testo Personalizzato */}
+            <div className="space-y-2">
+              <Label htmlFor="custom-text">Testo Aggiuntivo (opzionale)</Label>
+              <Input
+                id="custom-text"
+                placeholder="Es: Reparto IT, Piano 2..."
+                value={customText}
+                onChange={(e) => setCustomText(e.target.value)}
+              />
+            </div>
+
+
+          </CardContent>
+        </Card>
+
+        {/* Anteprima e Azioni */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Eye className="mr-2 h-5 w-5" />
+              Anteprima Etichetta
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {selectedPcData ? (
+              <>
+                {/* Anteprima */}
+                <div className="border-2 border-dashed border-border p-6 rounded-lg bg-muted/30">
+                  <div 
+                    className="bg-white border-2 border-gray-300 mx-auto relative shadow-lg rounded-sm overflow-hidden"
+                    style={{
+                      width: '210px',
+                      height: '126px',
+                      fontFamily: 'Inter, sans-serif',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      padding: '8px'
+                    }}
+                  >
+                    {/* Area centrale con info PC */}
+                    <div className="flex-1 flex flex-col justify-center items-center text-center">
+                      <div className="text-gray-800 text-base font-bold mb-1 leading-tight">
+                        {selectedPcData.brand?.toUpperCase()} {selectedPcData.model}
+                      </div>
+                      <div className="text-gray-600 text-xs font-medium mb-1">
+                        S/N: {selectedPcData.serialNumber || 'N/A'}
+                      </div>
+                      <div className="flex items-center justify-center gap-1 mb-2">
+                        <img 
+                          src="/assets/maori-logo.jpeg" 
+                          alt="Maori Group Logo" 
+                          className="h-2.5 w-auto object-contain"
+                        />
+                        <div className="text-gray-700 text-xs font-medium">
+                          info@maorigroup.it
+                        </div>
+                      </div>
+                      {customText && (
+                        <div className="text-gray-600 text-xs italic mb-1">
+                          {customText}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Codice a barre in fondo */}
+                    {includeBarcode && (
+                      <div className="flex justify-center">
+                        <div className="w-20 h-4 bg-gray-900 flex items-center justify-center text-white text-xs rounded-sm">
+                          <span className="font-mono text-xs">||||||</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+
+                {/* Informazioni PC */}
+                <div className="space-y-3">
+                  <h3 className="font-medium">Dettagli PC Selezionato</h3>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">ID:</span>
+                      <span className="ml-2 font-medium">{selectedPcData.pcId}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Stato:</span>
+                      <Badge variant={selectedPcData.status === 'active' ? 'default' : 'secondary'} className="ml-2">
+                        {selectedPcData.status === 'active' ? 'Attivo' : 
+                         selectedPcData.status === 'maintenance' ? 'Manutenzione' : 'Dismesso'}
+                      </Badge>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Marca:</span>
+                      <span className="ml-2">{selectedPcData.brand}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Modello:</span>
+                      <span className="ml-2">{selectedPcData.model}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">S/N:</span>
+                      <span className="ml-2 font-mono text-xs">{selectedPcData.serialNumber || 'N/A'}</span>
+                    </div>
+                    {selectedPcData.employee && (
+                      <>
+                        <div>
+                          <span className="text-muted-foreground">Assegnato a:</span>
+                          <span className="ml-2">{selectedPcData.employee.name}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Email:</span>
+                          <span className="ml-2">{selectedPcData.employee.email}</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Azioni */}
+                <div className="flex gap-3">
+                  <Button onClick={printLabel} className="flex-1">
+                    <Printer className="mr-2 h-4 w-4" />
+                    Stampa Etichetta
+                  </Button>
+                  <Button variant="outline" onClick={printLabel}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Scarica PDF
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                <Printer className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                <p>Seleziona un PC per vedere l'anteprima dell'etichetta</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+
     </div>
   );
 }
