@@ -22,7 +22,16 @@ export default function Topbar() {
   const [showSearchDialog, setShowSearchDialog] = useState(false);
 
   const handleSearchClick = () => {
+    console.log('Search clicked - opening dialog');
     setShowSearchDialog(true);
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setGlobalSearchTerm(value);
+    if (value.length > 0) {
+      setShowSearchDialog(true);
+    }
   };
 
   const handleSearchClose = () => {
@@ -41,10 +50,10 @@ export default function Topbar() {
               placeholder="Ricerca globale: PC, dipendenti, tutto..."
               value={globalSearchTerm}
               onClick={handleSearchClick}
-              onChange={(e) => setGlobalSearchTerm(e.target.value)}
-              className="pl-10 bg-muted/30 border-0 focus:bg-background cursor-pointer"
+              onFocus={handleSearchClick}
+              onChange={handleSearchChange}
+              className="pl-10 bg-muted/30 border-0 focus:bg-background"
               data-testid="input-global-search"
-              readOnly
             />
           </div>
         </div>
