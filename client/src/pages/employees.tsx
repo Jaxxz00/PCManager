@@ -25,7 +25,7 @@ export default function Employees() {
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { globalSearchTerm } = useGlobalSearch();
+  const { globalSearchTerm, setGlobalSearchTerm } = useGlobalSearch();
   
   // Usa la ricerca globale se presente, altrimenti la ricerca locale
   const effectiveSearchTerm = globalSearchTerm || searchTerm;

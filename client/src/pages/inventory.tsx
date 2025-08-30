@@ -20,7 +20,7 @@ export default function Inventory() {
   const [brandFilter, setBrandFilter] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { globalSearchTerm } = useGlobalSearch();
+  const { globalSearchTerm, setGlobalSearchTerm } = useGlobalSearch();
   
   // Usa la ricerca globale se presente, altrimenti la ricerca locale
   const effectiveSearchTerm = globalSearchTerm || searchTerm;
@@ -223,11 +223,12 @@ export default function Inventory() {
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Cerca PC, modello, serial, dipendente..."
+                placeholder={globalSearchTerm ? `Ricerca globale attiva: "${globalSearchTerm}"` : "Cerca PC, modello, serial, dipendente..."}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className={`pl-10 ${globalSearchTerm ? 'bg-blue-50 border-blue-200' : ''}`}
                 data-testid="input-search-pc"
+                disabled={!!globalSearchTerm}
               />
             </div>
             
@@ -337,6 +338,7 @@ export default function Inventory() {
                   size="sm" 
                   onClick={() => {
                     setSearchTerm("");
+                    setGlobalSearchTerm("");
                     setStatusFilter("");
                     setBrandFilter("");
                   }}
@@ -347,7 +349,10 @@ export default function Inventory() {
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    onClick={() => setSearchTerm("")}
+                    onClick={() => {
+                      setSearchTerm("");
+                      setGlobalSearchTerm("");
+                    }}
                   >
                     Cancella Ricerca
                   </Button>
