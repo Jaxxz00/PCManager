@@ -1,682 +1,378 @@
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import { 
+  GitBranch, 
+  Monitor, 
+  Users, 
+  ArrowRight, 
   CheckCircle, 
   Circle, 
-  ArrowRight, 
-  ArrowLeft, 
-  Monitor, 
-  User, 
-  FileText, 
-  Tag, 
-  CheckSquare,
+  Clock,
+  FileText,
+  AlertTriangle,
   Printer,
-  Package,
-  Shield
-} from 'lucide-react';
-import type { Pc, Employee } from '@shared/schema';
+  User
+} from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
 
-interface WorkflowStep {
-  id: number;
+interface AssignmentStep {
+  id: string;
   title: string;
   description: string;
-  icon: React.ComponentType<any>;
+  completed: boolean;
+  icon: React.ElementType;
+}
+
+interface WorkflowData {
+  selectedPc: any;
+  selectedEmployee: any;
+  step: number;
   completed: boolean;
 }
 
-const initialSteps: WorkflowStep[] = [
-  {
-    id: 1,
-    title: "Selezione PC",
-    description: "Scegli il computer da assegnare",
-    icon: Monitor,
+export default function Workflow() {
+  const [workflowData, setWorkflowData] = useState<WorkflowData>({
+    selectedPc: null,
+    selectedEmployee: null,
+    step: 1,
     completed: false
-  },
-  {
-    id: 2,
-    title: "Assegnazione Dipendente",
-    description: "Seleziona il dipendente destinatario",
-    icon: User,
-    completed: false
-  },
-  {
-    id: 3,
-    title: "Generazione Manleva",
-    description: "Crea e compila il documento di manleva",
-    icon: FileText,
-    completed: false
-  },
-  {
-    id: 4,
-    title: "Creazione Etichetta",
-    description: "Genera l'etichetta identificativa",
-    icon: Tag,
-    completed: false
-  },
-  {
-    id: 5,
-    title: "Controllo e Verifica",
-    description: "Verifica tutti i documenti e l'etichetta",
-    icon: CheckSquare,
-    completed: false
-  },
-  {
-    id: 6,
-    title: "Consegna Finale",
-    description: "Completamento del processo di consegna",
-    icon: Package,
-    completed: false
-  }
-];
+  });
 
-export default function WorkflowPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
-  const [currentStep, setCurrentStep] = useState(1);
-  const [steps, setSteps] = useState(initialSteps);
-  const [workflowData, setWorkflowData] = useState({
-    selectedPc: '',
-    selectedEmployee: '',
-    manlevaDetails: {
-      purpose: '',
-      conditions: '',
-      returnDate: '',
-      notes: ''
-    },
-    labelCreated: false,
-    finalChecks: {
-      documentsSigned: false,
-      labelApplied: false,
-      pcTested: false,
-      employeeNotified: false
-    }
+
+  const { data: pcs = [], isLoading: pcsLoading } = useQuery({
+    queryKey: ["/api/pcs"],
   });
 
-  // API calls
-  const { data: pcs = [], isLoading: loadingPcs } = useQuery<Pc[]>({
-    queryKey: ['/api/pcs']
+  const { data: employees = [], isLoading: employeesLoading } = useQuery({
+    queryKey: ["/api/employees"],
   });
 
-  const { data: employees = [], isLoading: loadingEmployees } = useQuery<Employee[]>({
-    queryKey: ['/api/employees']
-  });
+  // Filtra PC non assegnati
+  const availablePCs = pcs.filter((pc: any) => !pc.employeeId);
 
   const assignPcMutation = useMutation({
     mutationFn: async (data: { pcId: string; employeeId: string }) => {
-      return apiRequest(`/api/pcs/${data.pcId}/assign`, 'POST', { employeeId: data.employeeId });
+      return apiRequest(`/api/pcs/${data.pcId}/assign`, "POST", {
+        employeeId: data.employeeId
+      });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/pcs'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/pcs"] });
+      setWorkflowData(prev => ({ ...prev, step: 6, completed: true }));
       toast({
-        title: "Successo",
-        description: "PC assegnato correttamente al dipendente"
+        title: "Assegnazione Completata",
+        description: "PC assegnato con successo al dipendente",
       });
-    }
+    },
+    onError: () => {
+      toast({
+        title: "Errore",
+        description: "Errore durante l'assegnazione del PC",
+        variant: "destructive",
+      });
+    },
   });
 
-  const availablePcs = pcs.filter(pc => pc.status === 'DISPONIBILE');
-  const selectedPcData = pcs.find(pc => pc.id === workflowData.selectedPc);
-  const selectedEmployeeData = employees.find(emp => emp.id === workflowData.selectedEmployee);
+  const steps: AssignmentStep[] = [
+    {
+      id: "select-pc",
+      title: "Seleziona PC",
+      description: "Scegli il computer da assegnare",
+      completed: !!workflowData.selectedPc,
+      icon: Monitor
+    },
+    {
+      id: "select-employee",
+      title: "Seleziona Dipendente",
+      description: "Scegli il dipendente destinatario",
+      completed: !!workflowData.selectedEmployee,
+      icon: Users
+    },
+    {
+      id: "verify",
+      title: "Verifica Dati",
+      description: "Controlla le informazioni inserite",
+      completed: workflowData.step >= 3,
+      icon: CheckCircle
+    },
+    {
+      id: "print-label",
+      title: "Stampa Etichetta",
+      description: "Genera etichetta identificativa",
+      completed: workflowData.step >= 4,
+      icon: Printer
+    },
+    {
+      id: "document",
+      title: "Manleva Firmata",
+      description: "Documento di presa in carico",
+      completed: workflowData.step >= 5,
+      icon: FileText
+    },
+    {
+      id: "complete",
+      title: "Assegnazione",
+      description: "Finalizza l'operazione",
+      completed: workflowData.completed,
+      icon: GitBranch
+    }
+  ];
 
-  const markStepCompleted = (stepId: number) => {
-    setSteps(prev => prev.map(step => 
-      step.id === stepId ? { ...step, completed: true } : step
-    ));
+  const handlePcSelect = (pc: any) => {
+    setWorkflowData(prev => ({ ...prev, selectedPc: pc, step: Math.max(prev.step, 2) }));
   };
 
-  const nextStep = () => {
-    if (currentStep < steps.length) {
-      markStepCompleted(currentStep);
-      setCurrentStep(currentStep + 1);
+  const handleEmployeeSelect = (employee: any) => {
+    setWorkflowData(prev => ({ ...prev, selectedEmployee: employee, step: Math.max(prev.step, 3) }));
+  };
+
+  const handleNextStep = () => {
+    if (workflowData.step < 5) {
+      setWorkflowData(prev => ({ ...prev, step: prev.step + 1 }));
+    } else if (workflowData.step === 5 && workflowData.selectedPc && workflowData.selectedEmployee) {
+      assignPcMutation.mutate({
+        pcId: workflowData.selectedPc.id,
+        employeeId: workflowData.selectedEmployee.id
+      });
     }
   };
 
-  const prevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-
-  const handleFinalSubmit = async () => {
-    if (workflowData.selectedPc && workflowData.selectedEmployee) {
-      try {
-        await assignPcMutation.mutateAsync({
-          pcId: workflowData.selectedPc,
-          employeeId: workflowData.selectedEmployee
-        });
-        markStepCompleted(6);
-        toast({
-          title: "Processo Completato!",
-          description: "Il PC è stato assegnato con successo e tutti i documenti sono pronti."
-        });
-      } catch (error) {
-        toast({
-          title: "Errore",
-          description: "Errore durante l'assegnazione del PC",
-          variant: "destructive"
-        });
-      }
-    }
-  };
-
-  const canProceedToNext = () => {
-    switch (currentStep) {
-      case 1:
-        return workflowData.selectedPc !== '';
-      case 2:
-        return workflowData.selectedEmployee !== '';
-      case 3:
-        return workflowData.manlevaDetails.purpose !== '' && workflowData.manlevaDetails.conditions !== '';
-      case 4:
-        return workflowData.labelCreated;
-      case 5:
-        return Object.values(workflowData.finalChecks).every(check => check);
-      default:
-        return true;
-    }
+  const handleReset = () => {
+    setWorkflowData({
+      selectedPc: null,
+      selectedEmployee: null,
+      step: 1,
+      completed: false
+    });
   };
 
   const renderStepContent = () => {
-    switch (currentStep) {
+    switch (workflowData.step) {
       case 1:
         return (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="pc-select">Seleziona PC Disponibile</Label>
-              <Select 
-                value={workflowData.selectedPc} 
-                onValueChange={(value) => setWorkflowData(prev => ({ ...prev, selectedPc: value }))}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Scegli un PC..." />
-                </SelectTrigger>
-                <SelectContent 
-                  className="z-[100] bg-white border border-gray-200 shadow-lg rounded-md max-h-60 overflow-y-auto"
-                  position="popper"
-                  sideOffset={4}
-                >
-                  {loadingPcs ? (
-                    <SelectItem value="loading" disabled className="cursor-not-allowed opacity-50">
-                      Caricamento...
-                    </SelectItem>
-                  ) : (
-                    availablePcs.map((pc) => (
-                      <SelectItem 
-                        key={pc.id} 
-                        value={pc.id}
-                        className="cursor-pointer hover:bg-gray-100"
-                      >
-                        {pc.pcId} - {pc.brand} {pc.model} (S/N: {pc.serialNumber})
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {selectedPcData && (
-              <Card className="bg-gradient-to-br from-blue-50 to-indigo-100 border-blue-200 shadow-lg">
-                <CardContent className="pt-4">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-blue-500 rounded-lg">
-                      <Monitor className="w-5 h-5 text-white" />
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Monitor className="h-5 w-5" />
+                Seleziona PC da Assegnare
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {availablePCs.length === 0 ? (
+                <div className="text-center py-8">
+                  <AlertTriangle className="h-12 w-12 text-orange-500 mx-auto mb-4" />
+                  <p className="text-muted-foreground">Nessun PC disponibile per l'assegnazione</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {availablePCs.map((pc: any) => (
+                    <div
+                      key={pc.id}
+                      className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                        workflowData.selectedPc?.id === pc.id
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                      onClick={() => handlePcSelect(pc)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-semibold">{pc.pcId}</h3>
+                          <p className="text-sm text-muted-foreground">{pc.brand} {pc.model}</p>
+                          <p className="text-xs text-muted-foreground">RAM: {pc.ram}GB - Storage: {pc.storage}GB</p>
+                        </div>
+                        <Badge variant={pc.status === 'active' ? 'default' : 'secondary'}>
+                          {pc.status}
+                        </Badge>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-blue-900">PC Selezionato</h3>
-                      <p className="text-sm text-blue-700">Dettagli hardware e configurazione</p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="bg-white/50 rounded-lg p-3">
-                      <Label className="font-medium text-blue-800">Marca e Modello</Label>
-                      <p className="font-semibold text-gray-900">{selectedPcData.brand} {selectedPcData.model}</p>
-                    </div>
-                    <div className="bg-white/50 rounded-lg p-3">
-                      <Label className="font-medium text-blue-800">Numero Serie</Label>
-                      <p className="font-semibold text-gray-900">{selectedPcData.serialNumber}</p>
-                    </div>
-                    <div className="bg-white/50 rounded-lg p-3">
-                      <Label className="font-medium text-blue-800">Processore</Label>
-                      <p className="font-semibold text-gray-900">{selectedPcData.cpu || 'N/A'}</p>
-                    </div>
-                    <div className="bg-white/50 rounded-lg p-3">
-                      <Label className="font-medium text-blue-800">RAM</Label>
-                      <p className="font-semibold text-gray-900">{selectedPcData.ram ? `${selectedPcData.ram}GB` : 'N/A'}</p>
-                    </div>
-                  </div>
-                  <div className="mt-4 p-3 bg-blue-100 rounded-lg border border-blue-200">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-600" />
-                      <span className="text-sm font-medium text-green-800">PC Disponibile per l'assegnazione</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         );
 
       case 2:
         return (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="employee-select">Seleziona Dipendente</Label>
-              <select
-                value={workflowData.selectedEmployee || ""}
-                onChange={(e) => setWorkflowData(prev => ({ ...prev, selectedEmployee: e.target.value }))}
-                className="w-full h-10 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm cursor-pointer appearance-none pr-10"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                  backgroundPosition: 'right 8px center',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px'
-                }}
-              >
-                <option value="" disabled>Scegli un dipendente...</option>
-                {loadingEmployees ? (
-                  <option value="" disabled>Caricamento...</option>
-                ) : (
-                  employees.map((employee) => (
-                    <option key={employee.id} value={employee.id}>
-                      {employee.name} - {employee.department}
-                    </option>
-                  ))
-                )}
-              </select>
-            </div>
-            
-            {selectedEmployeeData && (
-              <Card className="bg-gradient-to-br from-emerald-50 to-teal-100 border-emerald-200 shadow-lg">
-                <CardContent className="pt-4">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-emerald-500 rounded-lg">
-                      <User className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-emerald-900">Dipendente Destinatario</h3>
-                      <p className="text-sm text-emerald-700">Informazioni del beneficiario dell'assegnazione</p>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Seleziona Dipendente
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {employees.map((employee: any) => (
+                  <div
+                    key={employee.id}
+                    className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                      workflowData.selectedEmployee?.id === employee.id
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                    onClick={() => handleEmployeeSelect(employee)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                        <User className="h-5 w-5 text-gray-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">{employee.name}</h3>
+                        <p className="text-sm text-muted-foreground">{employee.email}</p>
+                        <p className="text-xs text-muted-foreground">{employee.department}</p>
+                      </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="bg-white/50 rounded-lg p-3">
-                      <Label className="font-medium text-emerald-800">Nome Completo</Label>
-                      <p className="font-semibold text-gray-900">{selectedEmployeeData.name}</p>
-                    </div>
-                    <div className="bg-white/50 rounded-lg p-3">
-                      <Label className="font-medium text-emerald-800">Email</Label>
-                      <p className="font-semibold text-gray-900">{selectedEmployeeData.email}</p>
-                    </div>
-                    <div className="bg-white/50 rounded-lg p-3">
-                      <Label className="font-medium text-emerald-800">Dipartimento</Label>
-                      <p className="font-semibold text-gray-900">{selectedEmployeeData.department}</p>
-                    </div>
-                    <div className="bg-white/50 rounded-lg p-3">
-                      <Label className="font-medium text-emerald-800">Posizione</Label>
-                      <p className="font-semibold text-gray-900">{selectedEmployeeData.position}</p>
-                    </div>
-                  </div>
-                  <div className="mt-4 p-3 bg-emerald-100 rounded-lg border border-emerald-200">
-                    <div className="flex items-center gap-2">
-                      <User className="w-4 h-4 text-emerald-600" />
-                      <span className="text-sm font-medium text-emerald-800">Dipendente attivo e abilitato alle assegnazioni</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         );
 
       case 3:
         return (
-          <div className="space-y-6">
-            <div className="bg-gradient-to-br from-purple-50 to-pink-100 p-6 rounded-xl border border-purple-200">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-purple-500 rounded-full">
-                  <FileText className="h-6 w-6 text-white" />
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5" />
+                Verifica Assegnazione
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <h3 className="font-semibold mb-2 flex items-center gap-2">
+                    <Monitor className="h-4 w-4" />
+                    PC Selezionato
+                  </h3>
+                  {workflowData.selectedPc && (
+                    <div>
+                      <p className="font-medium">{workflowData.selectedPc.pcId}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {workflowData.selectedPc.brand} {workflowData.selectedPc.model}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        S/N: {workflowData.selectedPc.serialNumber}
+                      </p>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-purple-900">Documento di Manleva</h3>
-                  <p className="text-purple-700">Crea il documento ufficiale per l'assegnazione del dispositivo</p>
+                
+                <div className="p-4 bg-green-50 rounded-lg">
+                  <h3 className="font-semibold mb-2 flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Dipendente
+                  </h3>
+                  {workflowData.selectedEmployee && (
+                    <div>
+                      <p className="font-medium">{workflowData.selectedEmployee.name}</p>
+                      <p className="text-sm text-muted-foreground">{workflowData.selectedEmployee.email}</p>
+                      <p className="text-sm text-muted-foreground">{workflowData.selectedEmployee.department}</p>
+                    </div>
+                  )}
                 </div>
               </div>
               
-              <div className="bg-purple-100 border border-purple-200 rounded-lg p-4 mb-4">
-                <div className="flex items-start gap-3">
-                  <Shield className="h-5 w-5 text-purple-600 mt-0.5" />
-                  <div className="text-sm text-purple-800">
-                    <p className="font-medium mb-1">Protezione Legale Aziendale</p>
-                    <p>Questo documento stabilisce responsabilità e condizioni d'uso del dispositivo assegnato, proteggendo sia l'azienda che il dipendente.</p>
-                  </div>
-                </div>
+              <div className="flex items-center gap-2 p-3 bg-yellow-50 rounded-lg">
+                <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                <p className="text-sm text-yellow-800">
+                  Verificare che tutti i dati siano corretti prima di procedere
+                </p>
               </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="purpose" className="text-base font-semibold text-purple-800">Scopo dell'Assegnazione</Label>
-                <Input
-                  id="purpose"
-                  placeholder="Es: Sostituzione computer obsoleto, nuova assunzione, upgrade hardware..."
-                  value={workflowData.manlevaDetails.purpose}
-                  onChange={(e) => setWorkflowData(prev => ({
-                    ...prev,
-                    manlevaDetails: { ...prev.manlevaDetails, purpose: e.target.value }
-                  }))}
-                  className="bg-white border-purple-200 focus:border-purple-500"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="conditions" className="text-base font-semibold text-purple-800">Condizioni e Responsabilità</Label>
-                <Textarea
-                  id="conditions"
-                  placeholder="Descrivi le condizioni d'uso, responsabilità del dipendente, obblighi di cura e conservazione del dispositivo..."
-                  value={workflowData.manlevaDetails.conditions}
-                  onChange={(e) => setWorkflowData(prev => ({
-                    ...prev,
-                    manlevaDetails: { ...prev.manlevaDetails, conditions: e.target.value }
-                  }))}
-                  rows={6}
-                  className="bg-white border-purple-200 focus:border-purple-500"
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="return-date" className="text-base font-semibold text-purple-800">Data Prevista Restituzione</Label>
-                  <Input
-                    id="return-date"
-                    type="date"
-                    value={workflowData.manlevaDetails.returnDate}
-                    onChange={(e) => setWorkflowData(prev => ({
-                      ...prev,
-                      manlevaDetails: { ...prev.manlevaDetails, returnDate: e.target.value }
-                    }))}
-                    className="bg-white border-purple-200 focus:border-purple-500"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="notes" className="text-base font-semibold text-purple-800">Note Aggiuntive</Label>
-                  <Input
-                    id="notes"
-                    placeholder="Accordi particolari, condizioni speciali..."
-                    value={workflowData.manlevaDetails.notes}
-                    onChange={(e) => setWorkflowData(prev => ({
-                      ...prev,
-                      manlevaDetails: { ...prev.manlevaDetails, notes: e.target.value }
-                    }))}
-                    className="bg-white border-purple-200 focus:border-purple-500"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         );
 
       case 4:
         return (
-          <div className="space-y-6">
-            <div className="text-center bg-gradient-to-br from-orange-50 to-amber-100 p-6 rounded-xl border border-orange-200">
-              <div className="p-3 bg-orange-500 rounded-full inline-block mb-4">
-                <Printer className="h-8 w-8 text-white" />
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Printer className="h-5 w-5" />
+                Stampa Etichetta Identificativa
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="p-4 bg-gray-50 rounded-lg text-center">
+                <Printer className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                <p className="font-medium">Etichetta PC {workflowData.selectedPc?.pcId}</p>
+                <p className="text-sm text-muted-foreground">
+                  Assegnato a: {workflowData.selectedEmployee?.name}
+                </p>
               </div>
-              <h3 className="text-xl font-semibold text-orange-900 mb-2">Creazione Etichetta Professionale</h3>
-              <p className="text-orange-700 mb-4">
-                L'etichetta sarà generata con i dati del PC selezionato seguendo lo standard aziendale Maori Group
-              </p>
-              <div className="flex items-center justify-center gap-4 text-sm text-orange-800">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-600" />
-                  <span>Logo aziendale incluso</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-600" />
-                  <span>Codice a barre leggibile</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-600" />
-                  <span>Formato 5x3cm</span>
-                </div>
-              </div>
-            </div>
-            
-            {selectedPcData && (
-              <Card className="bg-muted/30">
-                <CardContent className="pt-4">
-                  <div className="text-center space-y-2">
-                    <div className="text-sm font-medium">Anteprima Etichetta</div>
-                    <div className="border-2 border-dashed border-border p-4 rounded-lg inline-block">
-                      <div className="text-xs space-y-1">
-                        <div className="font-medium">{selectedPcData.brand} {selectedPcData.model}</div>
-                        <div>S/N: {selectedPcData.serialNumber}</div>
-                        <div className="text-xs text-muted-foreground">info@maorigroup.it</div>
-                        <div className="w-16 h-3 bg-gray-900 mx-auto mt-2"></div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-4 flex justify-center">
-                    <Button 
-                      onClick={() => {
-                        setWorkflowData(prev => ({ ...prev, labelCreated: true }));
-                        toast({
-                          title: "Etichetta Creata",
-                          description: "L'etichetta è stata generata e può essere stampata"
-                        });
-                      }}
-                      disabled={workflowData.labelCreated}
-                    >
-                      {workflowData.labelCreated ? "Etichetta Creata" : "Genera Etichetta"}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+              <Button className="w-full" variant="outline">
+                <Printer className="h-4 w-4 mr-2" />
+                Stampa Etichetta QR
+              </Button>
+            </CardContent>
+          </Card>
         );
 
       case 5:
         return (
-          <div className="space-y-6">
-            <div className="bg-gradient-to-br from-red-50 to-rose-100 p-6 rounded-xl border border-red-200">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-red-500 rounded-full">
-                  <CheckSquare className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-red-900">Controlli Finali di Qualità</h3>
-                  <p className="text-red-700">Verifica finale prima della consegna ufficiale</p>
-                </div>
-              </div>
-              
-              <div className="bg-red-100 border border-red-200 rounded-lg p-4">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-red-600 mt-0.5" />
-                  <div className="text-sm text-red-800">
-                    <p className="font-medium mb-1">Lista di Controllo Obbligatoria</p>
-                    <p>Tutti i controlli devono essere completati prima di procedere alla consegna finale del dispositivo.</p>
-                  </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Documento di Manleva
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <h3 className="font-semibold mb-2">Documento di Presa in Carico</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Il dipendente deve firmare il documento di manleva per la presa in carico del PC aziendale.
+                </p>
+                <div className="space-y-2 text-sm">
+                  <p><strong>PC:</strong> {workflowData.selectedPc?.pcId} - {workflowData.selectedPc?.brand} {workflowData.selectedPc?.model}</p>
+                  <p><strong>Dipendente:</strong> {workflowData.selectedEmployee?.name}</p>
+                  <p><strong>Data:</strong> {new Date().toLocaleDateString('it-IT')}</p>
                 </div>
               </div>
-            </div>
-            
-            <div className="grid grid-cols-1 gap-4">
-              {[
-                { 
-                  key: 'documentsSigned', 
-                  label: 'Manleva firmata dal dipendente',
-                  description: 'Documento di responsabilità firmato e datato',
-                  icon: FileText,
-                  color: 'blue'
-                },
-                { 
-                  key: 'labelApplied', 
-                  label: 'Etichetta applicata sul PC',
-                  description: 'Etichetta identificativa correttamente posizionata',
-                  icon: Tag,
-                  color: 'green'
-                },
-                { 
-                  key: 'pcTested', 
-                  label: 'PC testato e funzionante',
-                  description: 'Verifica accensione, login e funzionalità base',
-                  icon: Monitor,
-                  color: 'purple'
-                },
-                { 
-                  key: 'employeeNotified', 
-                  label: 'Dipendente informato delle procedure',
-                  description: 'Spiegazione delle responsabilità e procedure',
-                  icon: User,
-                  color: 'orange'
-                }
-              ].map((check) => {
-                const CheckIcon = check.icon;
-                const isChecked = workflowData.finalChecks[check.key as keyof typeof workflowData.finalChecks];
-                
-                return (
-                  <Card key={check.key} className={`transition-all duration-300 ${
-                    isChecked 
-                      ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 shadow-md' 
-                      : 'bg-gray-50 border-gray-200 hover:border-gray-300'
-                  }`}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start space-x-4">
-                        <Checkbox
-                          id={check.key}
-                          checked={isChecked}
-                          onCheckedChange={(checked) => 
-                            setWorkflowData(prev => ({
-                              ...prev,
-                              finalChecks: {
-                                ...prev.finalChecks,
-                                [check.key]: checked as boolean
-                              }
-                            }))
-                          }
-                          className="mt-1"
-                        />
-                        <div className={`p-2 rounded-lg ${
-                          isChecked ? 'bg-green-500' : 'bg-gray-400'
-                        }`}>
-                          <CheckIcon className="h-4 w-4 text-white" />
-                        </div>
-                        <div className="flex-1">
-                          <Label htmlFor={check.key} className={`font-semibold cursor-pointer ${
-                            isChecked ? 'text-green-800' : 'text-gray-700'
-                          }`}>
-                            {check.label}
-                          </Label>
-                          <p className={`text-sm mt-1 ${
-                            isChecked ? 'text-green-600' : 'text-gray-500'
-                          }`}>
-                            {check.description}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
+              <Button className="w-full" variant="outline">
+                <FileText className="h-4 w-4 mr-2" />
+                Genera Documento Manleva
+              </Button>
+              <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <p className="text-sm text-green-800">
+                  Documento firmato e acquisito
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         );
 
       case 6:
         return (
-          <div className="text-center space-y-6">
-            <div className="bg-gradient-to-br from-green-50 to-emerald-100 p-8 rounded-2xl border border-green-200">
-              <div className="p-4 bg-green-500 rounded-full inline-block mb-6 shadow-lg">
-                <Package className="h-12 w-12 text-white" />
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                Assegnazione Completata
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-center space-y-4">
+              <div className="p-6 bg-green-50 rounded-lg">
+                <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-green-800">Operazione Completata</h3>
+                <p className="text-green-700">
+                  PC {workflowData.selectedPc?.pcId} assegnato con successo a {workflowData.selectedEmployee?.name}
+                </p>
               </div>
-              <h3 className="text-2xl font-bold text-green-900 mb-3">🎉 Processo Completato con Successo!</h3>
-              <p className="text-green-700 text-lg">
-                Il PC è stato assegnato con successo a <span className="font-semibold">{selectedEmployeeData?.name}</span>
-              </p>
-              
-              <div className="flex items-center justify-center gap-6 mt-6 text-sm text-green-800">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <span className="font-medium">Documentazione completa</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <span className="font-medium">Etichetta applicata</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <span className="font-medium">Controlli superati</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-6 mt-8">
-              <Card className="bg-gradient-to-br from-blue-50 to-cyan-100 border-blue-200 shadow-lg">
-                <CardContent className="pt-6 text-center">
-                  <div className="p-3 bg-blue-500 rounded-full inline-block mb-4">
-                    <Monitor className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="font-semibold text-blue-900 text-lg mb-2">PC Assegnato</div>
-                  <div className="text-blue-700 font-medium">{selectedPcData?.pcId}</div>
-                  <div className="text-blue-600 text-sm mt-2">{selectedPcData?.brand} {selectedPcData?.model}</div>
-                </CardContent>
-              </Card>
-              
-              <Card className="bg-gradient-to-br from-purple-50 to-violet-100 border-purple-200 shadow-lg">
-                <CardContent className="pt-6 text-center">
-                  <div className="p-3 bg-purple-500 rounded-full inline-block mb-4">
-                    <User className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="font-semibold text-purple-900 text-lg mb-2">Beneficiario</div>
-                  <div className="text-purple-700 font-medium">{selectedEmployeeData?.name}</div>
-                  <div className="text-purple-600 text-sm mt-2">{selectedEmployeeData?.department}</div>
-                </CardContent>
-              </Card>
-            </div>
-            
-            <div className="mt-8">
-              <Button 
-                onClick={handleFinalSubmit}
-                disabled={assignPcMutation.isPending}
-                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-                size="lg"
-              >
-                {assignPcMutation.isPending ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-3"></div>
-                    Salvando nel sistema...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="mr-3 h-5 w-5" />
-                    Finalizza Assegnazione nel Database
-                  </>
-                )}
+              <Button onClick={handleReset} className="w-full">
+                Nuova Assegnazione
               </Button>
-            </div>
-            
-            {steps.filter(s => s.completed).length === 6 && (
-              <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <div className="flex items-center gap-2 text-yellow-800">
-                  <CheckSquare className="h-5 w-5" />
-                  <span className="font-medium">Tutti i passaggi sono stati completati con successo!</span>
-                </div>
-              </div>
-            )}
-          </div>
+            </CardContent>
+          </Card>
         );
 
       default:
@@ -686,55 +382,53 @@ export default function WorkflowPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-medium text-foreground">Workflow Assegnazione PC</h1>
-          <p className="text-muted-foreground">Processo guidato dalla selezione alla consegna completa</p>
+          <h1 className="text-3xl font-bold text-foreground">Workflow Assegnazione PC</h1>
+          <p className="text-muted-foreground">Processo guidato per l'assegnazione di PC aziendali</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline">
-            Passo {currentStep} di {steps.length}
-          </Badge>
-        </div>
+        <Badge variant="outline" className="flex items-center gap-2">
+          <GitBranch className="h-4 w-4" />
+          Processo Attivo
+        </Badge>
       </div>
 
       {/* Progress Steps */}
-      <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 shadow-lg">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
+      <Card>
+        <CardHeader>
+          <CardTitle>Avanzamento Processo</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between mb-4">
             {steps.map((step, index) => {
               const StepIcon = step.icon;
-              const isActive = step.id === currentStep;
+              const isActive = workflowData.step === index + 1;
               const isCompleted = step.completed;
               
               return (
-                <div key={step.id} className="flex items-center">
-                  <div className="flex flex-col items-center">
-                    <div className={`
-                      flex items-center justify-center w-14 h-14 rounded-full border-3 shadow-lg transition-all duration-300 
-                      ${isCompleted ? 'bg-gradient-to-br from-green-400 to-green-600 border-green-500 text-white shadow-green-200' :
-                        isActive ? 'bg-gradient-to-br from-blue-400 to-blue-600 border-blue-500 text-white shadow-blue-200 scale-110' :
-                        'bg-gradient-to-br from-gray-200 to-gray-300 border-gray-400 text-gray-600 shadow-gray-100'}
-                    `}>
-                      {isCompleted ? <CheckCircle className="w-6 h-6" /> : <StepIcon className="w-6 h-6" />}
-                    </div>
-                    <div className="mt-3 text-center max-w-20">
-                      <div className={`text-xs font-semibold leading-tight ${
-                        isActive ? 'text-blue-800' : isCompleted ? 'text-green-800' : 'text-gray-600'
-                      }`}>
-                        {step.title}
-                      </div>
-                      <div className={`text-xs mt-1 ${
-                        isActive ? 'text-blue-600' : isCompleted ? 'text-green-600' : 'text-gray-500'
-                      }`}>
-                        {step.description}
-                      </div>
-                    </div>
+                <div key={step.id} className="flex flex-col items-center flex-1">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
+                    isCompleted 
+                      ? 'bg-green-500 text-white' 
+                      : isActive 
+                        ? 'bg-blue-500 text-white' 
+                        : 'bg-gray-200 text-gray-500'
+                  }`}>
+                    {isCompleted ? (
+                      <CheckCircle className="h-5 w-5" />
+                    ) : (
+                      <StepIcon className="h-5 w-5" />
+                    )}
                   </div>
-                  
+                  <p className={`text-xs text-center font-medium ${
+                    isActive ? 'text-blue-600' : isCompleted ? 'text-green-600' : 'text-gray-500'
+                  }`}>
+                    {step.title}
+                  </p>
                   {index < steps.length - 1 && (
-                    <div className={`w-16 h-1 mx-3 rounded-full transition-all duration-500 ${
-                      step.completed ? 'bg-gradient-to-r from-green-400 to-green-500 shadow-sm' : 'bg-gray-300'
+                    <div className={`w-full h-0.5 mt-2 ${
+                      steps[index + 1].completed ? 'bg-green-500' : 'bg-gray-200'
                     }`} />
                   )}
                 </div>
@@ -745,73 +439,49 @@ export default function WorkflowPage() {
       </Card>
 
       {/* Step Content */}
-      <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50">
-        <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-t-lg">
-          <CardTitle className="flex items-center text-white">
-            {(() => {
-              const StepIcon = steps[currentStep - 1].icon;
-              return (
-                <div className="p-2 bg-white/20 rounded-lg mr-3">
-                  <StepIcon className="h-5 w-5" />
-                </div>
-              );
-            })()}
-            <div>
-              <div className="text-xl font-bold">{steps[currentStep - 1].title}</div>
-              <div className="text-indigo-100 text-sm font-normal mt-1">{steps[currentStep - 1].description}</div>
-            </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-8">
-          {renderStepContent()}
-        </CardContent>
-      </Card>
+      {renderStepContent()}
 
       {/* Navigation */}
-      <Card className="bg-gradient-to-r from-gray-50 to-slate-100 border-gray-200 shadow-sm">
-        <CardContent className="p-6">
-          <div className="flex justify-between items-center">
-            <Button 
-              variant="outline" 
-              onClick={prevStep}
-              disabled={currentStep === 1}
-              className="bg-white hover:bg-gray-50 border-gray-300 text-gray-700 shadow-sm disabled:opacity-50 px-6 py-3"
-              size="lg"
-            >
-              <ArrowLeft className="mr-2 h-5 w-5" />
-              Passo Precedente
-            </Button>
-            
-            <div className="text-center">
-              <div className="text-sm text-gray-600 mb-1">Progresso Workflow</div>
-              <div className="text-lg font-semibold text-gray-800">{currentStep} di {steps.length} completati</div>
-            </div>
-            
-            <Button 
-              onClick={nextStep}
-              disabled={!canProceedToNext() || currentStep === steps.length}
-              className={`px-6 py-3 font-semibold shadow-lg transition-all duration-300 ${
-                currentStep === steps.length 
-                  ? 'bg-green-500 hover:bg-green-600 text-white' 
-                  : 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white'
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
-              size="lg"
-            >
-              {currentStep === steps.length ? (
+      {!workflowData.completed && workflowData.step < 6 && (
+        <div className="flex justify-between">
+          <Button 
+            variant="outline" 
+            onClick={() => setWorkflowData(prev => ({ ...prev, step: Math.max(1, prev.step - 1) }))}
+            disabled={workflowData.step === 1}
+          >
+            Indietro
+          </Button>
+          
+          <Button 
+            onClick={handleNextStep}
+            disabled={
+              (workflowData.step === 1 && !workflowData.selectedPc) ||
+              (workflowData.step === 2 && !workflowData.selectedEmployee) ||
+              assignPcMutation.isPending
+            }
+            className="flex items-center gap-2"
+          >
+            {workflowData.step === 5 ? (
+              assignPcMutation.isPending ? (
                 <>
-                  <CheckCircle className="mr-2 h-5 w-5" />
-                  Workflow Completato
+                  <Clock className="h-4 w-4 animate-spin" />
+                  Assegnazione...
                 </>
               ) : (
                 <>
-                  Prossimo Passo
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  Completa Assegnazione
+                  <CheckCircle className="h-4 w-4" />
                 </>
-              )}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+              )
+            ) : (
+              <>
+                Avanti
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

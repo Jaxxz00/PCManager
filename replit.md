@@ -5,6 +5,10 @@
 Sistema di gestione completo per computer e dipendenti aziendali di Maori Group. L'applicazione fornisce una dashboard centralizzata per il monitoraggio dell'inventario PC, assegnazioni dipendenti, gestione documenti e statistiche del sistema. Include interfaccia React moderna, backend Node.js/Express e **database PostgreSQL completamente integrato** per persistenza dati con cloud storage per documenti.
 
 ## Recent Changes (30/08/2025)
+- ✅ **WORKFLOW ASSEGNAZIONE PC CREATO**: Processo guidato completo a 6 step per assegnazione PC aziendali
+- ✅ **DASHBOARD FUNZIONALE RIFATTA**: Layout 3 colonne con dati real-time, alerts e azioni rapide
+- ✅ **SIDEBAR SEMPLIFICATA**: Design pulito senza elementi confusionari, navigazione essenziale
+- ✅ **PULSANTE NUOVO PC BLU**: Colore blu per il pulsante nell'inventario come richiesto
 - ✅ **SISTEMA NOTIFICHE RIPARATO**: Sostituito sistema hardcoded con NotificationBell dinamico basato su dati reali
 - ✅ **INVITI UTENTI EMAIL**: Sistema completo per invio email inviti con token temporanei e impostazione password
 - ✅ **DATABASE INVITE TOKENS**: Tabella inviteTokens per gestione token sicuri con scadenza 24h
