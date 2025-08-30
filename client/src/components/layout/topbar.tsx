@@ -12,50 +12,58 @@ import { useAuth } from "@/App";
 import { useLocation } from "wouter";
 import NotificationBell from "@/components/notification-bell";
 import { useGlobalSearch } from "@/contexts/GlobalSearchContext";
-import { GlobalSearchDialog } from "@/components/global-search-dialog";
+import { GlobalSearchDropdown } from "@/components/global-search-dropdown";
 import { useState } from "react";
 
 export default function Topbar() {
   const { user, logout } = useAuth();
   const [, setLocation] = useLocation();
   const { globalSearchTerm, setGlobalSearchTerm } = useGlobalSearch();
-  const [showSearchDialog, setShowSearchDialog] = useState(false);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
 
   const handleSearchClick = () => {
-    console.log('🔍 Search clicked - opening dialog, current state:', showSearchDialog);
-    setShowSearchDialog(true);
+    console.log('🔍 Search clicked - opening dropdown');
+    setShowSearchDropdown(true);
   };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+  const handleSearchChange = (value: string) => {
     setGlobalSearchTerm(value);
     if (value.length > 0) {
-      setShowSearchDialog(true);
+      setShowSearchDropdown(true);
+    } else {
+      setShowSearchDropdown(false);
     }
   };
 
   const handleSearchClose = () => {
-    setShowSearchDialog(false);
+    setShowSearchDropdown(false);
     setGlobalSearchTerm("");
   };
 
   return (
     <>
       <header className="bg-background border-b border-border h-16 flex items-center justify-between px-8 shadow-sm">
-        {/* Search Globale - ora apre dialog */}
-        <div className="flex-1 max-w-md">
+        {/* Search Globale - ora apre dropdown */}
+        <div className="flex-1 max-w-md relative">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 z-10" />
             <Input
               placeholder="Ricerca globale: PC, dipendenti, tutto..."
               value={globalSearchTerm}
               onClick={handleSearchClick}
               onFocus={handleSearchClick}
-              onChange={handleSearchChange}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-10 bg-muted/30 border-0 focus:bg-background"
               data-testid="input-global-search"
             />
           </div>
+          {/* Dropdown di ricerca */}
+          <GlobalSearchDropdown 
+            isOpen={showSearchDropdown}
+            onClose={handleSearchClose}
+            searchTerm={globalSearchTerm}
+            onSearchChange={handleSearchChange}
+          />
         </div>
 
       {/* Actions */}
@@ -108,13 +116,6 @@ export default function Topbar() {
         </DropdownMenu>
       </div>
     </header>
-
-    {/* Dialog di ricerca globale */}
-    <GlobalSearchDialog 
-      isOpen={showSearchDialog}
-      onClose={handleSearchClose}
-      initialSearchTerm={globalSearchTerm}
-    />
   </>
   );
 }
