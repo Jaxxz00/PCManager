@@ -290,7 +290,7 @@ export default function PcForm({ open, onOpenChange }: PcFormProps) {
               <Button
                 type="submit"
                 disabled={createPcMutation.isPending}
-                className="bg-primary hover:bg-primary/90"
+                className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 {createPcMutation.isPending ? "Salvataggio..." : "Salva PC"}
               </Button>
