@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useGlobalSearch } from "@/contexts/GlobalSearchContext";
+
 import { Plus, Search, MoreHorizontal, Edit, Trash2, User, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,8 +25,6 @@ export default function Employees() {
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { globalSearchTerm, setGlobalSearchTerm } = useGlobalSearch();
-  
   // Usa solo la ricerca locale ora che abbiamo il dialog globale
   const debouncedSearch = useDebounce(searchTerm, 300);
 
@@ -108,13 +106,8 @@ export default function Employees() {
       return matches;
     });
     
-    // Debug per ricerca globale
-    if (globalSearchTerm) {
-      console.log('Employees Global Search Active:', globalSearchTerm, '-> Found:', result.length, 'dipendenti');
-    }
-    
     return result;
-  }, [employees, debouncedSearch, globalSearchTerm]);
+  }, [employees, debouncedSearch]);
 
   const getEmployeePcCount = (employeeId: string) => {
     return pcs.filter((pc: any) => pc.employeeId === employeeId).length;

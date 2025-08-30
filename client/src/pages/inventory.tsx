@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useGlobalSearch } from "@/contexts/GlobalSearchContext";
+
 import { Plus, Edit, Trash2, Monitor, User, Calendar, Search, Filter, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,8 +20,6 @@ export default function Inventory() {
   const [brandFilter, setBrandFilter] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { globalSearchTerm, setGlobalSearchTerm } = useGlobalSearch();
-  
   // Usa solo la ricerca locale ora che abbiamo il dialog globale
   const debouncedSearch = useDebounce(searchTerm, 300);
 
@@ -46,7 +44,7 @@ export default function Inventory() {
     
     // Applica filtri
     return pcs.filter((pc: PcWithEmployee) => {
-      // Filtro ricerca (globale e locale)
+      // Filtro ricerca locale
       if (debouncedSearch.trim()) {
         const searchLower = debouncedSearch.toLowerCase();
         const matches = (
@@ -77,10 +75,7 @@ export default function Inventory() {
     });
   }, [pcs, debouncedSearch, statusFilter, brandFilter]);
 
-  // Debug semplificato
-  if (globalSearchTerm) {
-    console.log('Global Search Active:', globalSearchTerm, '-> Found:', filteredPcs.length, 'PCs');
-  }
+
 
   const deletePcMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -336,7 +331,6 @@ export default function Inventory() {
                   size="sm" 
                   onClick={() => {
                     setSearchTerm("");
-                    setGlobalSearchTerm("");
                     setStatusFilter("");
                     setBrandFilter("");
                   }}
@@ -349,7 +343,6 @@ export default function Inventory() {
                     size="sm" 
                     onClick={() => {
                       setSearchTerm("");
-                      setGlobalSearchTerm("");
                     }}
                   >
                     Cancella Ricerca
