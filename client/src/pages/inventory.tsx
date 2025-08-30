@@ -164,7 +164,7 @@ export default function Inventory() {
         </div>
         <Button onClick={() => setShowPcForm(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
           <Plus className="mr-2 h-4 w-4" />
-          Aggiungi PC
+          Nuovo PC
         </Button>
       </div>
       
@@ -177,10 +177,6 @@ export default function Inventory() {
         </div>
         <div className="flex items-center gap-2">
           <DataExport pcs={pcs} employees={employees} filteredPcs={filteredPcs} />
-          <Button onClick={() => setShowPcForm(true)} className="flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            Nuovo PC
-          </Button>
         </div>
       </div>
 
