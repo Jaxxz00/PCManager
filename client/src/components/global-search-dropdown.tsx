@@ -95,7 +95,7 @@ export function GlobalSearchDropdown({ isOpen, onClose, searchTerm, onSearchChan
   return (
     <div ref={dropdownRef} className="relative">
       {/* Dropdown Content */}
-      <div className="absolute top-0 left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
+      <div className="absolute top-0 left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto min-w-full">
         <div className="p-4">
           {!searchTerm.trim() ? (
             <div className="text-center py-6 text-muted-foreground">
@@ -120,14 +120,14 @@ export function GlobalSearchDropdown({ isOpen, onClose, searchTerm, onSearchChan
                         className="p-3 rounded-md hover:bg-gray-50 cursor-pointer transition-colors border border-transparent hover:border-gray-200"
                       >
                         <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium text-sm">{pc.pcId}</p>
-                            <p className="text-xs text-muted-foreground">{pc.brand} {pc.model}</p>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{pc.pcId}</p>
+                            <p className="text-xs text-muted-foreground truncate">{pc.brand} {pc.model} • S/N: {pc.serialNumber}</p>
                             {pc.employee && (
-                              <p className="text-xs text-blue-600">→ {pc.employee.name}</p>
+                              <p className="text-xs text-blue-600 truncate">→ {pc.employee.name} ({pc.employee.email})</p>
                             )}
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 ml-3">
                             {getStatusBadge(pc.status)}
                           </div>
                         </div>
@@ -156,16 +156,18 @@ export function GlobalSearchDropdown({ isOpen, onClose, searchTerm, onSearchChan
                         onClick={() => handleEmployeeClick(employee.id)}
                         className="p-3 rounded-md hover:bg-gray-50 cursor-pointer transition-colors border border-transparent hover:border-gray-200"
                       >
-                        <div>
-                          <p className="font-medium text-sm">{employee.name}</p>
-                          <p className="text-xs text-muted-foreground">{employee.email}</p>
-                          <div className="flex gap-2 mt-1">
-                            <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              {employee.department}
-                            </span>
-                            <span className="text-xs bg-gray-50 text-gray-700 px-2 py-1 rounded">
-                              {employee.position}
-                            </span>
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{employee.name}</p>
+                            <p className="text-xs text-muted-foreground truncate">{employee.email}</p>
+                            <div className="flex gap-2 mt-1 flex-wrap">
+                              <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded whitespace-nowrap">
+                                {employee.department}
+                              </span>
+                              <span className="text-xs bg-gray-50 text-gray-700 px-2 py-1 rounded whitespace-nowrap">
+                                {employee.position}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>

@@ -44,7 +44,7 @@ export default function Topbar() {
     <>
       <header className="bg-background border-b border-border h-16 flex items-center justify-between px-8 shadow-sm">
         {/* Search Globale - ora apre dropdown */}
-        <div className="flex-1 max-w-md relative">
+        <div className="flex-1 mr-4 relative">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 z-10" />
             <Input
