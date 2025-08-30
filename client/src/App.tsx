@@ -7,9 +7,9 @@ import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Inventory from "@/pages/inventory";
 import Employees from "@/pages/employees";
+import Documents from "@/pages/documents";
 import Labels from "@/pages/labels";
 import Reports from "@/pages/reports";
-import Documents from "@/pages/documents";
 import Settings from "@/pages/settings";
 import Profile from "@/pages/profile";
 import Maintenance from "@/pages/maintenance";
@@ -163,6 +163,13 @@ function Router() {
             {() => (
               <AuthenticatedLayout>
                 <Employees />
+              </AuthenticatedLayout>
+            )}
+          </Route>
+          <Route path="/documents">
+            {() => (
+              <AuthenticatedLayout>
+                <Documents />
               </AuthenticatedLayout>
             )}
           </Route>
