@@ -70,14 +70,31 @@ export default function Inventory() {
     return pcs.filter((pc: PcWithEmployee) => {
       // Filtro ricerca testuale
       if (debouncedSearch.trim()) {
-        const searchLower = debouncedSearch.toLowerCase();
+        const searchLower = debouncedSearch.toLowerCase().trim();
         const searchFields = [
           pc.pcId || '',
           pc.brand || '',
           pc.model || '',
           pc.serialNumber || '',
-          pc.employee?.name || ''
+          pc.cpu || '',
+          pc.operatingSystem || '',
+          pc.employee?.name || '',
+          pc.employee?.email || '',
+          `${pc.brand} ${pc.model}`.trim(),
+          pc.notes || ''
         ];
+        
+        // Debug ricerca
+        console.log('Search Debug:', {
+          searchTerm: debouncedSearch,
+          searchLower,
+          pcId: pc.pcId,
+          fields: searchFields,
+          matches: searchFields.map(field => ({
+            field,
+            includes: field.toLowerCase().includes(searchLower)
+          }))
+        });
         
         const matchesSearch = searchFields.some(field => 
           field.toLowerCase().includes(searchLower)
