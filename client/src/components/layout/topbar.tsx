@@ -11,20 +11,25 @@ import {
 import { useAuth } from "@/App";
 import { useLocation } from "wouter";
 import NotificationBell from "@/components/notification-bell";
+import { useGlobalSearch } from "@/contexts/GlobalSearchContext";
 
 export default function Topbar() {
   const { user, logout } = useAuth();
   const [, setLocation] = useLocation();
+  const { globalSearchTerm, setGlobalSearchTerm } = useGlobalSearch();
 
   return (
     <header className="bg-background border-b border-border h-16 flex items-center justify-between px-8 shadow-sm">
-      {/* Search */}
+      {/* Search Globale */}
       <div className="flex-1 max-w-md">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
-            placeholder="Cerca PC, dipendente..."
+            placeholder="Ricerca globale: PC, dipendenti, tutto..."
+            value={globalSearchTerm}
+            onChange={(e) => setGlobalSearchTerm(e.target.value)}
             className="pl-10 bg-muted/30 border-0 focus:bg-background"
+            data-testid="input-global-search"
           />
         </div>
       </div>

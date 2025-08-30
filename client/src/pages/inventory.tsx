@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useGlobalSearch } from "@/contexts/GlobalSearchContext";
 import { Plus, Edit, Trash2, Monitor, User, Calendar, Search, Filter, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,8 +20,11 @@ export default function Inventory() {
   const [brandFilter, setBrandFilter] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { globalSearchTerm } = useGlobalSearch();
   
-  const debouncedSearch = useDebounce(searchTerm, 300);
+  // Usa la ricerca globale se presente, altrimenti la ricerca locale
+  const effectiveSearchTerm = globalSearchTerm || searchTerm;
+  const debouncedSearch = useDebounce(effectiveSearchTerm, 300);
 
   const { data: pcs = [], isLoading, error } = useQuery<PcWithEmployee[]>({
     queryKey: ["/api/pcs"],
@@ -87,48 +91,17 @@ export default function Inventory() {
     const result = pcs.filter((pc: PcWithEmployee) => {
       console.log('Checking PC:', pc.pcId, pc.brand, pc.model);
       
-      // Ricerca globale - cerca in TUTTI i campi
+      // Filtro ricerca
       if (debouncedSearch.trim()) {
-        const searchTerms = debouncedSearch.toLowerCase().split(' ').filter(term => term.length > 0);
-        
-        // Crea un testo combinato con tutti i dati del PC per la ricerca
-        const searchableText = [
-          pc.pcId,
-          pc.brand,
-          pc.model,
-          pc.serialNumber,
-          pc.cpu,
-          pc.ram ? `${pc.ram}gb` : '',
-          pc.ram ? `${pc.ram} gb` : '',
-          pc.storage,
-          pc.operatingSystem,
-          pc.status,
-          pc.notes,
-          pc.employee?.name,
-          pc.employee?.email,
-          pc.purchaseDate,
-          pc.warrantyExpiry,
-          `${pc.brand} ${pc.model}`,
-          // Aggiungi anche le traduzioni dello status
-          pc.status === 'active' ? 'attivo' : '',
-          pc.status === 'maintenance' ? 'manutenzione' : '',
-          pc.status === 'retired' ? 'dismesso' : '',
-          // Altri sinonimi utili
-          pc.brand?.toLowerCase() === 'dell' ? 'dell computer' : '',
-          pc.brand?.toLowerCase() === 'hp' ? 'hewlett packard' : ''
-        ].filter(Boolean).join(' ').toLowerCase();
-        
-        // Verifica che tutti i termini di ricerca siano presenti
-        const allTermsMatch = searchTerms.every(term => 
-          searchableText.includes(term)
+        const searchLower = debouncedSearch.toLowerCase();
+        const matches = (
+          (pc.pcId || '').toLowerCase().includes(searchLower) ||
+          (pc.brand || '').toLowerCase().includes(searchLower) ||
+          (pc.model || '').toLowerCase().includes(searchLower) ||
+          (pc.serialNumber || '').toLowerCase().includes(searchLower) ||
+          (pc.employee?.name || '').toLowerCase().includes(searchLower)
         );
-        
-        console.log('Global Search DEBUG for', pc.pcId);
-        console.log('Search terms:', searchTerms);
-        console.log('Searchable text:', searchableText.substring(0, 200) + '...');
-        console.log('All terms match:', allTermsMatch);
-        
-        if (!allTermsMatch) return false;
+        if (!matches) return false;
       }
       
       // Filtro stato
@@ -273,7 +246,7 @@ export default function Inventory() {
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Ricerca globale: ID, marca, modello, dipendente, stato..."
+                placeholder="Cerca PC, modello, serial, dipendente..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"

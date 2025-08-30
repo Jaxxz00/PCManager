@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useGlobalSearch } from "@/contexts/GlobalSearchContext";
 import { Plus, Search, MoreHorizontal, Edit, Trash2, User, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,9 +23,13 @@ type EmployeeFormData = z.infer<typeof insertEmployeeSchema>;
 export default function Employees() {
   const [showEmployeeForm, setShowEmployeeForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const debouncedSearch = useDebounce(searchTerm, 300);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { globalSearchTerm } = useGlobalSearch();
+  
+  // Usa la ricerca globale se presente, altrimenti la ricerca locale
+  const effectiveSearchTerm = globalSearchTerm || searchTerm;
+  const debouncedSearch = useDebounce(effectiveSearchTerm, 300);
 
   const { data: employees = [], isLoading } = useQuery<Employee[]>({
     queryKey: ["/api/employees"],

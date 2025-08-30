@@ -20,6 +20,7 @@ import SetPasswordPage from "@/pages/set-password";
 import Sidebar from "@/components/layout/sidebar";
 import Topbar from "@/components/layout/topbar";
 import { createContext, useContext, useEffect, useState } from "react";
+import { GlobalSearchProvider } from "@/contexts/GlobalSearchContext";
 
 // Context per l'autenticazione
 const AuthContext = createContext<{
@@ -249,12 +250,14 @@ function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Router />
-          <Toaster />
-        </TooltipProvider>
-      </AuthProvider>
+      <GlobalSearchProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Router />
+            <Toaster />
+          </TooltipProvider>
+        </AuthProvider>
+      </GlobalSearchProvider>
     </QueryClientProvider>
   );
 }
