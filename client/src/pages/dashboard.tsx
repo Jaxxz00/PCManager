@@ -4,10 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { 
-  TrendingUp, 
-  TrendingDown, 
-  Calendar, 
   AlertTriangle, 
   CheckCircle, 
   Clock,
@@ -16,75 +14,53 @@ import {
   Wrench,
   FileText,
   ArrowRight,
-  PieChart,
-  BarChart3
+  Activity,
+  TrendingUp,
+  Calendar,
+  Plus
 } from "lucide-react";
-import { 
-  PieChart as RechartsPieChart, 
-  Pie, 
-  Cell, 
-  ResponsiveContainer, 
-  BarChart as RechartsBarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend 
-} from 'recharts';
-
-interface DashboardData {
-  pcsByStatus: Array<{ name: string; value: number; color: string }>;
-  pcsByBrand: Array<{ name: string; value: number }>;
-  warrantyExpiring: Array<{ pcId: string; warrantyExpiry: string; daysLeft: number }>;
-  maintenanceScheduled: Array<{ pcId: string; scheduledDate: string; type: string }>;
-  recentAssignments: Array<{ pcId: string; employeeName: string; assignedDate: string }>;
-  systemHealth: {
-    uptime: string;
-    lastBackup: string;
-    activeUsers: number;
-    totalDocuments: number;
-  };
-}
 
 export default function Dashboard() {
-  const { data: dashboardData, isLoading } = useQuery<DashboardData>({
-    queryKey: ["/api/dashboard/data"],
+  const { data: pcs = [], isLoading: pcsLoading } = useQuery({
+    queryKey: ["/api/pcs"],
   });
 
-  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+  const { data: employees = [], isLoading: employeesLoading } = useQuery({
+    queryKey: ["/api/employees"],
+  });
 
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
-            <p className="text-muted-foreground">Caricamento dati...</p>
-          </div>
-          <NotificationBell />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded w-1/2"></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
+  // Calcoli in tempo reale
+  const activePCs = pcs.filter((pc: any) => pc.status === 'active').length;
+  const maintenancePCs = pcs.filter((pc: any) => pc.status === 'maintenance').length;
+  const unassignedPCs = pcs.filter((pc: any) => !pc.employeeId).length;
+  
+  // PC con garanzia in scadenza (prossimi 30 giorni)
+  const warrantyExpiring = pcs.filter((pc: any) => {
+    if (!pc.warrantyExpiry) return false;
+    const today = new Date();
+    const warrantyDate = new Date(pc.warrantyExpiry);
+    const diffTime = warrantyDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 30 && diffDays >= 0;
+  });
+
+  // PC aggiunti di recente (ultimi 7 giorni)
+  const recentPCs = pcs.filter((pc: any) => {
+    if (!pc.createdAt) return false;
+    const today = new Date();
+    const pcDate = new Date(pc.createdAt);
+    const diffTime = today.getTime() - pcDate.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 7;
+  });
 
   return (
     <div className="space-y-6">
-      {/* Header Avanzato */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Dashboard Operativa</h1>
-          <p className="text-muted-foreground">Monitoraggio completo del sistema IT aziendale</p>
+          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-muted-foreground">Panoramica generale del sistema PC</p>
         </div>
         <div className="flex items-center gap-4">
           <Badge variant="outline" className="flex items-center gap-2">
@@ -98,258 +74,236 @@ export default function Dashboard() {
       {/* Stats Cards Principali */}
       <StatsCards />
 
-      {/* Grafici e Analytics */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Distribuzione PC per Stato */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <PieChart className="h-5 w-5" />
-              Distribuzione PC per Stato
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <RechartsPieChart>
-                  <Pie
-                    data={dashboardData?.pcsByStatus || [
-                      { name: 'Attivi', value: 12, color: '#10b981' },
-                      { name: 'Manutenzione', value: 3, color: '#f59e0b' },
-                      { name: 'Dismessi', value: 2, color: '#ef4444' }
-                    ]}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {(dashboardData?.pcsByStatus || [
-                      { name: 'Attivi', value: 12, color: '#10b981' },
-                      { name: 'Manutenzione', value: 3, color: '#f59e0b' },
-                      { name: 'Dismessi', value: 2, color: '#ef4444' }
-                    ]).map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </RechartsPieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* PC per Brand */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Inventario per Brand
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <RechartsBarChart data={dashboardData?.pcsByBrand || [
-                  { name: 'Dell', value: 8 },
-                  { name: 'HP', value: 5 },
-                  { name: 'Lenovo', value: 4 }
-                ]}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="#3b82f6" />
-                </RechartsBarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Sezioni Informative */}
+      {/* Grid Principale */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Garanzie in Scadenza */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-orange-500" />
-              Garanzie in Scadenza
-            </CardTitle>
-            <Badge variant="secondary">2</Badge>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
-                <div>
-                  <p className="font-medium">PC-001</p>
-                  <p className="text-sm text-muted-foreground">15 giorni rimasti</p>
+        
+        {/* Colonna Sinistra - Alerts */}
+        <div className="space-y-4">
+          {/* Garanzie in Scadenza */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center justify-between text-base">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-orange-500" />
+                  Garanzie in Scadenza
                 </div>
-                <Badge variant="secondary">
-                  15/09/2025
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-                <div>
-                  <p className="font-medium">PC-003</p>
-                  <p className="text-sm text-muted-foreground">5 giorni rimasti</p>
-                </div>
-                <Badge variant="destructive">
-                  05/09/2025
-                </Badge>
-              </div>
-              <Button variant="outline" size="sm" className="w-full">
-                Vedi tutte <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+                <Badge variant="secondary">{warrantyExpiring.length}</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {warrantyExpiring.length > 0 ? (
+                warrantyExpiring.slice(0, 3).map((pc: any, index: number) => {
+                  const daysLeft = Math.ceil((new Date(pc.warrantyExpiry).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                  return (
+                    <div key={index} className="flex items-center justify-between p-2 bg-orange-50 rounded-md">
+                      <div>
+                        <p className="font-medium text-sm">{pc.pcId}</p>
+                        <p className="text-xs text-muted-foreground">{daysLeft} giorni</p>
+                      </div>
+                      <Badge variant={daysLeft <= 7 ? "destructive" : "secondary"} className="text-xs">
+                        {new Date(pc.warrantyExpiry).toLocaleDateString('it-IT')}
+                      </Badge>
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">Nessuna garanzia in scadenza</p>
+              )}
+              {warrantyExpiring.length > 3 && (
+                <Button variant="outline" size="sm" className="w-full mt-2">
+                  Vedi tutte ({warrantyExpiring.length}) <ArrowRight className="h-3 w-3 ml-1" />
+                </Button>
+              )}
+            </CardContent>
+          </Card>
 
-        {/* Manutenzioni Programmate */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Wrench className="h-5 w-5 text-blue-500" />
-              Manutenzioni Programmate
-            </CardTitle>
-            <Badge variant="secondary">3</Badge>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                <div>
-                  <p className="font-medium">PC-005</p>
-                  <p className="text-sm text-muted-foreground">Pulizia sistema</p>
+          {/* PC Non Assegnati */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center justify-between text-base">
+                <div className="flex items-center gap-2">
+                  <Monitor className="h-4 w-4 text-blue-500" />
+                  PC Non Assegnati
                 </div>
-                <Badge variant="outline">
-                  02/09/2025
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                <div>
-                  <p className="font-medium">PC-007</p>
-                  <p className="text-sm text-muted-foreground">Aggiornamento RAM</p>
+                <Badge variant="secondary">{unassignedPCs}</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {unassignedPCs > 0 ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    {unassignedPCs} PC disponibili per l'assegnazione
+                  </p>
+                  <Link href="/inventory">
+                    <Button variant="outline" size="sm" className="w-full">
+                      Gestisci Assegnazioni <ArrowRight className="h-3 w-3 ml-1" />
+                    </Button>
+                  </Link>
                 </div>
-                <Badge variant="outline">
-                  05/09/2025
-                </Badge>
-              </div>
-              <Button variant="outline" size="sm" className="w-full">
-                Vedi tutte <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">Tutti i PC sono assegnati</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-        {/* Assegnazioni Recenti */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-green-500" />
-              Assegnazioni Recenti
-            </CardTitle>
-            <Badge variant="secondary">4</Badge>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                <div>
-                  <p className="font-medium">PC-009</p>
-                  <p className="text-sm text-muted-foreground">Mario Rossi</p>
+        {/* Colonna Centrale - Attività Recente */}
+        <div className="space-y-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Activity className="h-4 w-4 text-green-500" />
+                PC Aggiunti di Recente
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {recentPCs.length > 0 ? (
+                <div className="space-y-3">
+                  {recentPCs.slice(0, 4).map((pc: any, index: number) => (
+                    <div key={index} className="flex items-center justify-between p-2 bg-green-50 rounded-md">
+                      <div>
+                        <p className="font-medium text-sm">{pc.pcId}</p>
+                        <p className="text-xs text-muted-foreground">{pc.brand} {pc.model}</p>
+                      </div>
+                      <Badge variant="outline" className="text-xs">
+                        {new Date(pc.createdAt).toLocaleDateString('it-IT')}
+                      </Badge>
+                    </div>
+                  ))}
+                  {recentPCs.length > 4 && (
+                    <Button variant="outline" size="sm" className="w-full">
+                      Vedi tutti <ArrowRight className="h-3 w-3 ml-1" />
+                    </Button>
+                  )}
                 </div>
-                <Badge variant="outline">
-                  Oggi
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                <div>
-                  <p className="font-medium">PC-011</p>
-                  <p className="text-sm text-muted-foreground">Laura Bianchi</p>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">Nessun PC aggiunto di recente</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* PC in Manutenzione */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center justify-between text-base">
+                <div className="flex items-center gap-2">
+                  <Wrench className="h-4 w-4 text-yellow-500" />
+                  PC in Manutenzione
                 </div>
-                <Badge variant="outline">
-                  Ieri
-                </Badge>
+                <Badge variant="secondary">{maintenancePCs}</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {maintenancePCs > 0 ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    {maintenancePCs} PC richiedono attenzione
+                  </p>
+                  <Link href="/maintenance">
+                    <Button variant="outline" size="sm" className="w-full">
+                      Centro Manutenzione <ArrowRight className="h-3 w-3 ml-1" />
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">Tutti i PC sono operativi</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Colonna Destra - Stato Sistema */}
+        <div className="space-y-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <TrendingUp className="h-4 w-4 text-purple-500" />
+                Statistiche Rapide
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-3 bg-blue-50 rounded-lg">
+                  <Monitor className="h-6 w-6 text-blue-600 mx-auto mb-1" />
+                  <p className="text-xs text-muted-foreground">PC Totali</p>
+                  <p className="text-lg font-bold text-blue-600">{pcs.length}</p>
+                </div>
+                <div className="text-center p-3 bg-green-50 rounded-lg">
+                  <Users className="h-6 w-6 text-green-600 mx-auto mb-1" />
+                  <p className="text-xs text-muted-foreground">Dipendenti</p>
+                  <p className="text-lg font-bold text-green-600">{employees.length}</p>
+                </div>
+                <div className="text-center p-3 bg-orange-50 rounded-lg">
+                  <CheckCircle className="h-6 w-6 text-orange-600 mx-auto mb-1" />
+                  <p className="text-xs text-muted-foreground">PC Attivi</p>
+                  <p className="text-lg font-bold text-orange-600">{activePCs}</p>
+                </div>
+                <div className="text-center p-3 bg-purple-50 rounded-lg">
+                  <Clock className="h-6 w-6 text-purple-600 mx-auto mb-1" />
+                  <p className="text-xs text-muted-foreground">Uptime</p>
+                  <p className="text-lg font-bold text-purple-600">99.9%</p>
+                </div>
               </div>
-              <Button variant="outline" size="sm" className="w-full">
-                Vedi tutte <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          {/* Azioni Rapide */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Azioni Rapide</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Link href="/inventory">
+                <Button className="w-full justify-start h-10" variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Aggiungi Nuovo PC
+                </Button>
+              </Link>
+              <Link href="/employees">
+                <Button className="w-full justify-start h-10" variant="outline">
+                  <Users className="h-4 w-4 mr-2" />
+                  Aggiungi Dipendente
+                </Button>
+              </Link>
+              <Link href="/maintenance">
+                <Button className="w-full justify-start h-10" variant="outline">
+                  <Wrench className="h-4 w-4 mr-2" />
+                  Programma Manutenzione
+                </Button>
+              </Link>
+              <Link href="/reports">
+                <Button className="w-full justify-start h-10" variant="outline">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Genera Report
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
-      {/* Stato Sistema */}
+      {/* Sistema Status Bar */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Monitor className="h-5 w-5" />
-            Stato del Sistema
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="text-center">
-              <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mx-auto mb-2">
-                <Clock className="h-6 w-6 text-green-600" />
+        <CardContent className="py-4">
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-muted-foreground">Sistema Online</span>
               </div>
-              <p className="text-sm text-muted-foreground">Uptime Sistema</p>
-              <p className="text-lg font-semibold">99.9%</p>
-            </div>
-            <div className="text-center">
-              <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mx-auto mb-2">
-                <FileText className="h-6 w-6 text-blue-600" />
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Ultimo Backup: Oggi</span>
               </div>
-              <p className="text-sm text-muted-foreground">Ultimo Backup</p>
-              <p className="text-lg font-semibold">Oggi</p>
-            </div>
-            <div className="text-center">
-              <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-full mx-auto mb-2">
-                <Users className="h-6 w-6 text-purple-600" />
+              <div className="flex items-center gap-2">
+                <Activity className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">12 Utenti Attivi</span>
               </div>
-              <p className="text-sm text-muted-foreground">Utenti Attivi</p>
-              <p className="text-lg font-semibold">12</p>
             </div>
-            <div className="text-center">
-              <div className="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-full mx-auto mb-2">
-                <FileText className="h-6 w-6 text-orange-600" />
-              </div>
-              <p className="text-sm text-muted-foreground">Documenti Totali</p>
-              <p className="text-lg font-semibold">247</p>
-            </div>
+            <Badge variant="outline">v2.1.0</Badge>
           </div>
         </CardContent>
       </Card>
-
-      {/* Azioni Rapide */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Azioni Rapide</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Button className="h-16 flex-col gap-2" variant="outline">
-              <Monitor className="h-6 w-6" />
-              <span>Nuovo PC</span>
-            </Button>
-            <Button className="h-16 flex-col gap-2" variant="outline">
-              <Users className="h-6 w-6" />
-              <span>Nuovo Dipendente</span>
-            </Button>
-            <Button className="h-16 flex-col gap-2" variant="outline">
-              <Wrench className="h-6 w-6" />
-              <span>Programma Manutenzione</span>
-            </Button>
-            <Button className="h-16 flex-col gap-2" variant="outline">
-              <FileText className="h-6 w-6" />
-              <span>Genera Report</span>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Activity Log - Rimosso temporaneamente */}
     </div>
   );
 }
