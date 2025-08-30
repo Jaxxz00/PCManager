@@ -26,10 +26,20 @@ export default function Inventory() {
     queryKey: ["/api/pcs"],
   });
 
-
-
   const { data: employees = [] } = useQuery<Employee[]>({
     queryKey: ["/api/employees"],
+  });
+
+  // Debug temporaneo
+  console.log('Inventory Debug:', {
+    pcs,
+    pcsLength: pcs?.length,
+    isLoading,
+    error: error?.message,
+    searchTerm,
+    debouncedSearch,
+    statusFilter,
+    brandFilter
   });
 
   const deletePcMutation = useMutation({
