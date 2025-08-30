@@ -63,63 +63,65 @@ export default function Inventory() {
     },
   });
 
-  // Filtri e ricerca
+  // Filtri e ricerca - SEMPLIFICATO
   const filteredPcs = useMemo(() => {
-    console.log('Filtering Debug:', { 
-      pcs: pcs?.length, 
-      search: debouncedSearch, 
-      status: statusFilter, 
-      brand: brandFilter 
-    });
+    console.log('=== FILTER DEBUG START ===');
+    console.log('Raw PCs data:', pcs);
+    console.log('PCs length:', pcs?.length);
+    console.log('Search term:', debouncedSearch);
+    console.log('Status filter:', statusFilter);
+    console.log('Brand filter:', brandFilter);
     
     if (!pcs || pcs.length === 0) {
-      console.log('No PCs to filter');
+      console.log('NO PCS AVAILABLE - returning empty array');
       return [];
     }
     
-    let filtered = pcs.filter((pc: PcWithEmployee) => {
-      // Filtro ricerca testuale
+    // Se non ci sono filtri attivi, mostra tutto
+    if (!debouncedSearch.trim() && !statusFilter && !brandFilter) {
+      console.log('NO FILTERS ACTIVE - returning all PCs:', pcs.length);
+      return pcs;
+    }
+    
+    // Applica filtri solo se necessario
+    const result = pcs.filter((pc: PcWithEmployee) => {
+      console.log('Checking PC:', pc.pcId, pc.brand, pc.model);
+      
+      // Filtro ricerca
       if (debouncedSearch.trim()) {
-        const searchLower = debouncedSearch.toLowerCase().trim();
-        const searchFields = [
-          pc.pcId || '',
-          pc.brand || '',
-          pc.model || '',
-          pc.serialNumber || '',
-          pc.cpu || '',
-          pc.operatingSystem || '',
-          pc.employee?.name || '',
-          pc.employee?.email || '',
-          `${pc.brand} ${pc.model}`.trim(),
-          pc.notes || ''
-        ];
-        
-        const matchesSearch = searchFields.some(field => 
-          field.toLowerCase().includes(searchLower)
+        const searchLower = debouncedSearch.toLowerCase();
+        const matches = (
+          (pc.pcId || '').toLowerCase().includes(searchLower) ||
+          (pc.brand || '').toLowerCase().includes(searchLower) ||
+          (pc.model || '').toLowerCase().includes(searchLower) ||
+          (pc.employee?.name || '').toLowerCase().includes(searchLower)
         );
-        
-        console.log('Search result for', pc.pcId, ':', matchesSearch, searchFields);
-        
-        if (!matchesSearch) return false;
+        console.log('Search match for', pc.pcId, ':', matches);
+        if (!matches) return false;
       }
-
+      
       // Filtro stato
       if (statusFilter && pc.status !== statusFilter) {
-        console.log('Status filter failed for', pc.pcId, ':', pc.status, '!=', statusFilter);
+        console.log('Status filter reject:', pc.pcId);
         return false;
       }
       
-      // Filtro marca
+      // Filtro marca  
       if (brandFilter && pc.brand !== brandFilter) {
-        console.log('Brand filter failed for', pc.pcId, ':', pc.brand, '!=', brandFilter);
+        console.log('Brand filter reject:', pc.pcId);
         return false;
       }
-
+      
+      console.log('PC ACCEPTED:', pc.pcId);
       return true;
     });
     
-    console.log('Filtered result:', filtered.length, 'out of', pcs.length);
-    return filtered;
+    console.log('=== FILTER RESULT ===');
+    console.log('Filtered PCs:', result.length, 'out of', pcs.length);
+    console.log('Filtered data:', result);
+    console.log('=== FILTER DEBUG END ===');
+    
+    return result;
   }, [pcs, debouncedSearch, statusFilter, brandFilter]);
 
   // Statistiche per le cards
