@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { insertPcSchema, type Employee } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -90,6 +90,9 @@ export default function PcForm({ open, onOpenChange }: PcFormProps) {
               <X className="h-4 w-4" />
             </Button>
           </div>
+          <DialogDescription>
+            Inserisci i dettagli per registrare un nuovo computer nel sistema di inventario.
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
