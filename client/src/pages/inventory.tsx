@@ -22,9 +22,11 @@ export default function Inventory() {
   
   const debouncedSearch = useDebounce(searchTerm, 300);
 
-  const { data: pcs = [], isLoading } = useQuery<PcWithEmployee[]>({
+  const { data: pcs = [], isLoading, error } = useQuery<PcWithEmployee[]>({
     queryKey: ["/api/pcs"],
   });
+
+
 
   const { data: employees = [] } = useQuery<Employee[]>({
     queryKey: ["/api/employees"],
@@ -256,23 +258,39 @@ export default function Inventory() {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
               <p className="text-muted-foreground mt-2">Caricamento...</p>
             </div>
+          ) : error ? (
+            <div className="text-center py-8">
+              <Monitor className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <p className="text-red-600">Errore nel caricamento</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                {error.message.includes('401') || error.message.includes('Unauthorized') 
+                  ? 'Sessione scaduta. Effettua nuovamente il login.' 
+                  : error.message}
+              </p>
+              {(error.message.includes('401') || error.message.includes('Unauthorized')) && (
+                <Button 
+                  variant="outline" 
+                  className="mt-3"
+                  onClick={() => window.location.href = '/login'}
+                >
+                  Vai al Login
+                </Button>
+              )}
+            </div>
           ) : !pcs || pcs.length === 0 ? (
             <div className="text-center py-8">
               <Monitor className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">
-                {!pcs ? "Errore nel caricamento dei dati" : 
-                 pcs.length === 0 ? "Nessun PC nel sistema" : "Nessun PC corrisponde ai filtri"}
-              </p>
+              <p className="text-muted-foreground">Nessun PC nel sistema</p>
               <p className="text-xs text-muted-foreground mt-2">
-                PCs caricati: {pcs?.length || 0} | Filtrati: {filteredPcs.length}
+                Debug: isLoading={String(isLoading)}, pcs={pcs?.length || 'undefined'}
               </p>
             </div>
           ) : filteredPcs.length === 0 ? (
             <div className="text-center py-8">
               <Monitor className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">Nessun PC corrisponde ai filtri di ricerca</p>
+              <p className="text-muted-foreground">Nessun PC corrisponde ai filtri</p>
               <p className="text-xs text-muted-foreground mt-2">
-                PCs totali: {pcs.length} | Termine ricerca: "{debouncedSearch}"
+                Totali: {pcs.length} | Ricerca: "{debouncedSearch}" | Status: "{statusFilter}" | Brand: "{brandFilter}"
               </p>
               <Button 
                 variant="outline" 
