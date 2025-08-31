@@ -42,7 +42,7 @@ export default function Topbar() {
 
   return (
     <>
-      <header className="bg-background border-b border-border h-16 flex items-center justify-between px-8 shadow-sm">
+      <header className="bg-background border-b border-border h-24 flex items-center justify-between px-8 shadow-sm">
         {/* Search Globale - ora apre dropdown */}
         <div className="flex-1 mr-4 relative">
           <div className="relative">

@@ -31,7 +31,7 @@
     /* Professional spacing */
     --content-max-width: 1400px;
     --sidebar-width: 280px;
-    --topbar-height: 72px;
+    --topbar-height: 96px;
   }
 
   .dark {
