@@ -505,7 +505,7 @@ export default function Maintenance() {
                     >
                       Annulla
                     </Button>
-                    <Button type="submit" className="bg-primary hover:bg-primary/90">
+                    <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
                       Programma Intervento
                     </Button>
                   </div>
