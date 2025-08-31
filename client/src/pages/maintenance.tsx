@@ -388,7 +388,7 @@ export default function Maintenance() {
     
     pdf.text("Tipo:", 107, yRight);
     pdf.setFont("helvetica", "normal");
-    pdf.text(record.type.length > 15 ? record.type.substring(0, 15) + '...' : record.type, 127, yRight);
+    pdf.text(record.type.length > 15 ? record.type.substring(0, 15) + '...' : record.type, 123, yRight);
     
     yRight += 8;
     pdf.setFont("helvetica", "bold");
@@ -400,7 +400,7 @@ export default function Maintenance() {
       'medium': 'MEDIA',
       'low': 'BASSA'
     }[record.priority] || record.priority.toUpperCase();
-    pdf.text(priorityText, 127, yRight);
+    pdf.text(priorityText, 123, yRight);
     
     yRight += 8;
     pdf.setFont("helvetica", "bold");
@@ -412,13 +412,13 @@ export default function Maintenance() {
       'completed': 'FATTO',
       'cancelled': 'ANNULL.'
     }[record.status] || record.status.toUpperCase();
-    pdf.text(statusText, 127, yRight);
+    pdf.text(statusText, 123, yRight);
     
     yRight += 8;
     pdf.setFont("helvetica", "bold");
     pdf.text("Tecnico:", 107, yRight);
     pdf.setFont("helvetica", "normal");
-    pdf.text(record.technician.length > 15 ? record.technician.substring(0, 15) + '...' : record.technician, 127, yRight);
+    pdf.text(record.technician.length > 15 ? record.technician.substring(0, 15) + '...' : record.technician, 123, yRight);
     
     // Informazioni aggiuntive sotto la tabella - compatte
     let yExtra = yStart + 72;
