@@ -40,8 +40,6 @@ export default function Topbar() {
     setGlobalSearchTerm("");
   };
 
-
-
   return (
     <>
       <header className="bg-background border-b border-border h-24 flex items-center justify-between px-8 shadow-sm">
