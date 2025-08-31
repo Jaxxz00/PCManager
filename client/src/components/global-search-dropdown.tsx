@@ -155,8 +155,6 @@ export function GlobalSearchDropdown({ isOpen, onClose, searchTerm, onSearchChan
             <div className="text-center py-6 text-muted-foreground">
               <Search className="h-8 w-8 mx-auto mb-3 opacity-50" />
               <p>Inizia a digitare per cercare</p>
-              <p className="text-sm mt-1">PC, dipendenti, interventi manutenzione...</p>
-              <p className="text-xs mt-2 text-orange-600">💡 Scansiona codici a barre "RIC-" per trovare PC in manutenzione</p>
             </div>
           ) : (
             <>
