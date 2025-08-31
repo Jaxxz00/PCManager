@@ -81,6 +81,33 @@
   code, kbd, samp, pre {
     font-family: 'JetBrains Mono', 'Monaco', 'Menlo', monospace;
   }
+
+  /* Better visibility for list bullets and text */
+  ul li::marker {
+    color: hsl(210, 11%, 40%); /* Darker gray for better contrast */
+  }
+  
+  ol li::marker {
+    color: hsl(210, 11%, 40%); /* Darker gray for better contrast */
+  }
+
+  /* Improved text contrast for list items */
+  ul li, ol li {
+    color: hsl(210, 11%, 25%); /* Darker text for better readability */
+  }
+
+  /* Dark mode list styling */
+  .dark ul li::marker {
+    color: hsl(213, 31%, 75%); /* Light gray for dark mode */
+  }
+  
+  .dark ol li::marker {
+    color: hsl(213, 31%, 75%); /* Light gray for dark mode */
+  }
+
+  .dark ul li, .dark ol li {
+    color: hsl(213, 31%, 85%); /* Light text for dark mode */
+  }
 }
 
 @layer components {
