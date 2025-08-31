@@ -388,7 +388,7 @@ export default function Maintenance() {
     
     pdf.text("Tipo:", 107, yRight);
     pdf.setFont("helvetica", "normal");
-    pdf.text(record.type.length > 15 ? record.type.substring(0, 15) + '...' : record.type, 123, yRight);
+    pdf.text(record.type.length > 18 ? record.type.substring(0, 18) + '...' : record.type, 123, yRight);
     
     yRight += 8;
     pdf.setFont("helvetica", "bold");
