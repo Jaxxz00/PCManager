@@ -91,7 +91,7 @@ export default function StatsCards() {
         return (
           <Card key={stat.title} className="hover:shadow-lg transition-shadow duration-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 {stat.title}
               </CardTitle>
               <div className={`p-2 rounded-full ${stat.bgColor}`}>
@@ -99,10 +99,10 @@ export default function StatsCards() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-900">
+              <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {stat.value}
               </div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-600 dark:text-gray-400">
                 {stat.description}
               </p>
             </CardContent>
