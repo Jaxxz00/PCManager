@@ -338,7 +338,7 @@ export default function Maintenance() {
           </Button>
           <Dialog open={showMaintenanceDialog} onOpenChange={setShowMaintenanceDialog}>
             <DialogTrigger asChild>
-              <Button className="bg-primary hover:bg-primary/90 flex items-center gap-2">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2">
                 <Plus className="h-4 w-4" />
                 Nuovo Intervento
               </Button>
