@@ -217,7 +217,7 @@ export default function Employees() {
                   <Button
                     type="submit"
                     disabled={createEmployeeMutation.isPending}
-                    className="bg-primary hover:bg-primary/90"
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     {createEmployeeMutation.isPending ? "Salvataggio..." : "Salva"}
                   </Button>
