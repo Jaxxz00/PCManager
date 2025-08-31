@@ -143,7 +143,7 @@ export default function Employees() {
         </div>
         <Dialog open={showEmployeeForm} onOpenChange={setShowEmployeeForm}>
           <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
               <Plus className="mr-2 h-4 w-4" />
               Aggiungi Dipendente
             </Button>
