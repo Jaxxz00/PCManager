@@ -304,7 +304,8 @@ export default function Maintenance() {
     const timestamp = format(currentDate, "yyyyMMddHHmm");
     const interventoId = `RIC-${timestamp.slice(2)}`; // RIC-25083110xx
     
-    // Header semplice e pulito
+    // Header semplice e pulito - tutto bianco
+    pdf.setTextColor(0, 0, 0); // Nero su sfondo bianco
     pdf.setFontSize(22);
     pdf.setFont("helvetica", "bold");
     pdf.text("MAORI GROUP", 20, 25);
@@ -463,21 +464,35 @@ export default function Maintenance() {
     
     yExtra += 35;
     
-    // Note se presenti
+    // Note se presenti con altezza dinamica
     if (record.notes) {
       pdf.setFontSize(10);
       pdf.setFont("helvetica", "bold");
       pdf.text("NOTE:", 20, yExtra);
       
       yExtra += 5;
-      pdf.rect(20, yExtra, 170, 20, 'S');
       
+      // Calcola altezza necessaria per le note
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(9);
       const notesLines = pdf.splitTextToSize(record.notes, 165);
+      const notesHeight = Math.max(20, notesLines.length * 4 + 10);
+      
+      // Controlla se c'è spazio sufficiente
+      if (yExtra + notesHeight > 260) {
+        // Aggiungi nuova pagina se necessario
+        pdf.addPage();
+        yExtra = 20;
+        pdf.setFontSize(10);
+        pdf.setFont("helvetica", "bold");
+        pdf.text("NOTE (continua):", 20, yExtra);
+        yExtra += 5;
+      }
+      
+      pdf.rect(20, yExtra, 170, notesHeight, 'S');
       pdf.text(notesLines, 22, yExtra + 8);
       
-      yExtra += 25;
+      yExtra += notesHeight + 5;
     }
     
     // Footer minimale
