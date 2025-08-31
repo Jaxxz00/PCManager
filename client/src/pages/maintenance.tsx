@@ -336,21 +336,27 @@ export default function Maintenance() {
     const recordIndex = record.id.slice(-3).toUpperCase();
     const interventoId = `INT-${year}${month}${day}-${recordIndex}`;
     
-    // Generazione codice a barre con nuovo ID
+    // Generazione codice a barre ad alta risoluzione
     const canvas = document.createElement('canvas');
+    canvas.width = 400; // Risoluzione più alta
+    canvas.height = 120; // Altezza proporzionale
+    
     JsBarcode(canvas, interventoId, {
       format: "CODE128",
-      width: 1.5,
-      height: 35,
+      width: 3, // Larghezza barre aumentata
+      height: 80, // Altezza aumentata
       displayValue: true,
-      fontSize: 10,
-      textAlign: "center"
+      fontSize: 16, // Font più grande
+      textAlign: "center",
+      textMargin: 8,
+      background: "#ffffff",
+      lineColor: "#000000"
     });
     
-    const barcodeDataURL = canvas.toDataURL();
+    const barcodeDataURL = canvas.toDataURL('image/png', 1.0); // Qualità massima
     
-    // Posizionamento codice a barre nell'header
-    pdf.addImage(barcodeDataURL, 'PNG', 130, 65, 60, 25);
+    // Posizionamento codice a barre nell'header con dimensioni ottimizzate
+    pdf.addImage(barcodeDataURL, 'PNG', 120, 62, 70, 30);
     
     // Informazioni principali nel box
     pdf.setFontSize(14);
