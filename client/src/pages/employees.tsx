@@ -42,7 +42,6 @@ export default function Employees() {
       name: "",
       email: "",
       department: "",
-      position: "",
       company: "Maori Group",
     },
   });
@@ -101,7 +100,6 @@ export default function Employees() {
         (employee.name || '').toLowerCase().includes(searchLower) ||
         (employee.email || '').toLowerCase().includes(searchLower) ||
         (employee.department || '').toLowerCase().includes(searchLower) ||
-        (employee.position || '').toLowerCase().includes(searchLower) ||
         (employee.company || '').toLowerCase().includes(searchLower) ||
         (employee.id || '').toLowerCase().includes(searchLower)
       );
@@ -197,19 +195,6 @@ export default function Employees() {
                 />
                 <FormField
                   control={form.control}
-                  name="position"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Posizione</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Developer, Manager..." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
                   name="company"
                   render={({ field }) => (
                     <FormItem>
@@ -270,7 +255,6 @@ export default function Employees() {
                   <TableHead className="font-medium min-w-[200px]">Email</TableHead>
                   <TableHead className="font-medium min-w-[120px]">Azienda</TableHead>
                   <TableHead className="font-medium min-w-[120px]">Dipartimento</TableHead>
-                  <TableHead className="font-medium min-w-[120px]">Posizione</TableHead>
                   <TableHead className="font-medium min-w-[120px]">PC Assegnati</TableHead>
                   <TableHead className="font-medium min-w-[120px]">Data Inserimento</TableHead>
                   <TableHead className="min-w-[120px]">Azioni</TableHead>
@@ -280,7 +264,7 @@ export default function Employees() {
                 {isLoading ? (
                   [...Array(5)].map((_, i) => (
                     <TableRow key={i}>
-                      {[...Array(8)].map((_, j) => (
+                      {[...Array(7)].map((_, j) => (
                         <TableCell key={j} className="animate-pulse">
                           <div className="h-4 bg-muted rounded w-20"></div>
                         </TableCell>
@@ -309,7 +293,6 @@ export default function Employees() {
                           {employee.department}
                         </span>
                       </TableCell>
-                      <TableCell className="text-muted-foreground">{employee.position}</TableCell>
                       <TableCell>
                         <span className="font-medium">{getEmployeePcCount(employee.id)}</span>
                       </TableCell>
