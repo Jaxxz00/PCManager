@@ -9,6 +9,7 @@ export const employees = pgTable("employees", {
   email: text("email").notNull().unique(),
   department: text("department").notNull(),
   position: text("position").notNull(),
+  company: text("company").notNull().default("Maori Group"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
