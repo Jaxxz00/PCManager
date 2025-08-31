@@ -12,33 +12,22 @@ import { useAuth } from "@/App";
 import { useLocation } from "wouter";
 import NotificationBell from "@/components/notification-bell";
 import { useGlobalSearch } from "@/contexts/GlobalSearchContext";
-import { GlobalSearchDropdown } from "@/components/global-search-dropdown";
-import { useState } from "react";
 
 export default function Topbar() {
   const { user, logout } = useAuth();
   const [, setLocation] = useLocation();
   const { globalSearchTerm, setGlobalSearchTerm } = useGlobalSearch();
-  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
 
   const handleSearchClick = () => {
-    console.log('🔍 Search clicked - opening dropdown');
-    setShowSearchDropdown(true);
+    // Disabilitato dropdown di ricerca
   };
 
   const handleSearchChange = (value: string) => {
     setGlobalSearchTerm(value);
-    if (value.length > 0) {
-      setShowSearchDropdown(true);
-    } else {
-      setShowSearchDropdown(false);
-    }
+    // Dropdown suggerimenti disabilitato
   };
 
-  const handleSearchClose = () => {
-    setShowSearchDropdown(false);
-    setGlobalSearchTerm("");
-  };
+
 
   return (
     <>
@@ -57,13 +46,7 @@ export default function Topbar() {
               data-testid="input-global-search"
             />
           </div>
-          {/* Dropdown di ricerca */}
-          <GlobalSearchDropdown 
-            isOpen={showSearchDropdown}
-            onClose={handleSearchClose}
-            searchTerm={globalSearchTerm}
-            onSearchChange={handleSearchChange}
-          />
+
         </div>
 
       {/* Actions */}
