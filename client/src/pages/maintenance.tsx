@@ -407,10 +407,10 @@ export default function Maintenance() {
     pdf.text("Stato:", 107, yRight);
     pdf.setFont("helvetica", "normal");
     const statusText = {
-      'pending': 'ATTESA',
-      'in_progress': 'CORSO',
-      'completed': 'FATTO',
-      'cancelled': 'ANNULL.'
+      'pending': 'IN ATTESA',
+      'in_progress': 'IN CORSO',
+      'completed': 'COMPLETATO',
+      'cancelled': 'ANNULLATO'
     }[record.status] || record.status.toUpperCase();
     pdf.text(statusText, 123, yRight);
     
