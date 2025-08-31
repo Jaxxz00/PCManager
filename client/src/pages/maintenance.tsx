@@ -20,7 +20,8 @@ import {
   Trash2,
   Settings,
   FileText,
-  Download
+  Download,
+  FileDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +38,8 @@ import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import type { PcWithEmployee } from "@shared/schema";
 import { z } from "zod";
+import jsPDF from "jspdf";
+import JsBarcode from "jsbarcode";
 
 // Schema per intervento
 const maintenanceSchema = z.object({
@@ -291,6 +294,157 @@ export default function Maintenance() {
     });
     setShowMaintenanceDialog(false);
     form.reset();
+  };
+
+  const generateMaintenancePDF = (record: MaintenanceRecord) => {
+    const pdf = new jsPDF();
+    
+    // Header azienda
+    pdf.setFontSize(20);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("MAORI GROUP", 20, 25);
+    
+    pdf.setFontSize(16);
+    pdf.setFont("helvetica", "normal");
+    pdf.text("Richiesta di Intervento Manutenzione", 20, 40);
+    
+    // Linea separatrice
+    pdf.setLineWidth(0.5);
+    pdf.line(20, 45, 190, 45);
+    
+    // Generazione codice a barre
+    const canvas = document.createElement('canvas');
+    const maintenanceId = `MAINT-${record.id.toUpperCase()}`;
+    
+    JsBarcode(canvas, maintenanceId, {
+      format: "CODE128",
+      width: 2,
+      height: 40,
+      displayValue: true,
+      fontSize: 12,
+      textAlign: "center"
+    });
+    
+    const barcodeDataURL = canvas.toDataURL();
+    
+    // Aggiunta codice a barre al PDF
+    pdf.addImage(barcodeDataURL, 'PNG', 140, 50, 50, 20);
+    
+    // Informazioni intervento
+    pdf.setFontSize(12);
+    pdf.setFont("helvetica", "bold");
+    
+    let yPosition = 80;
+    
+    pdf.text("ID INTERVENTO:", 20, yPosition);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(maintenanceId, 70, yPosition);
+    
+    yPosition += 10;
+    pdf.setFont("helvetica", "bold");
+    pdf.text("PC:", 20, yPosition);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(`${record.pc?.pcId || 'N/A'} - ${record.pc?.brand || ''} ${record.pc?.model || ''}`, 70, yPosition);
+    
+    yPosition += 10;
+    pdf.setFont("helvetica", "bold");
+    pdf.text("DIPENDENTE:", 20, yPosition);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(record.pc?.employee?.name || 'Non assegnato', 70, yPosition);
+    
+    yPosition += 10;
+    pdf.setFont("helvetica", "bold");
+    pdf.text("TIPO INTERVENTO:", 20, yPosition);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(record.type, 70, yPosition);
+    
+    yPosition += 10;
+    pdf.setFont("helvetica", "bold");
+    pdf.text("PRIORITÀ:", 20, yPosition);
+    pdf.setFont("helvetica", "normal");
+    const priorityText = {
+      'urgent': 'URGENTE',
+      'high': 'ALTA',
+      'medium': 'MEDIA',
+      'low': 'BASSA'
+    }[record.priority] || record.priority.toUpperCase();
+    pdf.text(priorityText, 70, yPosition);
+    
+    yPosition += 10;
+    pdf.setFont("helvetica", "bold");
+    pdf.text("STATO:", 20, yPosition);
+    pdf.setFont("helvetica", "normal");
+    const statusText = {
+      'pending': 'IN ATTESA',
+      'in_progress': 'IN CORSO',
+      'completed': 'COMPLETATO',
+      'cancelled': 'ANNULLATO'
+    }[record.status] || record.status.toUpperCase();
+    pdf.text(statusText, 70, yPosition);
+    
+    yPosition += 10;
+    pdf.setFont("helvetica", "bold");
+    pdf.text("TECNICO:", 20, yPosition);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(record.technician, 70, yPosition);
+    
+    if (record.scheduledDate) {
+      yPosition += 10;
+      pdf.setFont("helvetica", "bold");
+      pdf.text("DATA PROGRAMMATA:", 20, yPosition);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(format(new Date(record.scheduledDate), "dd/MM/yyyy HH:mm", { locale: it }), 70, yPosition);
+    }
+    
+    if (record.estimatedCost || record.actualCost) {
+      yPosition += 10;
+      pdf.setFont("helvetica", "bold");
+      pdf.text("COSTO:", 20, yPosition);
+      pdf.setFont("helvetica", "normal");
+      const cost = record.actualCost || record.estimatedCost;
+      pdf.text(`€${cost} ${record.actualCost ? '(effettivo)' : '(stimato)'}`, 70, yPosition);
+    }
+    
+    // Descrizione intervento
+    yPosition += 20;
+    pdf.setFont("helvetica", "bold");
+    pdf.text("DESCRIZIONE INTERVENTO:", 20, yPosition);
+    
+    yPosition += 10;
+    pdf.setFont("helvetica", "normal");
+    const descriptionLines = pdf.splitTextToSize(record.description, 170);
+    pdf.text(descriptionLines, 20, yPosition);
+    
+    yPosition += descriptionLines.length * 5 + 10;
+    
+    // Note se presenti
+    if (record.notes) {
+      pdf.setFont("helvetica", "bold");
+      pdf.text("NOTE:", 20, yPosition);
+      
+      yPosition += 10;
+      pdf.setFont("helvetica", "normal");
+      const notesLines = pdf.splitTextToSize(record.notes, 170);
+      pdf.text(notesLines, 20, yPosition);
+      yPosition += notesLines.length * 5 + 10;
+    }
+    
+    // Footer
+    yPosition = 260;
+    pdf.setLineWidth(0.5);
+    pdf.line(20, yPosition, 190, yPosition);
+    
+    yPosition += 10;
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(`Documento generato il ${format(new Date(), "dd/MM/yyyy HH:mm", { locale: it })}`, 20, yPosition);
+    pdf.text(`ID Richiesta: ${maintenanceId}`, 120, yPosition);
+    
+    yPosition += 8;
+    pdf.text("MAORI GROUP - Sistema Gestionale PC Aziendali", 20, yPosition);
+    
+    // Download del PDF
+    pdf.save(`Richiesta_Manutenzione_${maintenanceId}.pdf`);
   };
 
   const exportToCSV = () => {
@@ -670,7 +824,7 @@ export default function Maintenance() {
                   <TableHead className="font-medium w-[130px]">Tecnico</TableHead>
                   <TableHead className="font-medium w-[100px]">Costi</TableHead>
                   <TableHead className="font-medium w-[120px]">Date</TableHead>
-                  <TableHead className="w-[120px]">Azioni</TableHead>
+                  <TableHead className="w-[140px]">Azioni</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -756,6 +910,15 @@ export default function Maintenance() {
                             title="Visualizza dettagli"
                           >
                             <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700"
+                            onClick={() => generateMaintenancePDF(record)}
+                            title="Scarica PDF richiesta"
+                          >
+                            <FileDown className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
