@@ -299,68 +299,124 @@ export default function Maintenance() {
   const generateMaintenancePDF = (record: MaintenanceRecord) => {
     const pdf = new jsPDF();
     
-    // Header azienda
-    pdf.setFontSize(20);
+    // Sfondo header
+    pdf.setFillColor(30, 58, 138); // Blu scuro
+    pdf.rect(0, 0, 210, 35, 'F');
+    
+    // Logo e titolo header
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(24);
     pdf.setFont("helvetica", "bold");
-    pdf.text("MAORI GROUP", 20, 25);
+    pdf.text("MAORI GROUP", 15, 20);
     
-    pdf.setFontSize(16);
+    pdf.setFontSize(12);
     pdf.setFont("helvetica", "normal");
-    pdf.text("Richiesta di Intervento Manutenzione", 20, 40);
+    pdf.text("Sistema Gestionale PC Aziendali", 15, 28);
     
-    // Linea separatrice
+    // Reset colore testo
+    pdf.setTextColor(0, 0, 0);
+    
+    // Titolo documento
+    pdf.setFontSize(18);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("RICHIESTA INTERVENTO MANUTENZIONE", 15, 50);
+    
+    // Box info principale
+    pdf.setFillColor(248, 250, 252); // Grigio chiaro
+    pdf.rect(15, 60, 180, 35, 'F');
     pdf.setLineWidth(0.5);
-    pdf.line(20, 45, 190, 45);
+    pdf.setDrawColor(203, 213, 225);
+    pdf.rect(15, 60, 180, 35, 'S');
     
-    // Generazione codice a barre
+    // ID Intervento diverso
+    const currentDate = new Date();
+    const year = currentDate.getFullYear().toString().slice(-2);
+    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+    const day = String(currentDate.getDate()).padStart(2, '0');
+    const recordIndex = record.id.slice(-3).toUpperCase();
+    const interventoId = `INT-${year}${month}${day}-${recordIndex}`;
+    
+    // Generazione codice a barre con nuovo ID
     const canvas = document.createElement('canvas');
-    const maintenanceId = `MAINT-${record.id.toUpperCase()}`;
-    
-    JsBarcode(canvas, maintenanceId, {
+    JsBarcode(canvas, interventoId, {
       format: "CODE128",
-      width: 2,
-      height: 40,
+      width: 1.5,
+      height: 35,
       displayValue: true,
-      fontSize: 12,
+      fontSize: 10,
       textAlign: "center"
     });
     
     const barcodeDataURL = canvas.toDataURL();
     
-    // Aggiunta codice a barre al PDF
-    pdf.addImage(barcodeDataURL, 'PNG', 140, 50, 50, 20);
+    // Posizionamento codice a barre nell'header
+    pdf.addImage(barcodeDataURL, 'PNG', 130, 65, 60, 25);
     
-    // Informazioni intervento
+    // Informazioni principali nel box
+    pdf.setFontSize(14);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("N° INTERVENTO:", 20, 75);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(interventoId, 20, 85);
+    
+    // Sezione dettagli PC
+    let yPos = 110;
+    pdf.setFillColor(37, 99, 235); // Blu
+    pdf.rect(15, yPos, 180, 8, 'F');
+    pdf.setTextColor(255, 255, 255);
     pdf.setFontSize(12);
     pdf.setFont("helvetica", "bold");
+    pdf.text("DETTAGLI PC E DIPENDENTE", 20, yPos + 6);
     
-    let yPosition = 80;
+    pdf.setTextColor(0, 0, 0);
+    yPos += 15;
     
-    pdf.text("ID INTERVENTO:", 20, yPosition);
-    pdf.setFont("helvetica", "normal");
-    pdf.text(maintenanceId, 70, yPosition);
+    // Layout a due colonne
+    const leftCol = 20;
+    const rightCol = 110;
     
-    yPosition += 10;
+    pdf.setFontSize(10);
     pdf.setFont("helvetica", "bold");
-    pdf.text("PC:", 20, yPosition);
+    pdf.text("PC:", leftCol, yPos);
     pdf.setFont("helvetica", "normal");
-    pdf.text(`${record.pc?.pcId || 'N/A'} - ${record.pc?.brand || ''} ${record.pc?.model || ''}`, 70, yPosition);
+    pdf.text(`${record.pc?.pcId || 'N/A'}`, leftCol + 25, yPos);
     
-    yPosition += 10;
     pdf.setFont("helvetica", "bold");
-    pdf.text("DIPENDENTE:", 20, yPosition);
+    pdf.text("Modello:", rightCol, yPos);
     pdf.setFont("helvetica", "normal");
-    pdf.text(record.pc?.employee?.name || 'Non assegnato', 70, yPosition);
+    pdf.text(`${record.pc?.brand || ''} ${record.pc?.model || ''}`, rightCol + 25, yPos);
     
-    yPosition += 10;
+    yPos += 10;
     pdf.setFont("helvetica", "bold");
-    pdf.text("TIPO INTERVENTO:", 20, yPosition);
+    pdf.text("Dipendente:", leftCol, yPos);
     pdf.setFont("helvetica", "normal");
-    pdf.text(record.type, 70, yPosition);
+    pdf.text(record.pc?.employee?.name || 'Non assegnato', leftCol + 25, yPos);
     
-    yPosition += 10;
+    if (record.pc?.employee?.email) {
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Email:", rightCol, yPos);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(record.pc.employee.email, rightCol + 25, yPos);
+    }
+    
+    // Sezione intervento
+    yPos += 25;
+    pdf.setFillColor(37, 99, 235);
+    pdf.rect(15, yPos, 180, 8, 'F');
+    pdf.setTextColor(255, 255, 255);
     pdf.setFont("helvetica", "bold");
-    pdf.text("PRIORITÀ:", 20, yPosition);
+    pdf.text("DETTAGLI INTERVENTO", 20, yPos + 6);
+    
+    pdf.setTextColor(0, 0, 0);
+    yPos += 15;
+    
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Tipo:", leftCol, yPos);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(record.type, leftCol + 25, yPos);
+    
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Priorità:", rightCol, yPos);
     pdf.setFont("helvetica", "normal");
     const priorityText = {
       'urgent': 'URGENTE',
@@ -368,11 +424,11 @@ export default function Maintenance() {
       'medium': 'MEDIA',
       'low': 'BASSA'
     }[record.priority] || record.priority.toUpperCase();
-    pdf.text(priorityText, 70, yPosition);
+    pdf.text(priorityText, rightCol + 25, yPos);
     
-    yPosition += 10;
+    yPos += 10;
     pdf.setFont("helvetica", "bold");
-    pdf.text("STATO:", 20, yPosition);
+    pdf.text("Stato:", leftCol, yPos);
     pdf.setFont("helvetica", "normal");
     const statusText = {
       'pending': 'IN ATTESA',
@@ -380,71 +436,94 @@ export default function Maintenance() {
       'completed': 'COMPLETATO',
       'cancelled': 'ANNULLATO'
     }[record.status] || record.status.toUpperCase();
-    pdf.text(statusText, 70, yPosition);
+    pdf.text(statusText, leftCol + 25, yPos);
     
-    yPosition += 10;
     pdf.setFont("helvetica", "bold");
-    pdf.text("TECNICO:", 20, yPosition);
+    pdf.text("Tecnico:", rightCol, yPos);
     pdf.setFont("helvetica", "normal");
-    pdf.text(record.technician, 70, yPosition);
+    pdf.text(record.technician, rightCol + 25, yPos);
     
+    // Date e costi
+    yPos += 15;
     if (record.scheduledDate) {
-      yPosition += 10;
       pdf.setFont("helvetica", "bold");
-      pdf.text("DATA PROGRAMMATA:", 20, yPosition);
+      pdf.text("Data Programmata:", leftCol, yPos);
       pdf.setFont("helvetica", "normal");
-      pdf.text(format(new Date(record.scheduledDate), "dd/MM/yyyy HH:mm", { locale: it }), 70, yPosition);
+      pdf.text(format(new Date(record.scheduledDate), "dd/MM/yyyy HH:mm", { locale: it }), leftCol + 35, yPos);
     }
     
     if (record.estimatedCost || record.actualCost) {
-      yPosition += 10;
       pdf.setFont("helvetica", "bold");
-      pdf.text("COSTO:", 20, yPosition);
+      pdf.text("Costo:", rightCol, yPos);
       pdf.setFont("helvetica", "normal");
       const cost = record.actualCost || record.estimatedCost;
-      pdf.text(`€${cost} ${record.actualCost ? '(effettivo)' : '(stimato)'}`, 70, yPosition);
+      pdf.text(`€${cost} ${record.actualCost ? '(effettivo)' : '(stimato)'}`, rightCol + 25, yPos);
     }
     
-    // Descrizione intervento
-    yPosition += 20;
+    // Descrizione in box separato
+    yPos += 20;
+    pdf.setFillColor(37, 99, 235);
+    pdf.rect(15, yPos, 180, 8, 'F');
+    pdf.setTextColor(255, 255, 255);
     pdf.setFont("helvetica", "bold");
-    pdf.text("DESCRIZIONE INTERVENTO:", 20, yPosition);
+    pdf.text("DESCRIZIONE INTERVENTO", 20, yPos + 6);
     
-    yPosition += 10;
+    pdf.setTextColor(0, 0, 0);
+    yPos += 15;
+    
+    // Box descrizione
+    pdf.setFillColor(248, 250, 252);
+    const descriptionHeight = 25;
+    pdf.rect(15, yPos, 180, descriptionHeight, 'F');
+    pdf.setDrawColor(203, 213, 225);
+    pdf.rect(15, yPos, 180, descriptionHeight, 'S');
+    
     pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(9);
     const descriptionLines = pdf.splitTextToSize(record.description, 170);
-    pdf.text(descriptionLines, 20, yPosition);
+    pdf.text(descriptionLines, 20, yPos + 8);
     
-    yPosition += descriptionLines.length * 5 + 10;
+    yPos += descriptionHeight + 10;
     
     // Note se presenti
     if (record.notes) {
+      pdf.setFillColor(37, 99, 235);
+      pdf.rect(15, yPos, 180, 8, 'F');
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(10);
       pdf.setFont("helvetica", "bold");
-      pdf.text("NOTE:", 20, yPosition);
+      pdf.text("NOTE AGGIUNTIVE", 20, yPos + 6);
       
-      yPosition += 10;
+      pdf.setTextColor(0, 0, 0);
+      yPos += 15;
+      
+      pdf.setFillColor(248, 250, 252);
+      const notesHeight = 20;
+      pdf.rect(15, yPos, 180, notesHeight, 'F');
+      pdf.setDrawColor(203, 213, 225);
+      pdf.rect(15, yPos, 180, notesHeight, 'S');
+      
       pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(9);
       const notesLines = pdf.splitTextToSize(record.notes, 170);
-      pdf.text(notesLines, 20, yPosition);
-      yPosition += notesLines.length * 5 + 10;
+      pdf.text(notesLines, 20, yPos + 8);
+      
+      yPos += notesHeight + 10;
     }
     
     // Footer
-    yPosition = 260;
-    pdf.setLineWidth(0.5);
-    pdf.line(20, yPosition, 190, yPosition);
+    pdf.setFillColor(30, 58, 138);
+    pdf.rect(0, 275, 210, 22, 'F');
     
-    yPosition += 10;
-    pdf.setFontSize(10);
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(8);
     pdf.setFont("helvetica", "normal");
-    pdf.text(`Documento generato il ${format(new Date(), "dd/MM/yyyy HH:mm", { locale: it })}`, 20, yPosition);
-    pdf.text(`ID Richiesta: ${maintenanceId}`, 120, yPosition);
-    
-    yPosition += 8;
-    pdf.text("MAORI GROUP - Sistema Gestionale PC Aziendali", 20, yPosition);
+    pdf.text(`Documento generato: ${format(new Date(), "dd/MM/yyyy HH:mm", { locale: it })}`, 15, 283);
+    pdf.text(`ID: ${interventoId}`, 15, 290);
+    pdf.text("MAORI GROUP - Centro Manutenzione PC", 120, 286);
     
     // Download del PDF
-    pdf.save(`Richiesta_Manutenzione_${maintenanceId}.pdf`);
+    pdf.save(`Intervento_${interventoId}.pdf`);
   };
 
   const exportToCSV = () => {
