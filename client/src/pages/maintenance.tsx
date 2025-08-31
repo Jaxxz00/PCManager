@@ -382,15 +382,15 @@ export default function Maintenance() {
     const serialNumber = record.pc?.serialNumber || 'N/A';
     pdf.text(serialNumber.length > 20 ? serialNumber.substring(0, 20) + '...' : serialNumber, 32, yLeft);
     
-    // Contenuto destro - Intervento
+    // Contenuto destro - Intervento con spaziatura corretta
     pdf.setFont("helvetica", "bold");
     let yRight = yStart + 24;
     
     pdf.text("Tipo:", 107, yRight);
     pdf.setFont("helvetica", "normal");
-    pdf.text(record.type.length > 18 ? record.type.substring(0, 18) + '...' : record.type, 117, yRight);
+    pdf.text(record.type.length > 15 ? record.type.substring(0, 15) + '...' : record.type, 127, yRight);
     
-    yRight += 7;
+    yRight += 8;
     pdf.setFont("helvetica", "bold");
     pdf.text("Priorità:", 107, yRight);
     pdf.setFont("helvetica", "normal");
@@ -400,25 +400,25 @@ export default function Maintenance() {
       'medium': 'MEDIA',
       'low': 'BASSA'
     }[record.priority] || record.priority.toUpperCase();
-    pdf.text(priorityText, 117, yRight);
+    pdf.text(priorityText, 127, yRight);
     
-    yRight += 7;
+    yRight += 8;
     pdf.setFont("helvetica", "bold");
     pdf.text("Stato:", 107, yRight);
     pdf.setFont("helvetica", "normal");
     const statusText = {
-      'pending': 'IN ATTESA',
-      'in_progress': 'IN CORSO',
-      'completed': 'COMPLETATO',
-      'cancelled': 'ANNULLATO'
+      'pending': 'ATTESA',
+      'in_progress': 'CORSO',
+      'completed': 'FATTO',
+      'cancelled': 'ANNULL.'
     }[record.status] || record.status.toUpperCase();
-    pdf.text(statusText, 117, yRight);
+    pdf.text(statusText, 127, yRight);
     
-    yRight += 7;
+    yRight += 8;
     pdf.setFont("helvetica", "bold");
     pdf.text("Tecnico:", 107, yRight);
     pdf.setFont("helvetica", "normal");
-    pdf.text(record.technician.length > 18 ? record.technician.substring(0, 18) + '...' : record.technician, 117, yRight);
+    pdf.text(record.technician.length > 15 ? record.technician.substring(0, 15) + '...' : record.technician, 127, yRight);
     
     // Informazioni aggiuntive sotto la tabella - compatte
     let yExtra = yStart + 72;
