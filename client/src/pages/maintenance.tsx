@@ -304,92 +304,93 @@ export default function Maintenance() {
     const timestamp = format(currentDate, "yyyyMMddHHmm");
     const interventoId = `RIC-${timestamp.slice(2)}`; // RIC-25083110xx
     
-    // Header semplice e pulito - tutto bianco
-    pdf.setTextColor(0, 0, 0); // Nero su sfondo bianco
-    pdf.setFontSize(22);
+    // Header compatto
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(18);
     pdf.setFont("helvetica", "bold");
-    pdf.text("MAORI GROUP", 20, 25);
+    pdf.text("MAORI GROUP", 20, 20);
     
-    pdf.setFontSize(14);
+    pdf.setFontSize(12);
     pdf.setFont("helvetica", "normal");
-    pdf.text("Richiesta Intervento Manutenzione", 20, 35);
+    pdf.text("Richiesta Intervento Manutenzione", 20, 28);
     
     // Linea header
-    pdf.setLineWidth(1);
+    pdf.setLineWidth(0.5);
     pdf.setDrawColor(50, 50, 50);
-    pdf.line(20, 40, 190, 40);
+    pdf.line(20, 32, 190, 32);
     
-    // Codice a barre grande e centrato
+    // Codice a barre compatto
     const canvas = document.createElement('canvas');
     canvas.width = 600;
-    canvas.height = 150;
+    canvas.height = 120;
     
     JsBarcode(canvas, interventoId, {
       format: "CODE128",
-      width: 4,
-      height: 100,
+      width: 3,
+      height: 70,
       displayValue: true,
-      fontSize: 18,
+      fontSize: 14,
       textAlign: "center",
-      textMargin: 10,
+      textMargin: 6,
       background: "#ffffff",
       lineColor: "#000000"
     });
     
     const barcodeDataURL = canvas.toDataURL('image/png', 1.0);
     
-    // Codice a barre centrato
-    pdf.addImage(barcodeDataURL, 'PNG', 55, 50, 100, 35);
+    // Codice a barre centrato e più piccolo
+    pdf.addImage(barcodeDataURL, 'PNG', 65, 38, 80, 25);
     
-    // Tabella informazioni principali
-    let yStart = 100;
+    // Tabella informazioni principali - più compatta
+    let yStart = 72;
     
     // Bordo tabella principale
     pdf.setLineWidth(0.5);
     pdf.setDrawColor(100, 100, 100);
-    pdf.rect(20, yStart, 170, 80, 'S');
+    pdf.rect(20, yStart, 170, 65, 'S');
     
     // Divisori tabella
-    pdf.line(20, yStart + 20, 190, yStart + 20); // Header divisore
-    pdf.line(105, yStart, 105, yStart + 80); // Divisore verticale
+    pdf.line(20, yStart + 16, 190, yStart + 16); // Header divisore
+    pdf.line(105, yStart, 105, yStart + 65); // Divisore verticale
     
     // Headers tabella
-    pdf.setFontSize(12);
-    pdf.setFont("helvetica", "bold");
-    pdf.text("DETTAGLI PC", 22, yStart + 15);
-    pdf.text("DETTAGLI INTERVENTO", 107, yStart + 15);
-    
-    // Contenuto sinistro - PC
     pdf.setFontSize(10);
     pdf.setFont("helvetica", "bold");
-    let yLeft = yStart + 30;
+    pdf.text("DETTAGLI PC", 22, yStart + 12);
+    pdf.text("DETTAGLI INTERVENTO", 107, yStart + 12);
+    
+    // Contenuto sinistro - PC
+    pdf.setFontSize(9);
+    pdf.setFont("helvetica", "bold");
+    let yLeft = yStart + 24;
     
     pdf.text("ID:", 22, yLeft);
     pdf.setFont("helvetica", "normal");
-    pdf.text(record.pc?.pcId || 'N/A', 35, yLeft);
+    pdf.text(record.pc?.pcId || 'N/A', 32, yLeft);
     
-    yLeft += 8;
+    yLeft += 7;
     pdf.setFont("helvetica", "bold");
     pdf.text("Marca:", 22, yLeft);
     pdf.setFont("helvetica", "normal");
-    pdf.text(`${record.pc?.brand || ''} ${record.pc?.model || ''}`, 35, yLeft);
+    const brandModel = `${record.pc?.brand || ''} ${record.pc?.model || ''}`;
+    pdf.text(brandModel.length > 18 ? brandModel.substring(0, 18) + '...' : brandModel, 32, yLeft);
     
-    yLeft += 8;
+    yLeft += 7;
     pdf.setFont("helvetica", "bold");
     pdf.text("SN:", 22, yLeft);
     pdf.setFont("helvetica", "normal");
     const serialNumber = record.pc?.serialNumber || 'N/A';
-    pdf.text(serialNumber.length > 20 ? serialNumber.substring(0, 20) + '...' : serialNumber, 35, yLeft);
+    pdf.text(serialNumber.length > 20 ? serialNumber.substring(0, 20) + '...' : serialNumber, 32, yLeft);
     
     // Contenuto destro - Intervento
     pdf.setFont("helvetica", "bold");
-    let yRight = yStart + 30;
+    let yRight = yStart + 24;
     
     pdf.text("Tipo:", 107, yRight);
     pdf.setFont("helvetica", "normal");
-    pdf.text(record.type.length > 15 ? record.type.substring(0, 15) + '...' : record.type, 125, yRight);
+    pdf.text(record.type.length > 18 ? record.type.substring(0, 18) + '...' : record.type, 117, yRight);
     
-    yRight += 8;
+    yRight += 7;
     pdf.setFont("helvetica", "bold");
     pdf.text("Priorità:", 107, yRight);
     pdf.setFont("helvetica", "normal");
@@ -399,9 +400,9 @@ export default function Maintenance() {
       'medium': 'MEDIA',
       'low': 'BASSA'
     }[record.priority] || record.priority.toUpperCase();
-    pdf.text(priorityText, 125, yRight);
+    pdf.text(priorityText, 117, yRight);
     
-    yRight += 8;
+    yRight += 7;
     pdf.setFont("helvetica", "bold");
     pdf.text("Stato:", 107, yRight);
     pdf.setFont("helvetica", "normal");
@@ -411,90 +412,85 @@ export default function Maintenance() {
       'completed': 'COMPLETATO',
       'cancelled': 'ANNULLATO'
     }[record.status] || record.status.toUpperCase();
-    pdf.text(statusText, 125, yRight);
+    pdf.text(statusText, 117, yRight);
     
-    yRight += 8;
+    yRight += 7;
     pdf.setFont("helvetica", "bold");
     pdf.text("Tecnico:", 107, yRight);
     pdf.setFont("helvetica", "normal");
-    pdf.text(record.technician.length > 15 ? record.technician.substring(0, 15) + '...' : record.technician, 125, yRight);
+    pdf.text(record.technician.length > 18 ? record.technician.substring(0, 18) + '...' : record.technician, 117, yRight);
     
-    // Informazioni aggiuntive sotto la tabella
-    let yExtra = yStart + 90;
+    // Informazioni aggiuntive sotto la tabella - compatte
+    let yExtra = yStart + 72;
     
-    if (record.scheduledDate) {
-      pdf.setFont("helvetica", "bold");
-      pdf.text("Data Programmata:", 20, yExtra);
-      pdf.setFont("helvetica", "normal");
-      pdf.text(format(new Date(record.scheduledDate), "dd/MM/yyyy HH:mm", { locale: it }), 70, yExtra);
+    // Data e costo su una riga
+    if (record.scheduledDate || record.estimatedCost || record.actualCost) {
+      pdf.setFontSize(9);
+      if (record.scheduledDate) {
+        pdf.setFont("helvetica", "bold");
+        pdf.text("Data:", 20, yExtra);
+        pdf.setFont("helvetica", "normal");
+        pdf.text(format(new Date(record.scheduledDate), "dd/MM/yyyy HH:mm", { locale: it }), 35, yExtra);
+      }
+      
+      if (record.estimatedCost || record.actualCost) {
+        pdf.setFont("helvetica", "bold");
+        pdf.text("Costo:", 105, yExtra);
+        pdf.setFont("helvetica", "normal");
+        const cost = record.actualCost || record.estimatedCost;
+        pdf.text(`€${cost} ${record.actualCost ? '(eff.)' : '(stim.)'}`, 120, yExtra);
+      }
       yExtra += 10;
     }
     
-    if (record.estimatedCost || record.actualCost) {
-      pdf.setFont("helvetica", "bold");
-      pdf.text("Costo:", 20, yExtra);
-      pdf.setFont("helvetica", "normal");
-      const cost = record.actualCost || record.estimatedCost;
-      pdf.text(`€${cost} ${record.actualCost ? '(effettivo)' : '(stimato)'}`, 70, yExtra);
-      yExtra += 10;
-    }
-    
-    // Descrizione in box largo
-    yExtra += 5;
+    // Descrizione compatta
+    pdf.setFontSize(9);
     pdf.setFont("helvetica", "bold");
     pdf.text("DESCRIZIONE:", 20, yExtra);
     
-    yExtra += 5;
+    yExtra += 3;
     pdf.setLineWidth(0.5);
-    pdf.rect(20, yExtra, 170, 30, 'S');
+    pdf.rect(20, yExtra, 170, 22, 'S');
     
     pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(9);
+    pdf.setFontSize(8);
     const descriptionLines = pdf.splitTextToSize(record.description, 165);
-    pdf.text(descriptionLines, 22, yExtra + 8);
+    pdf.text(descriptionLines, 22, yExtra + 6);
     
-    yExtra += 35;
+    yExtra += 27;
     
-    // Note se presenti con altezza dinamica
+    // Note compatte - sempre in una pagina
     if (record.notes) {
-      pdf.setFontSize(10);
+      pdf.setFontSize(9);
       pdf.setFont("helvetica", "bold");
       pdf.text("NOTE:", 20, yExtra);
       
-      yExtra += 5;
+      yExtra += 3;
       
-      // Calcola altezza necessaria per le note
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(9);
-      const notesLines = pdf.splitTextToSize(record.notes, 165);
-      const notesHeight = Math.max(20, notesLines.length * 4 + 10);
-      
-      // Controlla se c'è spazio sufficiente
-      if (yExtra + notesHeight > 260) {
-        // Aggiungi nuova pagina se necessario
-        pdf.addPage();
-        yExtra = 20;
-        pdf.setFontSize(10);
-        pdf.setFont("helvetica", "bold");
-        pdf.text("NOTE (continua):", 20, yExtra);
-        yExtra += 5;
-      }
-      
+      // Altezza fissa per note
+      const notesHeight = 18;
       pdf.rect(20, yExtra, 170, notesHeight, 'S');
-      pdf.text(notesLines, 22, yExtra + 8);
+      
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(8);
+      const notesLines = pdf.splitTextToSize(record.notes, 165);
+      // Limita le note a quello che entra nello spazio
+      const maxLines = Math.floor(notesHeight / 3) - 1;
+      const displayLines = notesLines.slice(0, maxLines);
+      pdf.text(displayLines, 22, yExtra + 6);
       
       yExtra += notesHeight + 5;
     }
     
-    // Footer minimale
+    // Footer compatto
     pdf.setLineWidth(0.5);
     pdf.line(20, 270, 190, 270);
     
-    pdf.setFontSize(8);
+    pdf.setFontSize(7);
     pdf.setFont("helvetica", "normal");
-    pdf.text(`Generato: ${format(new Date(), "dd/MM/yyyy HH:mm", { locale: it })}`, 20, 278);
-    pdf.text(`ID Richiesta: ${interventoId}`, 20, 285);
-    pdf.text("MAORI GROUP - Sistema PC", 130, 278);
+    pdf.text(`Generato: ${format(new Date(), "dd/MM/yyyy HH:mm", { locale: it })}`, 20, 276);
+    pdf.text(`ID: ${interventoId}`, 20, 282);
+    pdf.text("MAORI GROUP - Sistema PC", 120, 276);
     
     // Download del PDF
     pdf.save(`Richiesta_${interventoId}.pdf`);
