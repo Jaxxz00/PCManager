@@ -376,19 +376,10 @@ export default function Maintenance() {
     
     yLeft += 8;
     pdf.setFont("helvetica", "bold");
-    pdf.text("Utente:", 22, yLeft);
+    pdf.text("SN:", 22, yLeft);
     pdf.setFont("helvetica", "normal");
-    const userName = record.pc?.employee?.name || 'Non assegnato';
-    pdf.text(userName.length > 20 ? userName.substring(0, 20) + '...' : userName, 35, yLeft);
-    
-    if (record.pc?.employee?.email) {
-      yLeft += 8;
-      pdf.setFont("helvetica", "bold");
-      pdf.text("Email:", 22, yLeft);
-      pdf.setFont("helvetica", "normal");
-      const email = record.pc.employee.email;
-      pdf.text(email.length > 18 ? email.substring(0, 18) + '...' : email, 35, yLeft);
-    }
+    const serialNumber = record.pc?.serialNumber || 'N/A';
+    pdf.text(serialNumber.length > 20 ? serialNumber.substring(0, 20) + '...' : serialNumber, 35, yLeft);
     
     // Contenuto destro - Intervento
     pdf.setFont("helvetica", "bold");
