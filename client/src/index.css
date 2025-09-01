@@ -7,7 +7,7 @@
 @layer base {
   :root {
     /* Maori Group color palette - blu scuro design system con background grigio */
-    --background: 210 14% 97%;
+    --background: 0 0% 96%;
     --foreground: 210 11% 15%;
     --card: 0 0% 100%;
     --card-foreground: 210 11% 15%;
@@ -73,6 +73,11 @@
 
   /* Professional typography */
   h1 { @apply text-2xl font-semibold tracking-tight; }
+  
+  /* Card styles without borders */
+  .card {
+    @apply bg-card text-card-foreground shadow-sm border-0;
+  }
   h2 { @apply text-xl font-semibold tracking-tight; }
   h3 { @apply text-lg font-medium; }
   h4 { @apply text-base font-medium; }
