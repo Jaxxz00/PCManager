@@ -79,9 +79,15 @@
   /* Professional typography */
   h1 { @apply text-2xl font-semibold tracking-tight; }
   
-  /* Card styles without borders */
+  /* Card styles without borders and shadows */
   .card {
-    @apply bg-card text-card-foreground shadow-sm border-0;
+    @apply bg-card text-card-foreground border-0;
+    box-shadow: none !important;
+  }
+  
+  /* Remove shadows from all card components */
+  [data-radix-popper-content-wrapper], .shadow-sm, .shadow, .shadow-md, .shadow-lg {
+    box-shadow: none !important;
   }
   h2 { @apply text-xl font-semibold tracking-tight; }
   h3 { @apply text-lg font-medium; }
