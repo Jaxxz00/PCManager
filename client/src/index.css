@@ -92,8 +92,23 @@
   }
   
   /* Ensure all card elements have no borders */
-  .card, [class*="card"], [data-testid*="card"] {
+  .card, [class*="card"], [data-testid*="card"], 
+  .bg-card, .rounded-lg, .rounded, .border,
+  div[class*="bg-white"], div[class*="bg-card"] {
     border: 0px !important;
+    border-width: 0px !important;
+    border-color: transparent !important;
+  }
+  
+  /* Global border removal for all potentially bordered elements */
+  * {
+    border-color: transparent !important;
+  }
+  
+  /* Specific override for card containers */
+  .bg-white, .bg-card {
+    border: none !important;
+    outline: none !important;
   }
   h2 { @apply text-xl font-semibold tracking-tight; }
   h3 { @apply text-lg font-medium; }
