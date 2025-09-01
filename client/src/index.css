@@ -81,13 +81,19 @@
   
   /* Card styles without borders and shadows */
   .card {
-    @apply bg-card text-card-foreground border-0;
+    @apply bg-card text-card-foreground;
     box-shadow: none !important;
+    border: 0px !important;
   }
   
   /* Remove shadows from all card components */
   [data-radix-popper-content-wrapper], .shadow-sm, .shadow, .shadow-md, .shadow-lg {
     box-shadow: none !important;
+  }
+  
+  /* Ensure all card elements have no borders */
+  .card, [class*="card"], [data-testid*="card"] {
+    border: 0px !important;
   }
   h2 { @apply text-xl font-semibold tracking-tight; }
   h3 { @apply text-lg font-medium; }
