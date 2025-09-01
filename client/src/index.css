@@ -6,8 +6,8 @@
 
 @layer base {
   :root {
-    /* Maori Group color palette - blu scuro design system */
-    --background: 0 0% 100%;
+    /* Maori Group color palette - blu scuro design system con background grigio */
+    --background: 210 14% 97%;
     --foreground: 210 11% 15%;
     --card: 0 0% 100%;
     --card-foreground: 210 11% 15%;
