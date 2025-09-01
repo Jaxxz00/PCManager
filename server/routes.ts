@@ -8,6 +8,7 @@ import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
+import { generateManlevaPDF } from "./pdfGenerators/manlevaGenerator";
 
 // Estendo il tipo Request per includere la sessione
 declare module 'express-serve-static-core' {
@@ -933,6 +934,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error setting password via invite:", error);
       res.status(500).json({ error: "Errore interno del server" });
+    }
+  });
+
+  // Manleva PDF Generation
+  app.post("/api/manleva/generate", methodFilter(['POST']), strictContentType, authenticateRequest, async (req, res) => {
+    try {
+      const { pcId, employeeId } = req.body;
+
+      if (!pcId || !employeeId) {
+        return res.status(400).json({ error: "PC ID e Employee ID sono richiesti" });
+      }
+
+      // Recupera dati PC
+      const pc = await storage.getPc(pcId);
+      if (!pc) {
+        return res.status(404).json({ error: "PC non trovato" });
+      }
+
+      // Recupera dati dipendente
+      const employee = await storage.getEmployee(employeeId);
+      if (!employee) {
+        return res.status(404).json({ error: "Dipendente non trovato" });
+      }
+
+      // Genera il PDF della manleva
+      const pdfBuffer = generateManlevaPDF({
+        employeeName: employee.name,
+        pcModel: `${pc.brand} ${pc.model}`,
+        pcSerial: pc.serialNumber || 'N/A',
+        assignmentDate: new Date().toLocaleDateString('it-IT'),
+        location: 'Siena'
+      });
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="manleva_${pc.pcId}_${employee.name.replace(/\s/g, '_')}.pdf"`);
+      res.send(pdfBuffer);
+
+    } catch (error) {
+      console.error("Error generating manleva PDF:", error);
+      res.status(500).json({ error: "Errore nella generazione del PDF della manleva" });
     }
   });
 

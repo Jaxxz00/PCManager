@@ -16,7 +16,8 @@ import {
   Eye,
   Trash2,
   Edit,
-  File
+  File,
+  FileDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -202,6 +203,46 @@ export default function Documents() {
     return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i];
   };
 
+  const generateManlevaPDF = async (pcId: string, employeeId: string) => {
+    try {
+      const response = await fetch('/api/manleva/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
+        },
+        body: JSON.stringify({ pcId, employeeId })
+      });
+
+      if (!response.ok) {
+        throw new Error('Errore nella generazione della manleva');
+      }
+
+      // Download PDF
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'manleva.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "Manleva generata",
+        description: "Il PDF della manleva è stato scaricato."
+      });
+    } catch (error) {
+      console.error('Errore generazione manleva:', error);
+      toast({
+        title: "Errore",
+        description: "Impossibile generare la manleva PDF.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const onSubmit = (data: DocumentFormData) => {
     // Mock submission - sostituire con API reale
     console.log("Manleva da creare:", { ...data, type: "manleva" });
@@ -221,14 +262,28 @@ export default function Documents() {
           <h1 className="text-3xl font-bold text-foreground">Manleve</h1>
           <p className="text-muted-foreground">Gestione manleve per PC aziendali - {documents.filter(doc => doc.type === 'manleva').length} totali</p>
         </div>
-        <Dialog open={showDocumentForm} onOpenChange={setShowDocumentForm}>
-          <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90">
-              <Plus className="mr-2 h-4 w-4" />
-              Nuova Manleva
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+        <div className="flex space-x-2">
+          <Button 
+            onClick={() => {
+              // Esempio con il primo PC e primo dipendente
+              if (pcs.length > 0 && employees.length > 0) {
+                generateManlevaPDF(pcs[0].id, employees[0].id);
+              }
+            }}
+            variant="outline"
+            className="bg-green-600 hover:bg-green-700 text-white border-green-600"
+          >
+            <FileDown className="mr-2 h-4 w-4" />
+            Genera Manleva
+          </Button>
+          <Dialog open={showDocumentForm} onOpenChange={setShowDocumentForm}>
+            <DialogTrigger asChild>
+              <Button className="bg-primary hover:bg-primary/90">
+                <Plus className="mr-2 h-4 w-4" />
+                Registra Manleva
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Aggiungi Nuova Manleva</DialogTitle>
             </DialogHeader>
@@ -318,7 +373,7 @@ export default function Documents() {
                     <FormItem>
                       <FormLabel>Tag (separati da virgola)</FormLabel>
                       <FormControl>
-                        <Input placeholder="es: garanzia, assistenza, windows" {...field} />
+                        <Input placeholder="es: consegna, responsabilità, firmata" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -347,8 +402,9 @@ export default function Documents() {
                 </div>
               </form>
             </Form>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Statistiche Manleve */}
