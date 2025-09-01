@@ -9,6 +9,7 @@ import { ObjectPermission } from "./objectAcl";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import { generateManlevaPDF } from "./pdfGenerators/manlevaGenerator";
+import bcrypt from "bcrypt";
 
 // Estendo il tipo Request per includere la sessione
 declare module 'express-serve-static-core' {
@@ -382,7 +383,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Non restituisco dati sensibili
-      const { passwordHash, twoFactorSecret, backupCodes, ...safeUser } = newUser;
+      const { passwordHash: _, twoFactorSecret, backupCodes, ...safeUser } = newUser;
       
       res.status(201).json({ 
         message: emailSent 
