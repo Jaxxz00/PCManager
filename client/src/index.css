@@ -69,11 +69,11 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: #e0e0e0 !important;
+    background-color: #f8fafc !important;
   }
   
   main {
-    background-color: #e0e0e0 !important;
+    background-color: #f8fafc !important;
   }
 
   /* Professional typography */
