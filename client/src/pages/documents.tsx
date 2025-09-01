@@ -17,7 +17,8 @@ import {
   Trash2,
   Edit,
   File,
-  FileDown
+  FileDown,
+  QrCode
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -240,6 +241,49 @@ export default function Documents() {
         description: "Impossibile generare la manleva PDF.",
         variant: "destructive"
       });
+    }
+  };
+
+  const generateQRCode = async (pcId: string) => {
+    try {
+      const response = await fetch('/api/qr/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
+        },
+        body: JSON.stringify({ pcId })
+      });
+
+      if (!response.ok) {
+        throw new Error('Errore nella generazione del QR code');
+      }
+
+      // Download QR as PDF
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `etichetta_${pcId}_${Date.now()}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "Successo",
+        description: "Etichetta QR generata e scaricata",
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Errore generazione QR:', error);
+      toast({
+        title: "Errore",
+        description: "Errore nella generazione del QR code",
+        variant: "destructive",
+      });
+      return false;
     }
   };
 
@@ -613,6 +657,10 @@ export default function Documents() {
                             size="sm"
                             className="h-8 w-8 p-0"
                             title="Visualizza"
+                            onClick={() => {
+                              // Logica per visualizzare il documento
+                              console.log("Visualizza documento:", document.id);
+                            }}
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
@@ -620,7 +668,18 @@ export default function Documents() {
                             variant="ghost"
                             size="sm"
                             className="h-8 w-8 p-0"
-                            title="Download"
+                            title="Download Manleva PDF"
+                            onClick={() => {
+                              if (document.pcId && document.employeeId) {
+                                generateManlevaPDF(document.pcId, document.employeeId);
+                              } else {
+                                toast({
+                                  title: "Errore",
+                                  description: "PC o dipendente non trovato per questa manleva",
+                                  variant: "destructive"
+                                });
+                              }
+                            }}
                           >
                             <Download className="h-4 w-4" />
                           </Button>
@@ -628,15 +687,31 @@ export default function Documents() {
                             variant="ghost"
                             size="sm"
                             className="h-8 w-8 p-0"
-                            title="Modifica"
+                            title="Genera QR Code"
+                            onClick={() => {
+                              // Logica per generare QR code
+                              if (document.pcId) {
+                                generateQRCode(document.pcId);
+                              } else {
+                                toast({
+                                  title: "Errore", 
+                                  description: "Nessun PC associato a questa manleva",
+                                  variant: "destructive"
+                                });
+                              }
+                            }}
                           >
-                            <Edit className="h-4 w-4" />
+                            <QrCode className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
                             className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
                             title="Elimina"
+                            onClick={() => {
+                              // Logica per eliminare documento
+                              console.log("Elimina documento:", document.id);
+                            }}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
