@@ -79,44 +79,22 @@
   /* Professional typography */
   h1 { @apply text-2xl font-semibold tracking-tight; }
   
-  /* Card styles without borders and shadows */
-  .card {
-    @apply bg-card text-card-foreground;
+  /* Card styles with hover animation */
+  .bg-white, .bg-card, [class*="bg-white"], div.rounded-lg {
     box-shadow: none !important;
-    border: 0px !important;
-    transition: border 0.3s ease, transform 0.2s ease;
+    border: 0px solid transparent !important;
+    transition: all 0.3s ease;
   }
   
   /* Card hover animation with blue border */
-  .card:hover {
+  .bg-white:hover, .bg-card:hover, [class*="bg-white"]:hover, div.rounded-lg:hover {
     border: 2px solid #3b82f6 !important;
-    border-color: #3b82f6 !important;
-    transform: translateY(-1px);
+    transform: translateY(-2px);
   }
   
-  /* Remove shadows from all card components */
-  [data-radix-popper-content-wrapper], .shadow-sm, .shadow, .shadow-md, .shadow-lg {
+  /* Remove all shadows globally */
+  .shadow-sm, .shadow, .shadow-md, .shadow-lg, [data-radix-popper-content-wrapper] {
     box-shadow: none !important;
-  }
-  
-  /* Ensure all card elements have no borders */
-  .card, [class*="card"], [data-testid*="card"], 
-  .bg-card, .rounded-lg, .rounded, .border,
-  div[class*="bg-white"], div[class*="bg-card"] {
-    border: 0px !important;
-    border-width: 0px !important;
-    border-color: transparent !important;
-  }
-  
-  /* Global border removal for all potentially bordered elements (except hover states) */
-  *:not(.card:hover) {
-    border-color: transparent !important;
-  }
-  
-  /* Specific override for card containers */
-  .bg-white, .bg-card {
-    border: none !important;
-    outline: none !important;
   }
   h2 { @apply text-xl font-semibold tracking-tight; }
   h3 { @apply text-lg font-medium; }
