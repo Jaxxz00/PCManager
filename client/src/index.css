@@ -84,6 +84,14 @@
     @apply bg-card text-card-foreground;
     box-shadow: none !important;
     border: 0px !important;
+    transition: border 0.3s ease, transform 0.2s ease;
+  }
+  
+  /* Card hover animation with blue border */
+  .card:hover {
+    border: 2px solid #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    transform: translateY(-1px);
   }
   
   /* Remove shadows from all card components */
@@ -100,8 +108,8 @@
     border-color: transparent !important;
   }
   
-  /* Global border removal for all potentially bordered elements */
-  * {
+  /* Global border removal for all potentially bordered elements (except hover states) */
+  *:not(.card:hover) {
     border-color: transparent !important;
   }
   
