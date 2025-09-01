@@ -236,3 +236,5 @@ export function PcHistory({ pcId, serialNumber }: PcHistoryProps) {
     </div>
   );
 }
+
+export default PcHistory;

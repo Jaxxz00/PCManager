@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import PcHistory from "@/components/pc-history";
 
 import { 
   Plus, 
@@ -29,6 +30,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
@@ -851,16 +853,30 @@ export default function Maintenance() {
         </CardContent>
       </Card>
 
-      {/* Tabella Interventi */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg font-medium flex items-center justify-between">
-            <span>Interventi di Manutenzione ({filteredRecords.length})</span>
-            <span className="text-sm font-normal text-muted-foreground">
-              Costo totale filtrati: €{filteredRecords.reduce((sum, r) => sum + (r.actualCost || r.estimatedCost || 0), 0)}
-            </span>
-          </CardTitle>
-        </CardHeader>
+      {/* Sezioni Principali con Tab */}
+      <Tabs defaultValue="maintenance" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="maintenance" className="flex items-center gap-2">
+            <Wrench className="h-4 w-4" />
+            Manutenzione
+          </TabsTrigger>
+          <TabsTrigger value="history" className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            Storico PC
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="maintenance" className="space-y-4">
+          {/* Tabella Interventi */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-medium flex items-center justify-between">
+                <span>Interventi di Manutenzione ({filteredRecords.length})</span>
+                <span className="text-sm font-normal text-muted-foreground">
+                  Costo totale filtrati: €{filteredRecords.reduce((sum, r) => sum + (r.actualCost || r.estimatedCost || 0), 0)}
+                </span>
+              </CardTitle>
+            </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
@@ -1116,6 +1132,12 @@ export default function Maintenance() {
           )}
         </DialogContent>
       </Dialog>
+        </TabsContent>
+
+        <TabsContent value="history" className="space-y-4">
+          <PcHistory />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

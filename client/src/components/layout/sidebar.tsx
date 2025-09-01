@@ -9,8 +9,7 @@ import {
   Tags,
   Building2,
   Shield,
-  GitBranch,
-  Clock
+  GitBranch
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,7 +18,6 @@ const navigation = [
   { name: "Inventario PC", href: "/inventory", icon: Monitor },
   { name: "Dipendenti", href: "/employees", icon: Users },
   { name: "Assegnazione PC", href: "/workflow", icon: GitBranch },
-  { name: "Storico PC", href: "/pc-history", icon: Clock },
   { name: "Documenti", href: "/documents", icon: Shield },
   { name: "Etichette", href: "/labels", icon: Tags },
   { name: "Report", href: "/reports", icon: FileText },
