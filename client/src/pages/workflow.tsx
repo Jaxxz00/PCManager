@@ -56,18 +56,57 @@ export default function Workflow() {
   // Filtra PC non assegnati
   const availablePCs = pcs.filter((pc: any) => !pc.employeeId);
 
+  const generateManlevaPDF = async (pcId: string, employeeId: string) => {
+    try {
+      const response = await fetch('/api/manleva/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
+        },
+        body: JSON.stringify({ pcId, employeeId })
+      });
+
+      if (!response.ok) {
+        throw new Error('Errore nella generazione della manleva');
+      }
+
+      // Download PDF
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `manleva_${Date.now()}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      return true;
+    } catch (error) {
+      console.error('Errore generazione manleva:', error);
+      return false;
+    }
+  };
+
   const assignPcMutation = useMutation({
     mutationFn: async (data: { pcId: string; employeeId: string }) => {
-      return apiRequest(`/api/pcs/${data.pcId}/assign`, "POST", {
+      // Prima assegna il PC
+      const result = await apiRequest(`/api/pcs/${data.pcId}/assign`, "POST", {
         employeeId: data.employeeId
       });
+      
+      // Poi genera automaticamente la manleva
+      await generateManlevaPDF(data.pcId, data.employeeId);
+      
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/pcs"] });
       setWorkflowData(prev => ({ ...prev, step: 6, completed: true }));
       toast({
         title: "Assegnazione Completata",
-        description: "PC assegnato con successo al dipendente",
+        description: "PC assegnato con successo e manleva generata automaticamente",
       });
     },
     onError: () => {
@@ -110,15 +149,15 @@ export default function Workflow() {
     },
     {
       id: "document",
-      title: "Manleva Firmata",
-      description: "Documento di presa in carico",
+      title: "Genera Manleva",
+      description: "Stampa documento per firma",
       completed: workflowData.step >= 5,
       icon: FileText
     },
     {
       id: "complete",
       title: "Assegnazione",
-      description: "Finalizza l'operazione",
+      description: "PC assegnato e manleva creata",
       completed: workflowData.completed,
       icon: GitBranch
     }

@@ -260,22 +260,9 @@ export default function Documents() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Manleve</h1>
-          <p className="text-muted-foreground">Gestione manleve per PC aziendali - {documents.filter(doc => doc.type === 'manleva').length} totali</p>
+          <p className="text-muted-foreground">Archivio manleve generate automaticamente durante l'assegnazione PC - {documents.filter(doc => doc.type === 'manleva').length} totali</p>
         </div>
         <div className="flex space-x-2">
-          <Button 
-            onClick={() => {
-              // Esempio con il primo PC e primo dipendente
-              if (pcs.length > 0 && employees.length > 0) {
-                generateManlevaPDF(pcs[0].id, employees[0].id);
-              }
-            }}
-            variant="outline"
-            className="bg-green-600 hover:bg-green-700 text-white border-green-600"
-          >
-            <FileDown className="mr-2 h-4 w-4" />
-            Genera Manleva
-          </Button>
           <Dialog open={showDocumentForm} onOpenChange={setShowDocumentForm}>
             <DialogTrigger asChild>
               <Button className="bg-primary hover:bg-primary/90">
