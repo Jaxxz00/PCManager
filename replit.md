@@ -4,7 +4,7 @@
 
 Sistema di gestione completo per computer e dipendenti aziendali di Maori Group. L'applicazione fornisce una dashboard centralizzata per il monitoraggio dell'inventario PC, assegnazioni dipendenti, gestione documenti e statistiche del sistema. Include interfaccia React moderna, backend Node.js/Express e **database PostgreSQL completamente integrato** per persistenza dati con cloud storage per documenti.
 
-## Recent Changes (30/08/2025)
+## Recent Changes (01/09/2025)
 - ✅ **WORKFLOW ASSEGNAZIONE PC CREATO**: Processo guidato completo a 6 step per assegnazione PC aziendali
 - ✅ **DASHBOARD FUNZIONALE RIFATTA**: Layout 3 colonne con dati real-time, alerts e azioni rapide
 - ✅ **SIDEBAR SEMPLIFICATA**: Design pulito senza elementi confusionari, navigazione essenziale
@@ -41,6 +41,9 @@ Sistema di gestione completo per computer e dipendenti aziendali di Maori Group.
 - ✅ **PAGINA MANUTENZIONE COMPLETA**: Centro manutenzione PC con gestione interventi, priorità, costi e tracking tecnici
 - ✅ **DIALOG TRANSPARENCY RISOLTO**: Sistemato problema dialog trasparenti con CSS universale per Radix UI
 - ✅ **DROPDOWN VISIBILITY RISOLTO**: Sostituiti componenti Radix UI Select con elementi HTML nativi per eliminare conflitti z-index nei dialog
+- ✅ **DESIGN MODERNO FLAT**: Background blu-grigio (#f1f5f9), topbar bianca, card senza bordi né ombreggiature
+- ✅ **ANIMAZIONI HOVER**: Cornice blu animata sulle card con movimento verso l'alto al passaggio del mouse
+- ✅ **STORICO PC INTEGRATO**: Funzionalità storico PC spostata dalla pagina separata alla sezione manutenzione con tab
 
 ## User Preferences
 
