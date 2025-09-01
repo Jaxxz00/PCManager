@@ -44,6 +44,7 @@ export default function Workflow() {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isGeneratingManleva, setIsGeneratingManleva] = useState(false);
 
   const { data: pcs = [], isLoading: pcsLoading } = useQuery({
     queryKey: ["/api/pcs"],
@@ -189,6 +190,85 @@ export default function Workflow() {
       step: 1,
       completed: false
     });
+  };
+
+  const handleGenerateManlevaDocument = async () => {
+    if (!workflowData.selectedPc || !workflowData.selectedEmployee) {
+      toast({
+        title: "Errore",
+        description: "PC e dipendente devono essere selezionati per generare la manleva",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsGeneratingManleva(true);
+
+    try {
+      // Genera e scarica il PDF della manleva
+      const response = await fetch("/api/manleva/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          pcId: workflowData.selectedPc.id,
+          employeeId: workflowData.selectedEmployee.id
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("Errore nella generazione del documento");
+      }
+
+      // Scarica il file PDF
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `manleva_${workflowData.selectedPc.pcId}_${workflowData.selectedEmployee.name.replace(/\s/g, '_')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      // Salva i metadati del documento nel database
+      const documentData = {
+        title: `Manleva ${workflowData.selectedPc.pcId} - ${workflowData.selectedEmployee.name}`,
+        type: "manleva",
+        description: "Documento di assegnazione e responsabilità per PC aziendale",
+        pcId: workflowData.selectedPc.id,
+        employeeId: workflowData.selectedEmployee.id,
+        tags: "assegnazione, responsabilità, firmata",
+        fileName: `manleva_${workflowData.selectedPc.pcId}_${workflowData.selectedEmployee.name.replace(/\s/g, '_')}.pdf`,
+        fileSize: blob.size,
+        uploadedBy: "admin"
+      };
+
+      await apiRequest("/api/documents", {
+        method: "POST",
+        body: documentData
+      });
+
+      toast({
+        title: "Successo",
+        description: "Documento manleva generato e salvato correttamente",
+      });
+
+      // Invalida la cache dei documenti per aggiornare la lista
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+
+    } catch (error) {
+      console.error("Error generating manleva:", error);
+      toast({
+        title: "Errore",
+        description: "Errore nella generazione del documento manleva",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGeneratingManleva(false);
+    }
   };
 
   const renderStepContent = () => {
@@ -376,9 +456,14 @@ export default function Workflow() {
                   <p><strong>Data:</strong> {new Date().toLocaleDateString('it-IT')}</p>
                 </div>
               </div>
-              <Button className="w-full" variant="outline">
+              <Button 
+                className="w-full" 
+                variant="outline"
+                onClick={handleGenerateManlevaDocument}
+                disabled={isGeneratingManleva}
+              >
                 <FileText className="h-4 w-4 mr-2" />
-                Genera Documento Manleva
+                {isGeneratingManleva ? "Generando..." : "Genera Documento Manleva"}
               </Button>
               <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
                 <CheckCircle className="h-4 w-4 text-green-600" />

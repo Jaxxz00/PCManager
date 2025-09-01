@@ -789,6 +789,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to fetch documents" });
     }
   });
+
+  // Create new document
+  app.post("/api/documents", authenticateRequest, async (req, res) => {
+    try {
+      const documentData = req.body;
+      const newDocument = await storage.createDocument({
+        ...documentData,
+        uploadedAt: new Date()
+      });
+      res.status(201).json(newDocument);
+    } catch (error) {
+      console.error("Error creating document:", error);
+      res.status(500).json({ error: "Failed to create document" });
+    }
+  });
   
   // Endpoint per servire documenti pubblici
   app.get("/public-objects/:filePath(*)", async (req, res) => {
