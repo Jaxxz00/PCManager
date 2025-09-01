@@ -166,6 +166,30 @@ export const setPasswordSchema = z.object({
 
 export type SetPasswordData = z.infer<typeof setPasswordSchema>;
 
+// Documents table for manleve and other documents
+export const documents = pgTable("documents", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  type: text("type").notNull(), // manleva, contratto, fattura, etc.
+  description: text("description"),
+  fileName: text("file_name"),
+  fileSize: integer("file_size"), // size in bytes
+  pcId: varchar("pc_id").references(() => pcs.id),
+  employeeId: varchar("employee_id").references(() => employees.id),
+  tags: text("tags"), // comma-separated tags
+  uploadedAt: timestamp("uploaded_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertDocumentSchema = createInsertSchema(documents).omit({
+  id: true,
+  uploadedAt: true,
+  createdAt: true,
+});
+
+export type Document = typeof documents.$inferSelect;
+export type InsertDocument = z.infer<typeof insertDocumentSchema>;
+
 // Extended type for PC with employee data
 export type PcWithEmployee = Pc & {
   employee?: Pick<Employee, 'id' | 'name' | 'email'> | null;

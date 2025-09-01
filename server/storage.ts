@@ -1,4 +1,4 @@
-import { type Employee, type InsertEmployee, type Pc, type InsertPc, type PcWithEmployee, type User, type InsertUser, type InviteToken, type InsertInviteToken, type PcHistory, type InsertPcHistory, employees, pcs, users, sessions, inviteTokens, pcHistory } from "@shared/schema";
+import { type Employee, type InsertEmployee, type Pc, type InsertPc, type PcWithEmployee, type User, type InsertUser, type InviteToken, type InsertInviteToken, type PcHistory, type InsertPcHistory, type Document, type InsertDocument, employees, pcs, users, sessions, inviteTokens, pcHistory, documents } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
 import { eq, sql } from "drizzle-orm";
@@ -64,6 +64,13 @@ export interface IStorage {
   getPcHistoryBySerial(serialNumber: string): Promise<PcHistory[]>;
   addPcHistoryEntry(historyEntry: InsertPcHistory): Promise<PcHistory>;
   getAllPcHistory(): Promise<PcHistory[]>;
+
+  // Document methods
+  getAllDocuments(): Promise<Document[]>;
+  getDocumentById(id: string): Promise<Document | undefined>;
+  createDocument(document: InsertDocument): Promise<Document>;
+  updateDocument(id: string, document: Partial<InsertDocument>): Promise<Document | undefined>;
+  deleteDocument(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -1165,6 +1172,46 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(pcHistory)
       .orderBy(sql`${pcHistory.createdAt} DESC`);
+  }
+
+  // Document methods implementation
+  async getAllDocuments(): Promise<Document[]> {
+    return await db
+      .select()
+      .from(documents)
+      .orderBy(sql`${documents.uploadedAt} DESC`);
+  }
+
+  async getDocumentById(id: string): Promise<Document | undefined> {
+    const [document] = await db
+      .select()
+      .from(documents)
+      .where(eq(documents.id, id));
+    return document || undefined;
+  }
+
+  async createDocument(document: InsertDocument): Promise<Document> {
+    const [newDocument] = await db
+      .insert(documents)
+      .values(document)
+      .returning();
+    return newDocument;
+  }
+
+  async updateDocument(id: string, updateData: Partial<InsertDocument>): Promise<Document | undefined> {
+    const [document] = await db
+      .update(documents)
+      .set(updateData)
+      .where(eq(documents.id, id))
+      .returning();
+    return document || undefined;
+  }
+
+  async deleteDocument(id: string): Promise<boolean> {
+    const result = await db
+      .delete(documents)
+      .where(eq(documents.id, id));
+    return (result.rowCount ?? 0) > 0;
   }
 }
 

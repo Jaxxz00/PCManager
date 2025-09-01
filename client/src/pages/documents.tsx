@@ -80,44 +80,9 @@ export default function Documents() {
 
   const debouncedSearch = useDebounce(searchTerm, 300);
 
-  // Mock data per ora - da sostituire con API reali
+  // Fetch documents from API
   const { data: documents = [], isLoading } = useQuery<Document[]>({
     queryKey: ["/api/documents"],
-    queryFn: async () => {
-      // Simulazione dati manleve
-      return [
-        {
-          id: "1",
-          title: "Manleva PC Dell OptiPlex 7090",
-          type: "manleva",
-          description: "Documento di consegna e responsabilità per PC aziendale",
-          pcId: "49a472d5-0d12-47c4-954b-6c0a811696e3",
-          employeeId: "e0d90135-811d-429a-a0a6-0576ac529d21",
-          tags: "consegna, responsabilità",
-          fileName: "manleva_dell_optiplex_luca_rossi.pdf",
-          fileSize: 245760,
-          uploadedAt: "2025-08-28T10:30:00Z",
-          uploadedBy: "admin",
-          pc: { pcId: "PC-001", brand: "Dell", model: "OptiPlex 7090" },
-          employee: { name: "Luca Rossi", email: "luca.rossi@maorigroup.com" }
-        },
-        {
-          id: "2",
-          title: "Manleva PC HP EliteDesk 800",
-          type: "manleva",
-          description: "Documento di consegna e responsabilità per PC aziendale HP",
-          pcId: "pc-002",
-          employeeId: "e0d90135-811d-429a-a0a6-0576ac529d22",
-          tags: "consegna, responsabilità, hp",
-          fileName: "manleva_hp_elitedesk_mario_bianchi.pdf",
-          fileSize: 238940,
-          uploadedAt: "2025-08-20T09:15:00Z",
-          uploadedBy: "admin",
-          pc: { pcId: "PC-002", brand: "HP", model: "EliteDesk 800" },
-          employee: { name: "Mario Bianchi", email: "mario.bianchi@maorigroup.com" }
-        }
-      ];
-    }
   });
 
   const { data: employees = [] } = useQuery<Employee[]>({

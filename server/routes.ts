@@ -779,6 +779,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Document management routes
   
+  // Get all documents
+  app.get("/api/documents", authenticateRequest, async (req, res) => {
+    try {
+      const documents = await storage.getAllDocuments();
+      res.json(documents);
+    } catch (error) {
+      console.error("Error fetching documents:", error);
+      res.status(500).json({ error: "Failed to fetch documents" });
+    }
+  });
+  
   // Endpoint per servire documenti pubblici
   app.get("/public-objects/:filePath(*)", async (req, res) => {
     const filePath = req.params.filePath;
