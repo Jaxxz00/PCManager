@@ -82,7 +82,7 @@ export default function Documents() {
   const { data: documents = [], isLoading } = useQuery<Document[]>({
     queryKey: ["/api/documents"],
     queryFn: async () => {
-      // Simulazione dati documenti
+      // Simulazione dati manleve
       return [
         {
           id: "1",
@@ -101,27 +101,18 @@ export default function Documents() {
         },
         {
           id: "2",
-          title: "Manuale utente Windows 11",
-          type: "manuale",
-          description: "Guida completa per l'utilizzo di Windows 11 in ambiente aziendale",
-          tags: "windows, guida, sistema operativo",
-          fileName: "manuale_windows11_corporate.pdf",
-          fileSize: 1024000,
-          uploadedAt: "2025-08-25T14:20:00Z",
-          uploadedBy: "admin"
-        },
-        {
-          id: "3",
-          title: "Contratto di assistenza HP",
-          type: "contratto",
-          description: "Contratto di assistenza tecnica per PC HP in garanzia",
+          title: "Manleva PC HP EliteDesk 800",
+          type: "manleva",
+          description: "Documento di consegna e responsabilità per PC aziendale HP",
           pcId: "pc-002",
-          tags: "assistenza, garanzia, hp",
-          fileName: "contratto_assistenza_hp_2025.pdf",
-          fileSize: 567890,
+          employeeId: "e0d90135-811d-429a-a0a6-0576ac529d22",
+          tags: "consegna, responsabilità, hp",
+          fileName: "manleva_hp_elitedesk_mario_bianchi.pdf",
+          fileSize: 238940,
           uploadedAt: "2025-08-20T09:15:00Z",
           uploadedBy: "admin",
-          pc: { pcId: "PC-002", brand: "HP", model: "EliteDesk 800" }
+          pc: { pcId: "PC-002", brand: "HP", model: "EliteDesk 800" },
+          employee: { name: "Mario Bianchi", email: "mario.bianchi@maorigroup.com" }
         }
       ];
     }
@@ -178,11 +169,10 @@ export default function Documents() {
     });
   }, [documents, debouncedSearch, typeFilter, tagFilter]);
 
-  // Statistiche
-  const totalDocuments = documents.length;
-  const manleveDocuments = documents.filter(doc => doc.type === 'manleva').length;
-  const manualiDocuments = documents.filter(doc => doc.type === 'manuale').length;
-  const contrattiDocuments = documents.filter(doc => doc.type === 'contratto').length;
+  // Statistiche solo manleve
+  const totalManleve = documents.length;
+  const manleveFirmate = documents.filter(doc => doc.tags?.includes('firmata')).length;
+  const manleveAttive = documents.filter(doc => !doc.tags?.includes('archiviata')).length;
 
   // Tipi di documento unici
   const uniqueTypes = Array.from(new Set(documents.map(doc => doc.type))).filter(Boolean);
@@ -214,10 +204,10 @@ export default function Documents() {
 
   const onSubmit = (data: DocumentFormData) => {
     // Mock submission - sostituire con API reale
-    console.log("Documento da creare:", data);
+    console.log("Manleva da creare:", { ...data, type: "manleva" });
     toast({
-      title: "Documento creato",
-      description: "Il documento è stato aggiunto al sistema."
+      title: "Manleva creata",
+      description: "La manleva è stata aggiunta al sistema."
     });
     setShowDocumentForm(false);
     form.reset();
@@ -228,61 +218,35 @@ export default function Documents() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Documenti</h1>
-          <p className="text-muted-foreground">Gestione documenti aziendali - {documents.length} totali</p>
+          <h1 className="text-3xl font-bold text-foreground">Manleve</h1>
+          <p className="text-muted-foreground">Gestione manleve per PC aziendali - {documents.filter(doc => doc.type === 'manleva').length} totali</p>
         </div>
         <Dialog open={showDocumentForm} onOpenChange={setShowDocumentForm}>
           <DialogTrigger asChild>
             <Button className="bg-primary hover:bg-primary/90">
               <Plus className="mr-2 h-4 w-4" />
-              Nuovo Documento
+              Nuova Manleva
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Aggiungi Nuovo Documento</DialogTitle>
+              <DialogTitle>Aggiungi Nuova Manleva</DialogTitle>
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Titolo</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Titolo del documento" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Tipo</FormLabel>
-                        <FormControl>
-                          <select
-                            {...field}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                          >
-                            <option value="">Seleziona tipo</option>
-                            <option value="manleva">Manleva</option>
-                            <option value="manuale">Manuale</option>
-                            <option value="contratto">Contratto</option>
-                            <option value="fattura">Fattura</option>
-                            <option value="garanzia">Garanzia</option>
-                            <option value="altro">Altro</option>
-                          </select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Titolo</FormLabel>
+                      <FormControl>
+                        <Input placeholder="es: Manleva PC Dell OptiPlex 7090" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <FormField
                   control={form.control}
@@ -378,7 +342,7 @@ export default function Documents() {
                     Annulla
                   </Button>
                   <Button type="submit" className="bg-primary hover:bg-primary/90">
-                    Salva Documento
+                    Salva Manleva
                   </Button>
                 </div>
               </form>
@@ -387,8 +351,8 @@ export default function Documents() {
         </Dialog>
       </div>
 
-      {/* Statistiche */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Statistiche Manleve */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
@@ -396,22 +360,8 @@ export default function Documents() {
                 <FileText className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Totali</p>
-                <p className="text-2xl font-bold">{totalDocuments}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <File className="h-5 w-5 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Manleve</p>
-                <p className="text-2xl font-bold">{manleveDocuments}</p>
+                <p className="text-sm font-medium text-muted-foreground">Totale Manleve</p>
+                <p className="text-2xl font-bold">{totalManleve}</p>
               </div>
             </div>
           </CardContent>
@@ -421,11 +371,11 @@ export default function Documents() {
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
               <div className="p-2 bg-green-100 rounded-lg">
-                <FileText className="h-5 w-5 text-green-600" />
+                <File className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Manuali</p>
-                <p className="text-2xl font-bold">{manualiDocuments}</p>
+                <p className="text-sm font-medium text-muted-foreground">Attive</p>
+                <p className="text-2xl font-bold">{manleveAttive}</p>
               </div>
             </div>
           </CardContent>
@@ -434,12 +384,12 @@ export default function Documents() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <FileText className="h-5 w-5 text-orange-600" />
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <User className="h-5 w-5 text-purple-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Contratti</p>
-                <p className="text-2xl font-bold">{contrattiDocuments}</p>
+                <p className="text-sm font-medium text-muted-foreground">Dipendenti</p>
+                <p className="text-2xl font-bold">{new Set(documents.filter(doc => doc.employeeId).map(doc => doc.employeeId)).size}</p>
               </div>
             </div>
           </CardContent>
