@@ -742,6 +742,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // PC History routes
+  app.get("/api/pcs/:id/history", authenticateRequest, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const history = await storage.getPcHistory(id);
+      res.json(history);
+    } catch (error) {
+      console.error("Error fetching PC history:", error);
+      res.status(500).json({ message: "Failed to fetch PC history" });
+    }
+  });
+
+  app.get("/api/pc-history/serial/:serialNumber", authenticateRequest, async (req, res) => {
+    try {
+      const { serialNumber } = req.params;
+      const history = await storage.getPcHistoryBySerial(serialNumber);
+      res.json(history);
+    } catch (error) {
+      console.error("Error fetching PC history by serial:", error);
+      res.status(500).json({ message: "Failed to fetch PC history" });
+    }
+  });
+
+  app.get("/api/pc-history", authenticateRequest, async (req, res) => {
+    try {
+      const history = await storage.getAllPcHistory();
+      res.json(history);
+    } catch (error) {
+      console.error("Error fetching all PC history:", error);
+      res.status(500).json({ message: "Failed to fetch PC history" });
+    }
+  });
+
   // Document management routes
   
   // Endpoint per servire documenti pubblici
@@ -848,7 +881,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get user info for display (without sensitive data)
-      const user = await storage.getUserById(inviteInfo.userId);
+      const user = await storage.getUser(inviteInfo.userId);
       if (!user) {
         return res.status(404).json({ error: "Utente non trovato" });
       }

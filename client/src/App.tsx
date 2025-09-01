@@ -14,6 +14,7 @@ import Settings from "@/pages/settings";
 import Profile from "@/pages/profile";
 import Maintenance from "@/pages/maintenance";
 import Workflow from "@/pages/workflow";
+import PcHistoryPage from "@/pages/pc-history";
 import LoginPage from "@/pages/login";
 import SetPasswordPage from "@/pages/set-password";
 // RegisterPage rimossa - registrazione disabilitata per sicurezza
@@ -205,6 +206,13 @@ function Router() {
             {() => (
               <AuthenticatedLayout>
                 <Workflow />
+              </AuthenticatedLayout>
+            )}
+          </Route>
+          <Route path="/pc-history">
+            {() => (
+              <AuthenticatedLayout>
+                <PcHistoryPage />
               </AuthenticatedLayout>
             )}
           </Route>

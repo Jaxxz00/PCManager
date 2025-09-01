@@ -1,4 +1,4 @@
-import { type Employee, type InsertEmployee, type Pc, type InsertPc, type PcWithEmployee, type User, type InsertUser, type InviteToken, type InsertInviteToken, employees, pcs, users, sessions, inviteTokens } from "@shared/schema";
+import { type Employee, type InsertEmployee, type Pc, type InsertPc, type PcWithEmployee, type User, type InsertUser, type InviteToken, type InsertInviteToken, type PcHistory, type InsertPcHistory, employees, pcs, users, sessions, inviteTokens, pcHistory } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
 import { eq, sql } from "drizzle-orm";
@@ -58,6 +58,12 @@ export interface IStorage {
     retiredPCs: number;
     expiringWarranties: number;
   }>;
+
+  // PC History methods
+  getPcHistory(pcId: string): Promise<PcHistory[]>;
+  getPcHistoryBySerial(serialNumber: string): Promise<PcHistory[]>;
+  addPcHistoryEntry(historyEntry: InsertPcHistory): Promise<PcHistory>;
+  getAllPcHistory(): Promise<PcHistory[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -374,6 +380,23 @@ export class MemStorage implements IStorage {
   async deleteSession(sessionId: string): Promise<boolean> {
     return this.sessions.delete(sessionId);
   }
+
+  // PC History stub methods - not implemented in memory storage
+  async getPcHistory(pcId: string): Promise<PcHistory[]> {
+    return [];
+  }
+  
+  async getPcHistoryBySerial(serialNumber: string): Promise<PcHistory[]> {
+    return [];
+  }
+  
+  async addPcHistoryEntry(historyEntry: InsertPcHistory): Promise<PcHistory> {
+    throw new Error("PC History not supported in memory storage");
+  }
+  
+  async getAllPcHistory(): Promise<PcHistory[]> {
+    return [];
+  }
 }
 
 // DatabaseStorage implementation with PostgreSQL
@@ -451,10 +474,26 @@ export class DatabaseStorage implements IStorage {
         status: insertPc.status || "active",
       })
       .returning();
+    
+    // Registra evento di creazione nello storico
+    await this.addPcHistoryEntry({
+      pcId: pc.id,
+      serialNumber: pc.serialNumber,
+      eventType: "created",
+      eventDescription: `PC creato: ${pc.brand} ${pc.model}`,
+      newValue: `${pc.brand} ${pc.model} - S/N: ${pc.serialNumber}`,
+      performedByName: "Sistema",
+      notes: `PC ID: ${pc.pcId}, CPU: ${pc.cpu}, RAM: ${pc.ram}GB, Storage: ${pc.storage}`,
+    });
+    
     return pc;
   }
 
   async updatePc(id: string, updateData: Partial<InsertPc>): Promise<Pc | undefined> {
+    // Ottieni i dati attuali del PC per confrontare i cambiamenti
+    const [currentPc] = await db.select().from(pcs).where(eq(pcs.id, id));
+    if (!currentPc) return undefined;
+
     const [pc] = await db
       .update(pcs)
       .set({
@@ -463,7 +502,96 @@ export class DatabaseStorage implements IStorage {
       })
       .where(eq(pcs.id, id))
       .returning();
-    return pc || undefined;
+
+    if (!pc) return undefined;
+
+    // Registra eventi di aggiornamento nello storico
+    const changes: string[] = [];
+    
+    // Verifica assegnazione dipendente
+    if (updateData.employeeId !== undefined && updateData.employeeId !== currentPc.employeeId) {
+      if (updateData.employeeId && !currentPc.employeeId) {
+        // Assegnazione
+        const [employee] = await db.select().from(employees).where(eq(employees.id, updateData.employeeId));
+        if (employee) {
+          await this.addPcHistoryEntry({
+            pcId: pc.id,
+            serialNumber: pc.serialNumber,
+            eventType: "assigned",
+            eventDescription: `PC assegnato a ${employee.name}`,
+            newValue: employee.name,
+            relatedEmployeeId: employee.id,
+            relatedEmployeeName: employee.name,
+            performedByName: "Sistema",
+          });
+        }
+      } else if (!updateData.employeeId && currentPc.employeeId) {
+        // Rimozione assegnazione
+        const [employee] = await db.select().from(employees).where(eq(employees.id, currentPc.employeeId));
+        await this.addPcHistoryEntry({
+          pcId: pc.id,
+          serialNumber: pc.serialNumber,
+          eventType: "unassigned",
+          eventDescription: `PC rimosso da ${employee?.name || 'dipendente sconosciuto'}`,
+          oldValue: employee?.name || 'dipendente sconosciuto',
+          relatedEmployeeId: employee?.id,
+          relatedEmployeeName: employee?.name,
+          performedByName: "Sistema",
+        });
+      }
+    }
+
+    // Verifica cambio stato
+    if (updateData.status && updateData.status !== currentPc.status) {
+      changes.push(`Stato: ${currentPc.status} → ${updateData.status}`);
+      await this.addPcHistoryEntry({
+        pcId: pc.id,
+        serialNumber: pc.serialNumber,
+        eventType: "status_change",
+        eventDescription: `Cambio stato da ${currentPc.status} a ${updateData.status}`,
+        oldValue: currentPc.status,
+        newValue: updateData.status,
+        performedByName: "Sistema",
+      });
+    }
+
+    // Verifica aggiornamenti specifiche tecniche
+    const techFields = ['cpu', 'ram', 'storage', 'operatingSystem'];
+    const techChanges = techFields.filter(field => 
+      updateData[field as keyof InsertPc] && 
+      updateData[field as keyof InsertPc] !== currentPc[field as keyof Pc]
+    );
+
+    if (techChanges.length > 0) {
+      const changeDetails = techChanges.map(field => 
+        `${field}: ${currentPc[field as keyof Pc]} → ${updateData[field as keyof InsertPc]}`
+      ).join(', ');
+      
+      await this.addPcHistoryEntry({
+        pcId: pc.id,
+        serialNumber: pc.serialNumber,
+        eventType: "specs_update",
+        eventDescription: `Specifiche aggiornate: ${changeDetails}`,
+        oldValue: techChanges.map(field => `${field}: ${currentPc[field as keyof Pc]}`).join(', '),
+        newValue: techChanges.map(field => `${field}: ${updateData[field as keyof InsertPc]}`).join(', '),
+        performedByName: "Sistema",
+      });
+    }
+
+    // Verifica aggiornamento note
+    if (updateData.notes !== undefined && updateData.notes !== currentPc.notes) {
+      await this.addPcHistoryEntry({
+        pcId: pc.id,
+        serialNumber: pc.serialNumber,
+        eventType: "notes_update",
+        eventDescription: "Note aggiornate",
+        oldValue: currentPc.notes || "Nessuna nota",
+        newValue: updateData.notes || "Nessuna nota",
+        performedByName: "Sistema",
+      });
+    }
+
+    return pc;
   }
 
   async deletePc(id: string): Promise<boolean> {
@@ -728,8 +856,36 @@ export class DatabaseStorage implements IStorage {
       },
     ];
 
+    const createdPCs = [];
     for (const pc of testPCs) {
-      await this.createPc(pc);
+      const created = await this.createPc(pc);
+      createdPCs.push(created);
+    }
+
+    // Aggiungi alcuni eventi di test allo storico
+    const testHistoryEvents = [
+      {
+        pcId: createdPCs[0].id,
+        serialNumber: createdPCs[0].serialNumber,
+        eventType: "maintenance",
+        eventDescription: "Pulizia sistema e aggiornamento driver",
+        performedByName: "Tecnico IT",
+        notes: "Pulizia completa sistema e aggiornamento driver video",
+      },
+      {
+        pcId: createdPCs[1].id, 
+        serialNumber: createdPCs[1].serialNumber,
+        eventType: "status_change",
+        eventDescription: "PC messo in manutenzione per sostituzione RAM",
+        oldValue: "active",
+        newValue: "maintenance",
+        performedByName: "Admin Sistema",
+        notes: "RAM difettosa rilevata durante test diagnostici",
+      },
+    ];
+
+    for (const event of testHistoryEvents) {
+      await this.addPcHistoryEntry(event);
     }
 
     console.log("Test data initialized successfully!");
@@ -977,6 +1133,38 @@ export class DatabaseStorage implements IStorage {
       .where(eq(inviteTokens.token, token));
 
     return true;
+  }
+
+  // PC History methods implementation
+  async getPcHistory(pcId: string): Promise<PcHistory[]> {
+    return await db
+      .select()
+      .from(pcHistory)
+      .where(eq(pcHistory.pcId, pcId))
+      .orderBy(sql`${pcHistory.createdAt} DESC`);
+  }
+
+  async getPcHistoryBySerial(serialNumber: string): Promise<PcHistory[]> {
+    return await db
+      .select()
+      .from(pcHistory)
+      .where(eq(pcHistory.serialNumber, serialNumber))
+      .orderBy(sql`${pcHistory.createdAt} DESC`);
+  }
+
+  async addPcHistoryEntry(historyEntry: InsertPcHistory): Promise<PcHistory> {
+    const [entry] = await db
+      .insert(pcHistory)
+      .values(historyEntry)
+      .returning();
+    return entry;
+  }
+
+  async getAllPcHistory(): Promise<PcHistory[]> {
+    return await db
+      .select()
+      .from(pcHistory)
+      .orderBy(sql`${pcHistory.createdAt} DESC`);
   }
 }
 

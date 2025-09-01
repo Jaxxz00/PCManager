@@ -58,6 +58,24 @@ export const sessions = pgTable("sessions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Tabella storico PC per tracciare cambiamenti e eventi
+export const pcHistory = pgTable("pc_history", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  pcId: varchar("pc_id").notNull().references(() => pcs.id),
+  serialNumber: text("serial_number").notNull(), // Duplicato per ricerche veloci
+  eventType: text("event_type").notNull(), // created, assigned, unassigned, maintenance, status_change, specs_update, notes_update
+  eventDescription: text("event_description").notNull(),
+  oldValue: text("old_value"), // Valore precedente se applicabile
+  newValue: text("new_value"), // Nuovo valore se applicabile
+  performedBy: varchar("performed_by").references(() => users.id),
+  performedByName: text("performed_by_name"), // Nome utente per storico
+  relatedEmployeeId: varchar("related_employee_id").references(() => employees.id),
+  relatedEmployeeName: text("related_employee_name"), // Nome dipendente per storico
+  maintenanceId: varchar("maintenance_id"), // Riferimento a manutenzione se applicabile
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertEmployeeSchema = createInsertSchema(employees).omit({
   id: true,
   createdAt: true,
@@ -106,10 +124,18 @@ export const registerSchema = insertUserSchema.extend({
   path: ["confirmPassword"],
 });
 
+// Schema per storico PC
+export const insertPcHistorySchema = createInsertSchema(pcHistory).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertEmployee = z.infer<typeof insertEmployeeSchema>;
 export type Employee = typeof employees.$inferSelect;
 export type InsertPc = z.infer<typeof insertPcSchema>;
 export type Pc = typeof pcs.$inferSelect;
+export type PcHistory = typeof pcHistory.$inferSelect;
+export type InsertPcHistory = z.infer<typeof insertPcHistorySchema>;
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type LoginData = z.infer<typeof loginSchema>;
