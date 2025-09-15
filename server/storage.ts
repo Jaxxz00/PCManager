@@ -1,6 +1,5 @@
 import { type Employee, type InsertEmployee, type Pc, type InsertPc, type PcWithEmployee, type User, type InsertUser, type InviteToken, type InsertInviteToken, type PcHistory, type InsertPcHistory, type Document, type InsertDocument, employees, pcs, users, sessions, inviteTokens, pcHistory, documents } from "@shared/schema";
 import { randomUUID } from "crypto";
-import { db } from "./db";
 import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import speakeasy from 'speakeasy';
@@ -1251,5 +1250,5 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-// Switch to DatabaseStorage
-export const storage = new DatabaseStorage();
+// Switch between storage implementations based on environment
+export const storage: IStorage = process.env.USE_DB === 'true' ? new DatabaseStorage() : new MemStorage();
