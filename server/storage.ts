@@ -195,6 +195,7 @@ export class MemStorage implements IStorage {
     const employee: Employee = {
       ...insertEmployee,
       id,
+      company: insertEmployee.company || "Maori Group", // Ensure company is always set
       createdAt: new Date(),
     };
     this.employees.set(id, employee);
@@ -270,29 +271,6 @@ export class MemStorage implements IStorage {
     return this.pcs.delete(id);
   }
 
-  async getDashboardStats() {
-    const pcs = Array.from(this.pcs.values());
-    const totalPCs = pcs.length;
-    const activePCs = pcs.filter(pc => pc.status === "active").length;
-    const maintenancePCs = pcs.filter(pc => pc.status === "maintenance").length;
-    const retiredPCs = pcs.filter(pc => pc.status === "retired").length;
-    
-    // Calculate warranties expiring in next 30 days
-    const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-    const expiringWarranties = pcs.filter(pc => {
-      const warrantyDate = new Date(pc.warrantyExpiry);
-      return warrantyDate <= thirtyDaysFromNow && warrantyDate >= new Date();
-    }).length;
-
-    return {
-      totalPCs,
-      activePCs,
-      maintenancePCs,
-      retiredPCs,
-      expiringWarranties,
-    };
-  }
 
   // User authentication methods (placeholder for MemStorage)
   async getUser(id: string): Promise<User | undefined> {
@@ -403,6 +381,67 @@ export class MemStorage implements IStorage {
   
   async getAllPcHistory(): Promise<PcHistory[]> {
     return [];
+  }
+
+  // Missing user methods
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    return this.users.delete(id);
+  }
+
+  // Invite token stub methods - not implemented in memory storage
+  async createInviteToken(userId: string): Promise<string> {
+    throw new Error("Invite tokens not supported in memory storage");
+  }
+
+  async getInviteToken(token: string): Promise<{ userId: string; expiresAt: Date } | null> {
+    throw new Error("Invite tokens not supported in memory storage");
+  }
+
+  async useInviteToken(token: string, password: string): Promise<boolean> {
+    throw new Error("Invite tokens not supported in memory storage");
+  }
+
+  // Dashboard stats stub method
+  async getDashboardStats(): Promise<{
+    totalPCs: number;
+    activePCs: number;
+    maintenancePCs: number;
+    retiredPCs: number;
+    expiringWarranties: number;
+  }> {
+    const allPcs = Array.from(this.pcs.values());
+    return {
+      totalPCs: allPcs.length,
+      activePCs: allPcs.filter(pc => pc.status === 'active').length,
+      maintenancePCs: allPcs.filter(pc => pc.status === 'maintenance').length,
+      retiredPCs: allPcs.filter(pc => pc.status === 'retired').length,
+      expiringWarranties: 0, // Not implemented for memory storage
+    };
+  }
+
+  // Document stub methods - not implemented in memory storage
+  async getAllDocuments(): Promise<Document[]> {
+    throw new Error("Documents not supported in memory storage");
+  }
+
+  async getDocumentById(id: string): Promise<Document | undefined> {
+    throw new Error("Documents not supported in memory storage");
+  }
+
+  async createDocument(document: InsertDocument): Promise<Document> {
+    throw new Error("Documents not supported in memory storage");
+  }
+
+  async updateDocument(id: string, document: Partial<InsertDocument>): Promise<Document | undefined> {
+    throw new Error("Documents not supported in memory storage");
+  }
+
+  async deleteDocument(id: string): Promise<boolean> {
+    throw new Error("Documents not supported in memory storage");
   }
 }
 
