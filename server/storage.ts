@@ -115,7 +115,7 @@ export class MemStorage implements IStorage {
         name: "Luca Bianchi",
         email: "luca.bianchi@company.com",
         department: "IT",
-        position: "Developer",
+        company: "Maori Group",
         createdAt: new Date(),
       },
       {
@@ -123,7 +123,7 @@ export class MemStorage implements IStorage {
         name: "Sara Verdi",
         email: "sara.verdi@company.com",
         department: "Marketing",
-        position: "Manager",
+        company: "Maori Group",
         createdAt: new Date(),
       },
       {
@@ -131,7 +131,7 @@ export class MemStorage implements IStorage {
         name: "Marco Neri",
         email: "marco.neri@company.com",
         department: "Sales",
-        position: "Representative",
+        company: "Maori Group",
         createdAt: new Date(),
       },
     ];
@@ -807,19 +807,16 @@ export class DatabaseStorage implements IStorage {
         name: "Luca Bianchi",
         email: "luca.bianchi@maorigroup.com",
         department: "IT",
-        position: "Developer",
       },
       {
         name: "Sara Verdi",
         email: "sara.verdi@maorigroup.com",
         department: "Marketing",
-        position: "Manager",
       },
       {
         name: "Marco Neri",
         email: "marco.neri@maorigroup.com",
         department: "Sales",
-        position: "Representative",
       },
     ];
 
