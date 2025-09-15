@@ -83,8 +83,6 @@ export const insertEmployeeSchema = createInsertSchema(employees).omit({
 
 export const insertPcSchema = createInsertSchema(pcs).omit({
   id: true,
-  pcId: true,
-  employeeId: true,
   createdAt: true,
   updatedAt: true,
 });
