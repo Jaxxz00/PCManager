@@ -103,10 +103,21 @@ export class MemStorage implements IStorage {
     this.pcs = new Map();
     this.users = new Map();
     this.sessions = new Map();
-    this.initializeTestData();
+    this.initializeTestData().catch(console.error);
   }
 
-  private initializeTestData() {
+  private async initializeTestData() {
+    // Create default admin user
+    await this.createUser({
+      username: "admin",
+      email: "admin@maorigroup.com",
+      firstName: "Amministratore",
+      lastName: "Sistema",
+      role: "admin",
+      isActive: true,
+      password: "admin123"
+    });
+
     // Add some test employees
     const testEmployees: Employee[] = [
       {
