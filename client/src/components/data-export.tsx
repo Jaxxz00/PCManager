@@ -12,7 +12,7 @@ interface DataExportProps {
 export default function DataExport({ pcs, employees, filteredPcs }: DataExportProps) {
   const { toast } = useToast();
 
-  const exportToCSV = (data: any[], filename: string) => {
+  const exportToCSV = (data: Record<string, string | number | boolean | null>[], filename: string) => {
     if (data.length === 0) {
       toast({
         title: "Errore",
@@ -35,7 +35,7 @@ export default function DataExport({ pcs, employees, filteredPcs }: DataExportPr
           if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
             return `"${value.replace(/"/g, '""')}"`;
           }
-          return value || '';
+          return value == null ? '' : String(value);
         }).join(',')
       )
     ].join('\n');
@@ -85,7 +85,7 @@ export default function DataExport({ pcs, employees, filteredPcs }: DataExportPr
       'Nome': emp.name,
       'Email': emp.email,
       'Dipartimento': emp.department,
-      'Posizione': emp.position,
+      'Azienda': emp.company,
       'Data Registrazione': emp.createdAt ? new Date(emp.createdAt).toLocaleDateString('it-IT') : '',
       'PC Assegnati': pcs.filter(pc => pc.employeeId === emp.id).map(pc => pc.pcId).join('; ') || 'Nessuno'
     }));

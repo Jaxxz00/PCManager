@@ -16,7 +16,7 @@ import { insertEmployeeSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { z } from "zod";
-import type { Employee } from "@shared/schema";
+import type { Employee, PcWithEmployee } from "@shared/schema";
 
 type EmployeeFormData = z.infer<typeof insertEmployeeSchema>;
 
@@ -32,7 +32,7 @@ export default function Employees() {
     queryKey: ["/api/employees"],
   });
 
-  const { data: pcs = [] } = useQuery<any[]>({
+  const { data: pcs = [] } = useQuery<PcWithEmployee[]>({
     queryKey: ["/api/pcs"],
   });
 
@@ -60,10 +60,11 @@ export default function Employees() {
       form.reset();
       setShowEmployeeForm(false);
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : "Impossibile aggiungere il dipendente.";
       toast({
         title: "Errore",
-        description: error.message || "Impossibile aggiungere il dipendente.",
+        description: message,
         variant: "destructive",
       });
     },
@@ -110,7 +111,7 @@ export default function Employees() {
   }, [employees, debouncedSearch]);
 
   const getEmployeePcCount = (employeeId: string) => {
-    return pcs.filter((pc: any) => pc.employeeId === employeeId).length;
+    return pcs.filter((pc) => pc.employeeId === employeeId).length;
   };
 
   const onSubmit = (data: EmployeeFormData) => {
