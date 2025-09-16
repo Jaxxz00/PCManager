@@ -65,7 +65,6 @@ export default function Labels() {
       
       return canvas.toDataURL();
     } catch (error) {
-      console.error('Errore generazione codice a barre:', error);
       return '';
     }
   };

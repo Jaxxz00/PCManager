@@ -288,7 +288,6 @@ export default function Maintenance() {
   };
 
   const onSubmit = (data: MaintenanceFormData) => {
-    console.log("Nuovo intervento:", data);
     toast({
       title: "Intervento programmato",
       description: "L'intervento di manutenzione è stato aggiunto con successo."

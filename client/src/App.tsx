@@ -84,7 +84,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       }
     } catch (error) {
-      console.error('Logout error:', error);
+      // Silent logout on error
     } finally {
       localStorage.removeItem('sessionId');
       sessionStorage.removeItem('sessionId');

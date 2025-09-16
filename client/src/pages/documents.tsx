@@ -200,7 +200,6 @@ export default function Documents() {
         description: "Il PDF della manleva è stato scaricato."
       });
     } catch (error) {
-      console.error('Errore generazione manleva:', error);
       toast({
         title: "Errore",
         description: "Impossibile generare la manleva PDF.",
@@ -242,7 +241,6 @@ export default function Documents() {
 
       return true;
     } catch (error) {
-      console.error('Errore generazione QR:', error);
       toast({
         title: "Errore",
         description: "Errore nella generazione del QR code",
@@ -254,7 +252,6 @@ export default function Documents() {
 
   const onSubmit = (data: DocumentFormData) => {
     // Mock submission - sostituire con API reale
-    console.log("Manleva da creare:", { ...data, type: "manleva" });
     toast({
       title: "Manleva creata",
       description: "La manleva è stata aggiunta al sistema."
@@ -624,7 +621,7 @@ export default function Documents() {
                             title="Visualizza"
                             onClick={() => {
                               // Logica per visualizzare il documento
-                              console.log("Visualizza documento:", document.id);
+                              // TODO: implementare visualizzazione documento
                             }}
                           >
                             <Eye className="h-4 w-4" />
@@ -675,7 +672,7 @@ export default function Documents() {
                             title="Elimina"
                             onClick={() => {
                               // Logica per eliminare documento
-                              console.log("Elimina documento:", document.id);
+                              // TODO: implementare eliminazione documento
                             }}
                           >
                             <Trash2 className="h-4 w-4" />

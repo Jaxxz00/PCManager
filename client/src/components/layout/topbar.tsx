@@ -22,7 +22,6 @@ export default function Topbar() {
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
 
   const handleSearchClick = () => {
-    console.log('🔍 Search clicked - opening dropdown');
     setShowSearchDropdown(true);
   };
 

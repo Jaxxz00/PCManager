@@ -46,11 +46,11 @@ export default function Workflow() {
   const queryClient = useQueryClient();
   const [isGeneratingManleva, setIsGeneratingManleva] = useState(false);
 
-  const { data: pcs = [], isLoading: pcsLoading } = useQuery({
+  const { data: pcs = [], isLoading: pcsLoading } = useQuery<any[]>({
     queryKey: ["/api/pcs"],
   });
 
-  const { data: employees = [], isLoading: employeesLoading } = useQuery({
+  const { data: employees = [], isLoading: employeesLoading } = useQuery<any[]>({
     queryKey: ["/api/employees"],
   });
 
@@ -85,7 +85,6 @@ export default function Workflow() {
 
       return true;
     } catch (error) {
-      console.error('Errore generazione manleva:', error);
       return false;
     }
   };
@@ -246,10 +245,7 @@ export default function Workflow() {
         uploadedBy: "admin"
       };
 
-      await apiRequest("/api/documents", {
-        method: "POST",
-        body: documentData
-      });
+      await apiRequest("/api/documents", "POST", documentData);
 
       toast({
         title: "Successo",
@@ -260,7 +256,6 @@ export default function Workflow() {
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
 
     } catch (error) {
-      console.error("Error generating manleva:", error);
       toast({
         title: "Errore",
         description: "Errore nella generazione del documento manleva",

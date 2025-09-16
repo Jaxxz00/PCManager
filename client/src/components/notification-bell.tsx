@@ -30,7 +30,8 @@ export default function NotificationBell() {
         const parsed = JSON.parse(stored);
         setDismissedNotifications(parsed);
       } catch (error) {
-        console.error('Error parsing dismissed notifications:', error);
+        // Invalid JSON in localStorage, reset to empty array
+        setDismissedNotifications([]);
       }
     }
   }, []);
