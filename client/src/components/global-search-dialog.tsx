@@ -17,12 +17,12 @@ export function GlobalSearchDialog({ isOpen, onClose, initialSearchTerm = "" }: 
   const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
   const [, setLocation] = useLocation();
 
-  const { data: pcs = [] } = useQuery<PcWithEmployee[]>({
+  const { data: pcs = [], isLoading: pcsLoading, isError: pcsError } = useQuery<PcWithEmployee[]>({
     queryKey: ["/api/pcs"],
     enabled: isOpen,
   });
 
-  const { data: employees = [] } = useQuery<Employee[]>({
+  const { data: employees = [], isLoading: employeesLoading, isError: employeesError } = useQuery<Employee[]>({
     queryKey: ["/api/employees"],
     enabled: isOpen,
   });
@@ -52,7 +52,7 @@ export function GlobalSearchDialog({ isOpen, onClose, initialSearchTerm = "" }: 
       (employee.name || '').toLowerCase().includes(searchLower) ||
       (employee.email || '').toLowerCase().includes(searchLower) ||
       (employee.department || '').toLowerCase().includes(searchLower) ||
-      (employee.position || '').toLowerCase().includes(searchLower)
+      (employee.company || '').toLowerCase().includes(searchLower)
     ));
   }, [employees, searchTerm]);
 
@@ -105,7 +105,17 @@ export function GlobalSearchDialog({ isOpen, onClose, initialSearchTerm = "" }: 
 
           {/* Risultati */}
           <div className="overflow-y-auto max-h-96 p-4 space-y-4">
-            {!searchTerm.trim() ? (
+            {(pcsLoading || employeesLoading) && searchTerm.trim() ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+                <p>Caricamento risultati...</p>
+              </div>
+            ) : (pcsError || employeesError) && searchTerm.trim() ? (
+              <div className="text-center py-8 text-red-600">
+                <p>Errore nel caricamento dei dati</p>
+                <p className="text-sm mt-2">Riprova più tardi</p>
+              </div>
+            ) : !searchTerm.trim() ? (
               <div className="text-center py-8 text-muted-foreground">
                 <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>Digita per iniziare la ricerca</p>
@@ -172,7 +182,7 @@ export function GlobalSearchDialog({ isOpen, onClose, initialSearchTerm = "" }: 
                                 {employee.department}
                               </span>
                               <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">
-                                {employee.position}
+                                {employee.company}
                               </span>
                             </div>
                           </div>

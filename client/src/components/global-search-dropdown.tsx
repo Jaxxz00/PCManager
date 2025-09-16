@@ -35,17 +35,17 @@ export function GlobalSearchDropdown({ isOpen, onClose, searchTerm, onSearchChan
   const [, setLocation] = useLocation();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const { data: pcs = [] } = useQuery<PcWithEmployee[]>({
+  const { data: pcs = [], isLoading: pcsLoading, isError: pcsError } = useQuery<PcWithEmployee[]>({
     queryKey: ["/api/pcs"],
     enabled: isOpen,
   });
 
-  const { data: employees = [] } = useQuery<Employee[]>({
+  const { data: employees = [], isLoading: employeesLoading, isError: employeesError } = useQuery<Employee[]>({
     queryKey: ["/api/employees"],
     enabled: isOpen,
   });
 
-  const { data: maintenanceRecords = [] } = useQuery<MaintenanceRecord[]>({
+  const { data: maintenanceRecords = [], isLoading: maintenanceLoading, isError: maintenanceError } = useQuery<MaintenanceRecord[]>({
     queryKey: ["/api/maintenance"],
     enabled: isOpen,
   });
@@ -152,7 +152,17 @@ export function GlobalSearchDropdown({ isOpen, onClose, searchTerm, onSearchChan
       {/* Dropdown Content */}
       <div className="absolute top-0 left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto min-w-full">
         <div className="p-4">
-          {!searchTerm.trim() ? (
+          {(pcsLoading || employeesLoading || maintenanceLoading) && searchTerm.trim() ? (
+            <div className="text-center py-6 text-muted-foreground">
+              <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-3"></div>
+              <p>Caricamento...</p>
+            </div>
+          ) : (pcsError || employeesError || maintenanceError) && searchTerm.trim() ? (
+            <div className="text-center py-6 text-red-600">
+              <p className="text-sm">Errore caricamento dati</p>
+              <p className="text-xs mt-1">Riprova più tardi</p>
+            </div>
+          ) : !searchTerm.trim() ? (
             <div className="text-center py-6 text-muted-foreground">
               <Search className="h-8 w-8 mx-auto mb-3 opacity-50" />
               <p>Inizia a digitare per cercare</p>
