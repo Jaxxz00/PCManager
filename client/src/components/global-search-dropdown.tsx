@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search, Monitor, User, X, Wrench } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -72,49 +72,50 @@ export function GlobalSearchDropdown({ isOpen, onClose, searchTerm, onSearchChan
     return `RIC-${timestamp.slice(2)}`;
   };
 
-  // Filtra PC
-  const filteredPcs = pcs.filter(pc => {
-    if (!searchTerm.trim()) return false;
+  // Filtra PC - ottimizzato con useMemo
+  const filteredPcs = useMemo(() => {
+    if (!searchTerm.trim()) return [];
     const searchLower = searchTerm.toLowerCase();
-    return (
+    return pcs.filter(pc => (
       (pc.pcId || '').toLowerCase().includes(searchLower) ||
       (pc.brand || '').toLowerCase().includes(searchLower) ||
       (pc.model || '').toLowerCase().includes(searchLower) ||
       (pc.serialNumber || '').toLowerCase().includes(searchLower) ||
       (pc.employee?.name || '').toLowerCase().includes(searchLower)
-    );
-  });
+    ));
+  }, [pcs, searchTerm]);
 
-  // Filtra record di manutenzione per codici a barre
-  const filteredMaintenance = maintenanceRecords.filter(record => {
-    if (!searchTerm.trim()) return false;
+  // Filtra record di manutenzione per codici a barre - ottimizzato con useMemo
+  const filteredMaintenance = useMemo(() => {
+    if (!searchTerm.trim()) return [];
     const searchUpper = searchTerm.toUpperCase();
     
-    // Cerca per codice RIC- (formato barcode)
-    if (searchUpper.startsWith('RIC-')) {
-      return true; // Mostra tutti i record di manutenzione se cerca un codice RIC-
-    }
-    
-    // Cerca per altri campi
-    return (
-      (record.pc?.pcId || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (record.type || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (record.technician || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (record.description || '').toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
+    return maintenanceRecords.filter(record => {
+      // Cerca per codice RIC- (formato barcode)
+      if (searchUpper.startsWith('RIC-')) {
+        return true; // Mostra tutti i record di manutenzione se cerca un codice RIC-
+      }
+      
+      // Cerca per altri campi
+      return (
+        (record.pc?.pcId || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (record.type || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (record.technician || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (record.description || '').toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    });
+  }, [maintenanceRecords, searchTerm]);
 
-  // Filtra Dipendenti
-  const filteredEmployees = employees.filter(employee => {
-    if (!searchTerm.trim()) return false;
+  // Filtra Dipendenti - ottimizzato con useMemo (rimosso position non esistente)
+  const filteredEmployees = useMemo(() => {
+    if (!searchTerm.trim()) return [];
     const searchLower = searchTerm.toLowerCase();
-    return (
+    return employees.filter(employee => (
       (employee.name || '').toLowerCase().includes(searchLower) ||
       (employee.email || '').toLowerCase().includes(searchLower) ||
-      (employee.department || '').toLowerCase().includes(searchLower) ||
-      (employee.position || '').toLowerCase().includes(searchLower)
-    );
-  });
+      (employee.department || '').toLowerCase().includes(searchLower)
+    ));
+  }, [employees, searchTerm]);
 
   const handlePcClick = (pcId: string) => {
     setLocation("/inventory");
@@ -285,7 +286,7 @@ export function GlobalSearchDropdown({ isOpen, onClose, searchTerm, onSearchChan
                                 {employee.department}
                               </span>
                               <span className="text-xs bg-gray-50 text-gray-700 px-2 py-1 rounded whitespace-nowrap">
-                                {employee.position}
+                                {employee.company}
                               </span>
                             </div>
                           </div>
