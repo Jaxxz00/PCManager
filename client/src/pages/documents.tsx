@@ -141,11 +141,16 @@ export default function Documents() {
   const manleveFirmate = documents.filter(doc => doc.tags?.includes('firmata')).length;
   const manleveAttive = documents.filter(doc => !doc.tags?.includes('archiviata')).length;
 
-  // Tipi di documento unici
-  const uniqueTypes = Array.from(new Set(documents.map(doc => doc.type))).filter(Boolean);
-  const uniqueTags = Array.from(new Set(
-    documents.flatMap(doc => (doc.tags || '').split(',').map(tag => tag.trim())).filter(Boolean)
-  ));
+  // Tipi di documento unici - ottimizzati con useMemo
+  const uniqueTypes = useMemo(() => {
+    return Array.from(new Set(documents.map(doc => doc.type))).filter(Boolean);
+  }, [documents]);
+
+  const uniqueTags = useMemo(() => {
+    return Array.from(new Set(
+      documents.flatMap(doc => (doc.tags || '').split(',').map(tag => tag.trim())).filter(Boolean)
+    ));
+  }, [documents]);
 
   const getTypeBadge = (type: string) => {
     switch (type) {
