@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search, Monitor, User, X } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -31,30 +31,30 @@ export function GlobalSearchDialog({ isOpen, onClose, initialSearchTerm = "" }: 
     setSearchTerm(initialSearchTerm);
   }, [initialSearchTerm]);
 
-  // Filtra PC
-  const filteredPcs = pcs.filter(pc => {
-    if (!searchTerm.trim()) return false;
+  // Filtra PC - ottimizzato con useMemo
+  const filteredPcs = useMemo(() => {
+    if (!searchTerm.trim()) return [];
     const searchLower = searchTerm.toLowerCase();
-    return (
+    return pcs.filter(pc => (
       (pc.pcId || '').toLowerCase().includes(searchLower) ||
       (pc.brand || '').toLowerCase().includes(searchLower) ||
       (pc.model || '').toLowerCase().includes(searchLower) ||
       (pc.serialNumber || '').toLowerCase().includes(searchLower) ||
       (pc.employee?.name || '').toLowerCase().includes(searchLower)
-    );
-  });
+    ));
+  }, [pcs, searchTerm]);
 
-  // Filtra Dipendenti
-  const filteredEmployees = employees.filter(employee => {
-    if (!searchTerm.trim()) return false;
+  // Filtra Dipendenti - ottimizzato con useMemo
+  const filteredEmployees = useMemo(() => {
+    if (!searchTerm.trim()) return [];
     const searchLower = searchTerm.toLowerCase();
-    return (
+    return employees.filter(employee => (
       (employee.name || '').toLowerCase().includes(searchLower) ||
       (employee.email || '').toLowerCase().includes(searchLower) ||
       (employee.department || '').toLowerCase().includes(searchLower) ||
       (employee.position || '').toLowerCase().includes(searchLower)
-    );
-  });
+    ));
+  }, [employees, searchTerm]);
 
   const handlePcClick = (pcId: string) => {
     setLocation("/inventory");
