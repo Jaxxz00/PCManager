@@ -2,7 +2,6 @@ import { useState, useMemo } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import PcHistory from "@/components/pc-history";
 
 import { 
   Plus, 
@@ -379,10 +378,10 @@ export default function Maintenance() {
     
     yLeft += 7;
     pdf.setFont("helvetica", "bold");
-    pdf.text("SN:", 22, yLeft);
+    pdf.text("Utente:", 22, yLeft);
     pdf.setFont("helvetica", "normal");
-    const serialNumber = record.pc?.serialNumber || 'N/A';
-    pdf.text(serialNumber.length > 20 ? serialNumber.substring(0, 20) + '...' : serialNumber, 32, yLeft);
+    const userName = record.pc?.employee?.name || 'Non Assegnato';
+    pdf.text(userName.length > 18 ? userName.substring(0, 18) + '...' : userName, 32, yLeft);
     
     // Contenuto destro - Intervento con spaziatura corretta
     pdf.setFont("helvetica", "bold");
@@ -1135,7 +1134,9 @@ export default function Maintenance() {
         </TabsContent>
 
         <TabsContent value="history" className="space-y-4">
-          <PcHistory />
+          <div className="text-center py-8 text-muted-foreground">
+            <p>Storico PC disponibile a breve</p>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
