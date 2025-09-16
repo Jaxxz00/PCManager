@@ -113,7 +113,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         imgSrc: ["'self'", "data:", "https:", "blob:"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Permette Vite HMR
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://replit.com"], // Permette Vite HMR e banner Replit
         connectSrc: ["'self'", "ws:", "wss:", "http:", "https:"], // WebSocket per HMR
         objectSrc: ["'none'"],
       },
