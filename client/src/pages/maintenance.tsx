@@ -547,7 +547,7 @@ export default function Maintenance() {
                 Nuovo Intervento
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Programma Nuovo Intervento di Manutenzione</DialogTitle>
               </DialogHeader>
