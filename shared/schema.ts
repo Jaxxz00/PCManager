@@ -112,6 +112,13 @@ export const maintenance = pgTable("maintenance", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Tabella sequenze codici asset per auto-generazione
+export const assetCodeSequences = pgTable("asset_code_sequences", {
+  assetType: text("asset_type").primaryKey(), // pc, smartphone, sim, tastiera, monitor, altro
+  prefix: text("prefix").notNull(), // PC, PHONE, SIM, KB, MON, OTHER
+  lastValue: integer("last_value").notNull().default(0), // Ultimo numero usato
+});
+
 export const insertEmployeeSchema = createInsertSchema(employees).omit({
   id: true,
   createdAt: true,
