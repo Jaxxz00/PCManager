@@ -1,4 +1,4 @@
-import { type Employee, type InsertEmployee, type Pc, type InsertPc, type PcWithEmployee, type User, type InsertUser, type InviteToken, type InsertInviteToken, type PcHistory, type InsertPcHistory, type Document, type InsertDocument, type Maintenance, type InsertMaintenance, type Asset, type InsertAsset, employees, pcs, users, sessions, inviteTokens, pcHistory, documents, maintenance, assets } from "@shared/schema";
+import { type Employee, type InsertEmployee, type Pc, type InsertPc, type PcWithEmployee, type User, type InsertUser, type InviteToken, type InsertInviteToken, type PcHistory, type InsertPcHistory, type Document, type InsertDocument, type Maintenance, type InsertMaintenance, type Asset, type InsertAsset, employees, pcs, users, sessions, inviteTokens, pcHistory, documents, maintenance, assets, assetCodeSequences } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
@@ -29,6 +29,7 @@ export interface IStorage {
   createAsset(asset: InsertAsset): Promise<Asset>;
   updateAsset(id: string, asset: Partial<InsertAsset>): Promise<Asset | undefined>;
   deleteAsset(id: string): Promise<boolean>;
+  getNextAssetCode(assetType: string): Promise<string>;
 
   // User authentication methods
   getUser(id: string): Promise<User | undefined>;
@@ -114,6 +115,7 @@ export class MemStorage implements IStorage {
   private employees: Map<string, Employee>;
   private pcs: Map<string, Pc>;
   private assets: Map<string, Asset>;
+  private assetSequences: Map<string, number>;
   private users: Map<string, User>;
   private sessions: Map<string, { userId: string; expiresAt: Date }>;
 
@@ -121,6 +123,7 @@ export class MemStorage implements IStorage {
     this.employees = new Map();
     this.pcs = new Map();
     this.assets = new Map();
+    this.assetSequences = new Map();
     this.users = new Map();
     this.sessions = new Map();
     this.initializeTestData().catch(console.error);
@@ -354,6 +357,29 @@ export class MemStorage implements IStorage {
 
   async deleteAsset(id: string): Promise<boolean> {
     return this.assets.delete(id);
+  }
+
+  async getNextAssetCode(assetType: string): Promise<string> {
+    // Mapping tipo -> prefisso
+    const prefixMap: Record<string, string> = {
+      'pc': 'PC',
+      'smartphone': 'PHONE',
+      'sim': 'SIM',
+      'tastiera': 'KB',
+      'monitor': 'MON',
+      'altro': 'OTHER'
+    };
+
+    const prefix = prefixMap[assetType] || 'ASSET';
+    
+    // Ottieni il prossimo numero per questo tipo
+    const currentValue = this.assetSequences.get(assetType) || 0;
+    const nextValue = currentValue + 1;
+    this.assetSequences.set(assetType, nextValue);
+    
+    // Formatta il codice con zero padding (es: PC-001)
+    const paddedNumber = String(nextValue).padStart(3, '0');
+    return `${prefix}-${paddedNumber}`;
   }
 
   // User authentication methods (placeholder for MemStorage)
@@ -800,6 +826,55 @@ export class DatabaseStorage implements IStorage {
       .delete(assets)
       .where(eq(assets.id, id));
     return (result.rowCount ?? 0) > 0;
+  }
+
+  async getNextAssetCode(assetType: string): Promise<string> {
+    // Mapping tipo -> prefisso
+    const prefixMap: Record<string, string> = {
+      'pc': 'PC',
+      'smartphone': 'PHONE',
+      'sim': 'SIM',
+      'tastiera': 'KB',
+      'monitor': 'MON',
+      'altro': 'OTHER'
+    };
+
+    const prefix = prefixMap[assetType] || 'ASSET';
+
+    // Transaction per evitare race conditions
+    const result = await db.transaction(async (tx) => {
+      // Cerca se esiste già una sequenza per questo tipo
+      let [sequence] = await tx
+        .select()
+        .from(assetCodeSequences)
+        .where(eq(assetCodeSequences.assetType, assetType));
+
+      if (!sequence) {
+        // Crea nuova sequenza se non esiste
+        [sequence] = await tx
+          .insert(assetCodeSequences)
+          .values({
+            assetType,
+            prefix,
+            lastValue: 0
+          })
+          .returning();
+      }
+
+      // Incrementa il contatore
+      const nextValue = sequence.lastValue + 1;
+      
+      await tx
+        .update(assetCodeSequences)
+        .set({ lastValue: nextValue })
+        .where(eq(assetCodeSequences.assetType, assetType));
+
+      // Formatta il codice con zero padding (es: PC-001)
+      const paddedNumber = String(nextValue).padStart(3, '0');
+      return `${prefix}-${paddedNumber}`;
+    });
+
+    return result;
   }
 
   // User authentication methods
