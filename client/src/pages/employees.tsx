@@ -144,7 +144,7 @@ export default function Employees() {
         </div>
         <Dialog open={showEmployeeForm} onOpenChange={setShowEmployeeForm}>
           <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button className="bg-blue-600 text-white">
               <Plus className="mr-2 h-4 w-4" />
               Aggiungi Dipendente
             </Button>
@@ -218,7 +218,7 @@ export default function Employees() {
                   <Button
                     type="submit"
                     disabled={createEmployeeMutation.isPending}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    className="bg-blue-600 text-white"
                   >
                     {createEmployeeMutation.isPending ? "Salvataggio..." : "Salva"}
                   </Button>

@@ -222,7 +222,7 @@ export default function RegisterPage() {
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                             data-testid="button-toggle-password"
                           >
                             {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -253,7 +253,7 @@ export default function RegisterPage() {
                           <button
                             type="button"
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                             data-testid="button-toggle-confirmPassword"
                           >
                             {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -268,7 +268,7 @@ export default function RegisterPage() {
                 <Button
                   type="submit"
                   disabled={registerMutation.isPending}
-                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-[1.02]"
+                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-lg shadow-lg transition-all transform"
                   data-testid="button-register"
                 >
                   {registerMutation.isPending ? (
@@ -291,7 +291,7 @@ export default function RegisterPage() {
                 Hai già un account?{" "}
                 <a 
                   href="/login" 
-                  className="text-blue-600 hover:text-blue-700 font-medium hover:underline"
+                  className="text-blue-600 font-medium"
                   data-testid="link-login"
                 >
                   Accedi ora

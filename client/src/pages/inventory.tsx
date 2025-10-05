@@ -111,7 +111,7 @@ export default function Inventory() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "active":
-        return <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100">Attivo</Badge>;
+        return <Badge variant="default" className="bg-green-100 text-green-800">Attivo</Badge>;
       case "maintenance":
         return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Manutenzione</Badge>;
       case "retired":
@@ -138,7 +138,7 @@ export default function Inventory() {
         </div>
         <Button 
           onClick={() => setShowPcForm(true)} 
-          className="bg-blue-600 hover:bg-blue-700 text-white"
+          className="bg-blue-600 text-white"
         >
           <Plus className="h-4 w-4 mr-2" />
           Nuovo PC
@@ -376,7 +376,7 @@ export default function Inventory() {
                       warrantyDate > new Date();
 
                     return (
-                      <TableRow key={pc.id} className="hover:bg-muted/50">
+                      <TableRow key={pc.id} className="">
                         <TableCell className="font-medium">{pc.pcId}</TableCell>
                         <TableCell>
                           <div>
@@ -417,7 +417,7 @@ export default function Inventory() {
                             <Button 
                               variant="ghost" 
                               size="icon" 
-                              className="h-8 w-8 text-red-600 hover:text-red-700"
+                              className="h-8 w-8 text-red-600"
                               onClick={() => deletePcMutation.mutate(pc.id)}
                             >
                               <Trash2 className="h-4 w-4" />

@@ -79,19 +79,11 @@
   /* Professional typography */
   h1 { @apply text-2xl font-semibold tracking-tight; }
   
-  /* Card styles with soft hover animation */
+  /* Card styles */
   .bg-white, .bg-card, [class*="bg-white"], div.rounded-lg {
     box-shadow: none !important;
     border: 0px solid transparent !important;
     border-radius: 12px !important;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  /* Soft card hover animation with gentle blue glow */
-  .bg-white:hover, .bg-card:hover, [class*="bg-white"]:hover, div.rounded-lg:hover {
-    border: 1px solid #60a5fa !important;
-    transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 8px 25px rgba(96, 165, 250, 0.15) !important;
   }
   
   /* Remove all shadows globally (except hover states) */
@@ -102,25 +94,12 @@
   /* Soft button styling */
   button, .button, [role="button"] {
     border-radius: 8px !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  /* Soft button hover effects */
-  button:hover, .button:hover, [role="button"]:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
   }
   
   /* Soft input styling */
   input, select, textarea {
     border-radius: 8px !important;
     border: 1px solid #e2e8f0 !important;
-    transition: all 0.3s ease;
-  }
-  
-  input:focus, select:focus, textarea:focus {
-    border-color: #60a5fa !important;
-    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1) !important;
   }
   h2 { @apply text-xl font-semibold tracking-tight; }
   h3 { @apply text-lg font-medium; }

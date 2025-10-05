@@ -291,7 +291,7 @@ export default function Workflow() {
                       className={`p-4 border rounded-lg cursor-pointer transition-all ${
                         workflowData.selectedPc?.id === pc.id
                           ? "border-blue-500 bg-blue-50"
-                          : "border-gray-200 hover:border-gray-300"
+                          : "border-gray-200"
                       }`}
                       onClick={() => handlePcSelect(pc)}
                     >
@@ -330,7 +330,7 @@ export default function Workflow() {
                     className={`p-4 border rounded-lg cursor-pointer transition-all ${
                       workflowData.selectedEmployee?.id === employee.id
                         ? "border-blue-500 bg-blue-50"
-                        : "border-gray-200 hover:border-gray-300"
+                        : "border-gray-200"
                     }`}
                     onClick={() => handleEmployeeSelect(employee)}
                   >

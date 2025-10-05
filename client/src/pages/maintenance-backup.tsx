@@ -282,7 +282,7 @@ export default function Maintenance() {
         </div>
         <Dialog open={showMaintenanceForm} onOpenChange={setShowMaintenanceForm}>
           <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button className="bg-blue-600 text-white">
               <Plus className="mr-2 h-4 w-4" />
               Nuovo Intervento
             </Button>
@@ -343,16 +343,16 @@ export default function Maintenance() {
                             position="popper"
                             sideOffset={4}
                           >
-                            <SelectItem value="preventive" className="cursor-pointer hover:bg-gray-100">
+                            <SelectItem value="preventive" className="cursor-pointer">
                               Manutenzione Preventiva
                             </SelectItem>
-                            <SelectItem value="corrective" className="cursor-pointer hover:bg-gray-100">
+                            <SelectItem value="corrective" className="cursor-pointer">
                               Manutenzione Correttiva
                             </SelectItem>
-                            <SelectItem value="upgrade" className="cursor-pointer hover:bg-gray-100">
+                            <SelectItem value="upgrade" className="cursor-pointer">
                               Upgrade Hardware
                             </SelectItem>
-                            <SelectItem value="cleaning" className="cursor-pointer hover:bg-gray-100">
+                            <SelectItem value="cleaning" className="cursor-pointer">
                               Pulizia Sistema
                             </SelectItem>
                           </SelectContent>
@@ -505,7 +505,7 @@ export default function Maintenance() {
                   <Button
                     type="submit"
                     disabled={createMaintenanceMutation.isPending}
-                    className="bg-primary hover:bg-primary/90"
+                    className="bg-primary"
                   >
                     {createMaintenanceMutation.isPending ? "Programmazione..." : "Programma Intervento"}
                   </Button>
@@ -518,7 +518,7 @@ export default function Maintenance() {
 
       {/* Statistiche Manutenzione */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card className="hover:shadow-md transition-shadow">
+        <Card className="">
           <CardContent className="p-6">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
@@ -532,7 +532,7 @@ export default function Maintenance() {
           </CardContent>
         </Card>
         
-        <Card className="hover:shadow-md transition-shadow">
+        <Card className="">
           <CardContent className="p-6">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
@@ -546,7 +546,7 @@ export default function Maintenance() {
           </CardContent>
         </Card>
         
-        <Card className="hover:shadow-md transition-shadow">
+        <Card className="">
           <CardContent className="p-6">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
@@ -560,7 +560,7 @@ export default function Maintenance() {
           </CardContent>
         </Card>
         
-        <Card className="hover:shadow-md transition-shadow">
+        <Card className="">
           <CardContent className="p-6">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
@@ -574,7 +574,7 @@ export default function Maintenance() {
           </CardContent>
         </Card>
         
-        <Card className="hover:shadow-md transition-shadow">
+        <Card className="">
           <CardContent className="p-6">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">

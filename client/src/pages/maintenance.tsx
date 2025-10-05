@@ -541,7 +541,7 @@ export default function Maintenance() {
           </Button>
           <Dialog open={showMaintenanceDialog} onOpenChange={setShowMaintenanceDialog}>
             <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2">
+              <Button className="bg-blue-600 text-white flex items-center gap-2">
                 <Plus className="h-4 w-4" />
                 Nuovo Intervento
               </Button>
@@ -711,7 +711,7 @@ export default function Maintenance() {
                     >
                       Annulla
                     </Button>
-                    <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <Button type="submit" className="bg-blue-600 text-white">
                       Programma Intervento
                     </Button>
                   </div>
@@ -906,7 +906,7 @@ export default function Maintenance() {
                   ))
                 ) : filteredRecords.length > 0 ? (
                   filteredRecords.map((record) => (
-                    <TableRow key={record.id} className="hover:bg-muted/50">
+                    <TableRow key={record.id} className="">
                       <TableCell>
                         <div>
                           <p className="font-medium text-sm">{record.pc?.pcId}</p>
@@ -980,7 +980,7 @@ export default function Maintenance() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700"
+                            className="h-8 w-8 p-0 text-blue-600"
                             onClick={() => generateMaintenancePDF(record)}
                             title="Scarica PDF richiesta"
                           >
@@ -997,7 +997,7 @@ export default function Maintenance() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                            className="h-8 w-8 p-0 text-red-600"
                             title="Elimina intervento"
                           >
                             <Trash2 className="h-4 w-4" />

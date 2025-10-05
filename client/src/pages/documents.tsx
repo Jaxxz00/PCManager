@@ -276,7 +276,7 @@ export default function Documents() {
         <div className="flex space-x-2">
           <Dialog open={showDocumentForm} onOpenChange={setShowDocumentForm}>
             <DialogTrigger asChild>
-              <Button className="bg-primary hover:bg-primary/90">
+              <Button className="bg-primary">
                 <Plus className="mr-2 h-4 w-4" />
                 Registra Manleva
               </Button>
@@ -394,7 +394,7 @@ export default function Documents() {
                   >
                     Annulla
                   </Button>
-                  <Button type="submit" className="bg-primary hover:bg-primary/90">
+                  <Button type="submit" className="bg-primary">
                     Salva Manleva
                   </Button>
                 </div>
@@ -562,7 +562,7 @@ export default function Documents() {
                   ))
                 ) : filteredDocuments.length > 0 ? (
                   filteredDocuments.map((document) => (
-                    <TableRow key={document.id} className="hover:bg-muted/50">
+                    <TableRow key={document.id} className="">
                       <TableCell>
                         <div>
                           <p className="font-medium">{document.title}</p>
@@ -673,7 +673,7 @@ export default function Documents() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                            className="h-8 w-8 p-0 text-red-600"
                             title="Elimina"
                             onClick={() => {
                               // Logica per eliminare documento

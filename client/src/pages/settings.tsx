@@ -82,10 +82,10 @@ export default function Settings() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium ${
                 activeTab === tab.id
                   ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground"
               }`}
             >
               <Icon className="h-4 w-4" />
@@ -344,7 +344,7 @@ function UserManagement() {
             </CardTitle>
             <Button
               onClick={() => setShowCreateDialog(true)}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-blue-600"
             >
               <Plus className="h-4 w-4 mr-2" />
               Nuovo Utente
@@ -425,7 +425,7 @@ function UserManagement() {
                             size="sm"
                             onClick={() => deleteUserMutation.mutate(user.id)}
                             disabled={deleteUserMutation.isPending}
-                            className="text-red-600 hover:text-red-700"
+                            className="text-red-600"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -541,7 +541,7 @@ function UserManagement() {
                 <Button 
                   type="submit" 
                   disabled={createUserMutation.isPending}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  className="flex-1 bg-blue-600"
                 >
                   {createUserMutation.isPending ? (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />

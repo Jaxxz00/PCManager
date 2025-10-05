@@ -181,7 +181,7 @@ export function GlobalSearchDropdown({ isOpen, onClose, searchTerm, onSearchChan
                       <div
                         key={pc.id}
                         onClick={() => handlePcClick(pc.id)}
-                        className="p-3 rounded-md hover:bg-gray-50 cursor-pointer transition-colors border border-transparent hover:border-gray-200"
+                        className="p-3 rounded-md cursor-pointer border border-transparent"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex-1 min-w-0">
@@ -220,7 +220,7 @@ export function GlobalSearchDropdown({ isOpen, onClose, searchTerm, onSearchChan
                         <div
                           key={record.id}
                           onClick={() => handleMaintenanceClick(record.id)}
-                          className="p-3 rounded-md hover:bg-gray-50 cursor-pointer transition-colors border border-transparent hover:border-gray-200"
+                          className="p-3 rounded-md cursor-pointer border border-transparent"
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex-1 min-w-0">
@@ -285,7 +285,7 @@ export function GlobalSearchDropdown({ isOpen, onClose, searchTerm, onSearchChan
                       <div
                         key={employee.id}
                         onClick={() => handleEmployeeClick(employee.id)}
-                        className="p-3 rounded-md hover:bg-gray-50 cursor-pointer transition-colors border border-transparent hover:border-gray-200"
+                        className="p-3 rounded-md cursor-pointer border border-transparent"
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">

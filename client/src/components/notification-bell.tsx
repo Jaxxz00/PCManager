@@ -166,7 +166,7 @@ export default function NotificationBell() {
               <div className="max-h-96 overflow-y-auto">
                 {notifications.map((notification, index) => (
                   <div key={notification.id}>
-                    <div className={`p-3 hover:bg-muted/50 transition-colors ${getPriorityColor(notification.priority)} border-l-4`}>
+                    <div className={`p-3 ${getPriorityColor(notification.priority)} border-l-4`}>
                       <div className="flex items-start justify-between">
                         <div className="flex items-start space-x-3 flex-1">
                           {getIcon(notification.type)}
@@ -185,7 +185,7 @@ export default function NotificationBell() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-6 w-6 opacity-70 hover:opacity-100"
+                          className="h-6 w-6 opacity-70"
                           onClick={() => dismissNotification(notification.id)}
                         >
                           <X className="h-3 w-3" />

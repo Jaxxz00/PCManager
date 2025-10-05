@@ -96,7 +96,7 @@ export function GlobalSearchDialog({ isOpen, onClose, initialSearchTerm = "" }: 
               />
               <button
                 onClick={onClose}
-                className="absolute right-3 top-3 h-4 w-4 text-muted-foreground hover:text-foreground"
+                className="absolute right-3 top-3 h-4 w-4 text-muted-foreground"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -135,7 +135,7 @@ export function GlobalSearchDialog({ isOpen, onClose, initialSearchTerm = "" }: 
                         <div
                           key={pc.id}
                           onClick={() => handlePcClick(pc.id)}
-                          className="p-3 rounded-lg border hover:bg-muted/50 cursor-pointer transition-colors"
+                          className="p-3 rounded-lg border cursor-pointer"
                         >
                           <div className="flex items-center justify-between">
                             <div>
@@ -172,7 +172,7 @@ export function GlobalSearchDialog({ isOpen, onClose, initialSearchTerm = "" }: 
                         <div
                           key={employee.id}
                           onClick={() => handleEmployeeClick(employee.id)}
-                          className="p-3 rounded-lg border hover:bg-muted/50 cursor-pointer transition-colors"
+                          className="p-3 rounded-lg border cursor-pointer"
                         >
                           <div>
                             <p className="font-medium">{employee.name}</p>

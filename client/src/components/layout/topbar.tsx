@@ -89,14 +89,14 @@ export default function Topbar() {
               <p className="text-sm text-slate-600">{user?.email}</p>
             </div>
             <DropdownMenuItem 
-              className="cursor-pointer hover:bg-blue-100/50 text-slate-800"
+              className="cursor-pointer text-slate-800"
               onClick={() => setLocation("/profile")}
             >
               <User className="mr-2 h-4 w-4 text-blue-600" />
               Profilo
             </DropdownMenuItem>
             <DropdownMenuItem 
-              className="cursor-pointer hover:bg-blue-100/50 text-slate-800"
+              className="cursor-pointer text-slate-800"
               onClick={() => setLocation("/settings")}
             >
               <Settings className="mr-2 h-4 w-4 text-blue-600" />
@@ -104,7 +104,7 @@ export default function Topbar() {
             </DropdownMenuItem>
             <DropdownMenuSeparator className="border-blue-200/30" />
             <DropdownMenuItem 
-              className="cursor-pointer text-red-600 hover:bg-red-50 focus:text-red-600"
+              className="cursor-pointer text-red-600 focus:text-red-600"
               onClick={logout}
               data-testid="button-logout"
             >

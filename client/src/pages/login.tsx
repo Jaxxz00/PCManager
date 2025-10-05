@@ -194,7 +194,7 @@ export default function Login() {
                             <button
                               type="button"
                               onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400"
                               data-testid="button-toggle-password"
                             >
                               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -259,7 +259,7 @@ export default function Login() {
                         setUsingBackupCode(!usingBackupCode);
                         form.setValue("twoFactorCode", "");
                       }}
-                      className="text-sm text-blue-600 hover:text-blue-700 underline"
+                      className="text-sm text-blue-600 underline"
                       data-testid="button-toggle-backup-code"
                     >
                       {usingBackupCode 
@@ -275,7 +275,7 @@ export default function Login() {
               <Button
                 type="submit"
                 disabled={loginMutation.isPending}
-                className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white text-lg font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+                className="w-full h-12 bg-blue-600 text-white text-lg font-medium rounded-lg shadow-md transition-all"
                 data-testid="button-login"
               >
                 {loginMutation.isPending ? (
@@ -300,7 +300,7 @@ export default function Login() {
                     setUsingBackupCode(false);
                     form.reset({ username: "", password: "", twoFactorCode: "" });
                   }}
-                  className="w-full text-center text-sm text-slate-600 hover:text-slate-700 underline"
+                  className="w-full text-center text-sm text-slate-600 underline"
                   data-testid="button-back-to-login"
                 >
                   Torna al login

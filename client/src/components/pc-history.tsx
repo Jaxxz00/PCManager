@@ -157,7 +157,7 @@ export function PcHistory({ pcId, serialNumber }: PcHistoryProps) {
               {history.map((entry) => (
                 <div
                   key={entry.id}
-                  className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                  className="border rounded-lg p-4"
                   data-testid={`history-entry-${entry.id}`}
                 >
                   <div className="flex items-start justify-between">

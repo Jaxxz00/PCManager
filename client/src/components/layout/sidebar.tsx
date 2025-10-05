@@ -65,10 +65,10 @@ export default function Sidebar() {
               <li key={item.name}>
                 <Link href={item.href}>
                   <div className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm",
                     active 
                       ? "bg-blue-600 text-white" 
-                      : "text-gray-700 hover:bg-gray-100"
+                      : "text-gray-700"
                   )}>
                     <Icon className="h-4 w-4" />
                     <span>{item.name}</span>
@@ -90,10 +90,10 @@ export default function Sidebar() {
                 <li key={item.name}>
                   <Link href={item.href}>
                     <div className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                      "flex items-center gap-3 px-3 py-2 rounded-md text-sm",
                       active 
                         ? "bg-blue-600 text-white" 
-                        : "text-gray-700 hover:bg-gray-100"
+                        : "text-gray-700"
                     )}>
                       <Icon className="h-4 w-4" />
                       <span>{item.name}</span>
