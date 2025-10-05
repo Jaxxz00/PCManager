@@ -295,7 +295,7 @@ export default function Employees() {
                         </span>
                       </TableCell>
                       <TableCell>
-                        <span className="font-medium">{getEmployeePcCount(employee.id)}</span>
+                        <span className="font-medium">{getEmployeeAssetCount(employee.id)}</span>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {employee.createdAt ? new Date(employee.createdAt).toLocaleDateString('it-IT') : 'N/A'}
