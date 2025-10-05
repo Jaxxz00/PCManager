@@ -64,7 +64,9 @@ export interface IStorage {
     activePCs: number;
     maintenancePCs: number;
     retiredPCs: number;
-    expiringWarranties: number;
+    totalEmployees: number;
+    assignedPCs: number;
+    availablePCs: number;
   }>;
 
   // PC History methods
@@ -493,15 +495,20 @@ export class MemStorage implements IStorage {
     activePCs: number;
     maintenancePCs: number;
     retiredPCs: number;
-    expiringWarranties: number;
+    totalEmployees: number;
+    assignedPCs: number;
+    availablePCs: number;
   }> {
     const allPcs = Array.from(this.pcs.values());
+    const allEmployees = Array.from(this.employees.values());
     return {
       totalPCs: allPcs.length,
       activePCs: allPcs.filter(pc => pc.status === 'active').length,
       maintenancePCs: allPcs.filter(pc => pc.status === 'maintenance').length,
       retiredPCs: allPcs.filter(pc => pc.status === 'retired').length,
-      expiringWarranties: 0, // Not implemented for memory storage
+      totalEmployees: allEmployees.length,
+      assignedPCs: allPcs.filter(pc => pc.employeeId).length,
+      availablePCs: allPcs.filter(pc => !pc.employeeId && pc.status === 'disponibile').length,
     };
   }
 
@@ -917,51 +924,57 @@ export class DatabaseStorage implements IStorage {
 
   async getDashboardStats() {
     try {
-      const result = await db.execute(sql`
+      // Query per assets
+      const assetResult = await db.execute(sql`
         SELECT 
-          COUNT(*) as total_pcs,
-          COUNT(CASE WHEN status = 'active' THEN 1 END) as active_pcs,
-          COUNT(CASE WHEN status = 'maintenance' THEN 1 END) as maintenance_pcs,
-          COUNT(CASE WHEN status = 'retired' THEN 1 END) as retired_pcs,
-          COUNT(CASE 
-            WHEN warranty_expiry BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '30 days' 
-            THEN 1 
-          END) as expiring_warranties
-        FROM pcs
+          COUNT(*) as total_assets,
+          COUNT(CASE WHEN status = 'active' OR status = 'assegnato' THEN 1 END) as active_assets,
+          COUNT(CASE WHEN status = 'manutenzione' THEN 1 END) as maintenance_assets,
+          COUNT(CASE WHEN status = 'dismesso' OR status = 'retired' THEN 1 END) as retired_assets,
+          COUNT(CASE WHEN employee_id IS NOT NULL THEN 1 END) as assigned_assets,
+          COUNT(CASE WHEN status = 'disponibile' AND employee_id IS NULL THEN 1 END) as available_assets
+        FROM assets
       `);
 
-      const stats = result.rows[0] || {};
+      const assetStats = assetResult.rows[0] || {};
+      
+      // Query per dipendenti
+      const employeeResult = await db.execute(sql`
+        SELECT COUNT(*) as total_employees FROM employees
+      `);
+      
+      const employeeStats = employeeResult.rows[0] || {};
       
       return {
-        totalPCs: Number(stats.total_pcs || 0),
-        activePCs: Number(stats.active_pcs || 0),
-        maintenancePCs: Number(stats.maintenance_pcs || 0),
-        retiredPCs: Number(stats.retired_pcs || 0),
-        expiringWarranties: Number(stats.expiring_warranties || 0),
+        totalPCs: Number(assetStats.total_assets || 0),
+        activePCs: Number(assetStats.active_assets || 0),
+        maintenancePCs: Number(assetStats.maintenance_assets || 0),
+        retiredPCs: Number(assetStats.retired_assets || 0),
+        totalEmployees: Number(employeeStats.total_employees || 0),
+        assignedPCs: Number(assetStats.assigned_assets || 0),
+        availablePCs: Number(assetStats.available_assets || 0),
       };
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
       // Fallback to basic count queries
-      const allPcs = await db.select().from(pcs);
-      const totalPCs = allPcs.length;
-      const activePCs = allPcs.filter(pc => pc.status === 'active').length;
-      const maintenancePCs = allPcs.filter(pc => pc.status === 'maintenance').length;
-      const retiredPCs = allPcs.filter(pc => pc.status === 'retired').length;
+      const allAssets = await db.select().from(assets);
+      const allEmployees = await db.select().from(employees);
       
-      // Calculate expiring warranties
-      const thirtyDaysFromNow = new Date();
-      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-      const expiringWarranties = allPcs.filter(pc => {
-        const warrantyDate = new Date(pc.warrantyExpiry);
-        return warrantyDate <= thirtyDaysFromNow && warrantyDate >= new Date();
-      }).length;
+      const totalPCs = allAssets.length;
+      const activePCs = allAssets.filter(a => a.status === 'active' || a.status === 'assegnato').length;
+      const maintenancePCs = allAssets.filter(a => a.status === 'manutenzione').length;
+      const retiredPCs = allAssets.filter(a => a.status === 'dismesso' || a.status === 'retired').length;
+      const assignedPCs = allAssets.filter(a => a.employeeId).length;
+      const availablePCs = allAssets.filter(a => a.status === 'disponibile' && !a.employeeId).length;
 
       return {
         totalPCs,
         activePCs,
         maintenancePCs,
         retiredPCs,
-        expiringWarranties,
+        totalEmployees: allEmployees.length,
+        assignedPCs,
+        availablePCs,
       };
     }
   }
