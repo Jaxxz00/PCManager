@@ -429,14 +429,14 @@ export default function Inventory() {
                             <div className="flex gap-2">
                               {asset.employeeId && (
                                 <Button
-                                  variant="ghost"
+                                  variant="outline"
                                   size="sm"
-                                  className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                                  className="text-orange-600 border-orange-300 hover:text-orange-700 hover:bg-orange-50"
                                   onClick={() => handleUnassign(asset)}
                                   data-testid={`button-unassign-${asset.id}`}
-                                  title="Rimuovi assegnazione"
                                 >
-                                  <UserX className="w-4 h-4" />
+                                  <UserX className="w-4 h-4 mr-1" />
+                                  Riconsegna
                                 </Button>
                               )}
                               <Button
