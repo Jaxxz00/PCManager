@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import type { PcWithEmployee, Employee } from "@shared/schema";
+import type { Asset, Employee } from "@shared/schema";
 
 interface MaintenanceRecord {
   id: string;
@@ -21,7 +21,7 @@ interface MaintenanceRecord {
   estimatedCost?: number;
   actualCost?: number;
   notes?: string;
-  pc?: PcWithEmployee;
+  pc?: Asset;
 }
 
 interface GlobalSearchDropdownProps {
@@ -35,8 +35,8 @@ export function GlobalSearchDropdown({ isOpen, onClose, searchTerm, onSearchChan
   const [, setLocation] = useLocation();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const { data: pcs = [], isLoading: pcsLoading, isError: pcsError } = useQuery<PcWithEmployee[]>({
-    queryKey: ["/api/pcs"],
+  const { data: assets = [], isLoading: assetsLoading, isError: assetsError } = useQuery<Asset[]>({
+    queryKey: ["/api/assets"],
     enabled: isOpen,
   });
 
@@ -72,18 +72,18 @@ export function GlobalSearchDropdown({ isOpen, onClose, searchTerm, onSearchChan
     return `RIC-${timestamp.slice(2)}`;
   };
 
-  // Filtra PC - ottimizzato con useMemo
-  const filteredPcs = useMemo(() => {
+  // Filtra Asset - ottimizzato con useMemo
+  const filteredAssets = useMemo(() => {
     if (!searchTerm.trim()) return [];
     const searchLower = searchTerm.toLowerCase();
-    return pcs.filter(pc => (
-      (pc.pcId || '').toLowerCase().includes(searchLower) ||
-      (pc.brand || '').toLowerCase().includes(searchLower) ||
-      (pc.model || '').toLowerCase().includes(searchLower) ||
-      (pc.serialNumber || '').toLowerCase().includes(searchLower) ||
-      (pc.employee?.name || '').toLowerCase().includes(searchLower)
+    return assets.filter(asset => (
+      (asset.assetCode || '').toLowerCase().includes(searchLower) ||
+      (asset.brand || '').toLowerCase().includes(searchLower) ||
+      (asset.model || '').toLowerCase().includes(searchLower) ||
+      (asset.serialNumber || '').toLowerCase().includes(searchLower) ||
+      (asset.assetType || '').toLowerCase().includes(searchLower)
     ));
-  }, [pcs, searchTerm]);
+  }, [assets, searchTerm]);
 
   // Filtra record di manutenzione per codici a barre - ottimizzato con useMemo
   const filteredMaintenance = useMemo(() => {
@@ -98,7 +98,7 @@ export function GlobalSearchDropdown({ isOpen, onClose, searchTerm, onSearchChan
       
       // Cerca per altri campi
       return (
-        (record.pc?.pcId || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (record.pc?.assetCode || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (record.type || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (record.technician || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (record.description || '').toLowerCase().includes(searchTerm.toLowerCase())
@@ -117,7 +117,7 @@ export function GlobalSearchDropdown({ isOpen, onClose, searchTerm, onSearchChan
     ));
   }, [employees, searchTerm]);
 
-  const handlePcClick = (pcId: string) => {
+  const handleAssetClick = (assetId: string) => {
     setLocation("/inventory");
     onClose();
   };
@@ -152,12 +152,12 @@ export function GlobalSearchDropdown({ isOpen, onClose, searchTerm, onSearchChan
       {/* Dropdown Content */}
       <div className="absolute top-0 left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto min-w-full">
         <div className="p-4">
-          {(pcsLoading || employeesLoading || maintenanceLoading) && searchTerm.trim() ? (
+          {(assetsLoading || employeesLoading || maintenanceLoading) && searchTerm.trim() ? (
             <div className="text-center py-6 text-muted-foreground">
               <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-3"></div>
               <p>Caricamento...</p>
             </div>
-          ) : (pcsError || employeesError || maintenanceError) && searchTerm.trim() ? (
+          ) : (assetsError || employeesError || maintenanceError) && searchTerm.trim() ? (
             <div className="text-center py-6 text-red-600">
               <p className="text-sm">Errore caricamento dati</p>
               <p className="text-xs mt-1">Riprova più tardi</p>
@@ -169,37 +169,37 @@ export function GlobalSearchDropdown({ isOpen, onClose, searchTerm, onSearchChan
             </div>
           ) : (
             <>
-              {/* Sezione PC */}
-              {filteredPcs.length > 0 && (
+              {/* Sezione Asset */}
+              {filteredAssets.length > 0 && (
                 <div className="mb-4">
                   <h3 className="flex items-center gap-2 font-semibold text-sm text-muted-foreground mb-3 border-b pb-2">
                     <Monitor className="h-4 w-4" />
-                    PC ({filteredPcs.length})
+                    Asset ({filteredAssets.length})
                   </h3>
                   <div className="space-y-2">
-                    {filteredPcs.slice(0, 4).map((pc) => (
+                    {filteredAssets.slice(0, 4).map((asset) => (
                       <div
-                        key={pc.id}
-                        onClick={() => handlePcClick(pc.id)}
+                        key={asset.id}
+                        onClick={() => handleAssetClick(asset.id)}
                         className="p-3 rounded-md cursor-pointer border border-transparent"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm truncate">{pc.pcId}</p>
-                            <p className="text-xs text-muted-foreground truncate">{pc.brand} {pc.model} • S/N: {pc.serialNumber}</p>
-                            {pc.employee && (
-                              <p className="text-xs text-blue-600 truncate">→ {pc.employee.name} ({pc.employee.email})</p>
-                            )}
+                            <p className="font-medium text-sm truncate">{asset.assetCode}</p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {asset.brand} {asset.model} • {asset.assetType.toUpperCase()}
+                              {asset.serialNumber && ` • S/N: ${asset.serialNumber}`}
+                            </p>
                           </div>
                           <div className="flex items-center gap-2 ml-3">
-                            {getStatusBadge(pc.status)}
+                            {getStatusBadge(asset.status)}
                           </div>
                         </div>
                       </div>
                     ))}
-                    {filteredPcs.length > 4 && (
+                    {filteredAssets.length > 4 && (
                       <p className="text-xs text-muted-foreground text-center py-2 bg-gray-50 rounded">
-                        +{filteredPcs.length - 4} altri PC... (vai all'inventario)
+                        +{filteredAssets.length - 4} altri asset... (vai all'inventario)
                       </p>
                     )}
                   </div>
@@ -228,7 +228,7 @@ export function GlobalSearchDropdown({ isOpen, onClose, searchTerm, onSearchChan
                                 <span className="font-mono text-orange-600">{interventoId}</span> • {record.type}
                               </p>
                               <p className="text-xs text-muted-foreground truncate">
-                                PC: {record.pc?.pcId} • Tecnico: {record.technician}
+                                Asset: {record.pc?.assetCode} • Tecnico: {record.technician}
                               </p>
                               <p className="text-xs text-blue-600 truncate">{record.description}</p>
                             </div>
@@ -313,11 +313,11 @@ export function GlobalSearchDropdown({ isOpen, onClose, searchTerm, onSearchChan
               )}
 
               {/* Nessun risultato */}
-              {filteredPcs.length === 0 && filteredEmployees.length === 0 && filteredMaintenance.length === 0 && (
+              {filteredAssets.length === 0 && filteredEmployees.length === 0 && filteredMaintenance.length === 0 && (
                 <div className="text-center py-6 text-muted-foreground">
                   <Search className="h-8 w-8 mx-auto mb-3 opacity-50" />
                   <p>Nessun risultato per "{searchTerm}"</p>
-                  <p className="text-sm mt-1">Prova con "Dell", "Luca", "IT" o "RIC-"...</p>
+                  <p className="text-sm mt-1">Prova con "Dell", "Luca", "IT", "smartphone" o "RIC-"...</p>
                 </div>
               )}
             </>
