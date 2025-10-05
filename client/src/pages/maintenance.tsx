@@ -37,14 +37,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import type { PcWithEmployee } from "@shared/schema";
+import type { Asset } from "@shared/schema";
 import { z } from "zod";
 import jsPDF from "jspdf";
 import JsBarcode from "jsbarcode";
 
 // Schema per intervento
 const maintenanceSchema = z.object({
-  pcId: z.string().min(1, "Seleziona un PC"),
+  assetId: z.string().min(1, "Seleziona un asset"),
   type: z.string().min(1, "Il tipo di intervento è obbligatorio"),
   priority: z.string().min(1, "La priorità è obbligatoria"),
   description: z.string().min(1, "La descrizione è obbligatoria"),
@@ -58,7 +58,7 @@ type MaintenanceFormData = z.infer<typeof maintenanceSchema>;
 
 interface MaintenanceRecord {
   id: string;
-  pcId: string;
+  assetId: string;
   type: string;
   priority: "low" | "medium" | "high" | "urgent";
   status: "pending" | "in_progress" | "completed" | "cancelled";
@@ -70,10 +70,12 @@ interface MaintenanceRecord {
   createdAt: string;
   scheduledDate?: string;
   completedDate?: string;
-  pc?: {
-    pcId: string;
+  asset?: {
+    assetCode: string;
+    assetType: string;
     brand: string;
     model: string;
+    employeeId?: string | null;
     employee?: {
       name: string;
       email: string;
@@ -97,8 +99,8 @@ export default function Maintenance() {
     queryKey: ["/api/maintenance"],
   });
 
-  const { data: pcs = [] } = useQuery<PcWithEmployee[]>({
-    queryKey: ["/api/pcs"]
+  const { data: assets = [] } = useQuery<Asset[]>({
+    queryKey: ["/api/assets"]
   });
 
   // Delete maintenance mutation
@@ -128,7 +130,7 @@ export default function Maintenance() {
   const form = useForm<MaintenanceFormData>({
     resolver: zodResolver(maintenanceSchema),
     defaultValues: {
-      pcId: "",
+      assetId: "",
       type: "",
       priority: "",
       description: "",
@@ -148,8 +150,8 @@ export default function Maintenance() {
           (record.type || '').toLowerCase().includes(searchLower) ||
           (record.description || '').toLowerCase().includes(searchLower) ||
           (record.technician || '').toLowerCase().includes(searchLower) ||
-          (record.pc?.pcId || '').toLowerCase().includes(searchLower) ||
-          (record.pc?.employee?.name || '').toLowerCase().includes(searchLower)
+          (record.asset?.assetCode || '').toLowerCase().includes(searchLower) ||
+          (record.asset?.employee?.name || '').toLowerCase().includes(searchLower)
         );
         if (!matches) return false;
       }
@@ -288,20 +290,20 @@ export default function Maintenance() {
     
     pdf.text("ID:", 22, yLeft);
     pdf.setFont("helvetica", "normal");
-    pdf.text(record.pc?.pcId || 'N/A', 32, yLeft);
+    pdf.text(record.asset?.assetCode || 'N/A', 32, yLeft);
     
     yLeft += 7;
     pdf.setFont("helvetica", "bold");
     pdf.text("Marca:", 22, yLeft);
     pdf.setFont("helvetica", "normal");
-    const brandModel = `${record.pc?.brand || ''} ${record.pc?.model || ''}`;
+    const brandModel = `${record.asset?.brand || ''} ${record.asset?.model || ''}`;
     pdf.text(brandModel.length > 18 ? brandModel.substring(0, 18) + '...' : brandModel, 32, yLeft);
     
     yLeft += 7;
     pdf.setFont("helvetica", "bold");
     pdf.text("Utente:", 22, yLeft);
     pdf.setFont("helvetica", "normal");
-    const userName = record.pc?.employee?.name || 'Non Assegnato';
+    const userName = record.asset?.employee?.name || 'Non Assegnato';
     pdf.text(userName.length > 18 ? userName.substring(0, 18) + '...' : userName, 32, yLeft);
     
     // Contenuto destro - Intervento con spaziatura corretta
@@ -420,9 +422,10 @@ export default function Maintenance() {
 
   const exportToCSV = () => {
     const csvContent = [
-      ["PC", "Tipo", "Priorità", "Stato", "Tecnico", "Costo", "Data Programmata", "Descrizione"],
+      ["Asset", "Tipo Asset", "Tipo Intervento", "Priorità", "Stato", "Tecnico", "Costo", "Data Programmata", "Descrizione"],
       ...filteredRecords.map(record => [
-        record.pc?.pcId || '',
+        record.asset?.assetCode || '',
+        record.asset?.assetType || '',
         record.type,
         record.priority,
         record.status,
@@ -480,20 +483,19 @@ export default function Maintenance() {
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
-                      name="pcId"
+                      name="assetId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>PC da Manutenere</FormLabel>
+                          <FormLabel>Asset da Manutenere</FormLabel>
                           <FormControl>
                             <select
                               {...field}
                               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             >
-                              <option value="">Seleziona PC</option>
-                              {pcs.map(pc => (
-                                <option key={pc.id} value={pc.id}>
-                                  {pc.pcId} - {pc.brand} {pc.model}
-                                  {pc.employee && ` (${pc.employee.name})`}
+                              <option value="">Seleziona Asset</option>
+                              {assets.map(asset => (
+                                <option key={asset.id} value={asset.id}>
+                                  {asset.assetCode} - {asset.brand} {asset.model} ({asset.assetType})
                                 </option>
                               ))}
                             </select>
@@ -785,7 +787,7 @@ export default function Maintenance() {
           </TabsTrigger>
           <TabsTrigger value="history" className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
-            Storico PC
+            Storico Asset
           </TabsTrigger>
         </TabsList>
 
@@ -805,7 +807,7 @@ export default function Maintenance() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
-                  <TableHead className="font-medium w-[180px]">PC e Dipendente</TableHead>
+                  <TableHead className="font-medium w-[180px]">Asset e Dipendente</TableHead>
                   <TableHead className="font-medium w-[150px]">Tipo Intervento</TableHead>
                   <TableHead className="font-medium w-[120px]">Priorità</TableHead>
                   <TableHead className="font-medium w-[120px]">Stato</TableHead>
@@ -831,13 +833,13 @@ export default function Maintenance() {
                     <TableRow key={record.id} className="">
                       <TableCell>
                         <div>
-                          <p className="font-medium text-sm">{record.pc?.pcId}</p>
+                          <p className="font-medium text-sm">{record.asset?.assetCode}</p>
                           <p className="text-xs text-muted-foreground">
-                            {record.pc?.brand} {record.pc?.model}
+                            {record.asset?.brand} {record.asset?.model}
                           </p>
-                          {record.pc?.employee && (
+                          {record.asset?.employee && (
                             <p className="text-xs text-blue-600 font-medium">
-                              {record.pc.employee.name}
+                              {record.asset.employee.name}
                             </p>
                           )}
                         </div>
@@ -973,20 +975,20 @@ export default function Maintenance() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <h4 className="font-medium text-sm text-muted-foreground">PC</h4>
-                  <p className="font-medium">{viewingRecord.pc?.pcId}</p>
+                  <h4 className="font-medium text-sm text-muted-foreground">Asset</h4>
+                  <p className="font-medium">{viewingRecord.asset?.assetCode}</p>
                   <p className="text-sm text-muted-foreground">
-                    {viewingRecord.pc?.brand} {viewingRecord.pc?.model}
+                    {viewingRecord.asset?.brand} {viewingRecord.asset?.model}
                   </p>
                 </div>
                 <div>
                   <h4 className="font-medium text-sm text-muted-foreground">Dipendente</h4>
                   <p className="font-medium">
-                    {viewingRecord.pc?.employee?.name || 'Non assegnato'}
+                    {viewingRecord.asset?.employee?.name || 'Non assegnato'}
                   </p>
-                  {viewingRecord.pc?.employee?.email && (
+                  {viewingRecord.asset?.employee?.email && (
                     <p className="text-sm text-muted-foreground">
-                      {viewingRecord.pc.employee.email}
+                      {viewingRecord.asset.employee.email}
                     </p>
                   )}
                 </div>
@@ -1065,7 +1067,7 @@ export default function Maintenance() {
 
         <TabsContent value="history" className="space-y-4">
           <div className="text-center py-8 text-muted-foreground">
-            <p>Storico PC disponibile a breve</p>
+            <p>Storico Asset disponibile a breve</p>
           </div>
         </TabsContent>
       </Tabs>
