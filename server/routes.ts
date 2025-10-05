@@ -777,6 +777,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Asset management routes (unified inventory for all device types)
+  
+  // Get all assets with optional type filter
+  app.get("/api/assets", authenticateRequest, async (req, res) => {
+    try {
+      const { type } = req.query;
+      const assets = await storage.getAssets(type as string | undefined);
+      res.json(assets);
+    } catch (error) {
+      console.error("Error fetching assets:", error);
+      res.status(500).json({ error: "Failed to fetch assets" });
+    }
+  });
+
+  // Get single asset by ID
+  app.get("/api/assets/:id", authenticateRequest, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const asset = await storage.getAsset(id);
+      
+      if (!asset) {
+        return res.status(404).json({ error: "Asset not found" });
+      }
+
+      res.json(asset);
+    } catch (error) {
+      console.error("Error fetching asset:", error);
+      res.status(500).json({ error: "Failed to fetch asset" });
+    }
+  });
+
+  // Create new asset
+  app.post("/api/assets", methodFilter(['POST']), strictContentType, authenticateRequest, async (req, res) => {
+    try {
+      const { insertAssetSchema } = await import("@shared/schema");
+      const validationResult = insertAssetSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: "Dati non validi", 
+          details: validationResult.error.errors 
+        });
+      }
+
+      const newAsset = await storage.createAsset(validationResult.data);
+      res.status(201).json(newAsset);
+    } catch (error) {
+      console.error("Error creating asset:", error);
+      res.status(500).json({ error: "Failed to create asset" });
+    }
+  });
+
+  // Update asset
+  app.patch("/api/assets/:id", methodFilter(['PATCH']), strictContentType, authenticateRequest, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updatedAsset = await storage.updateAsset(id, req.body);
+      
+      if (!updatedAsset) {
+        return res.status(404).json({ error: "Asset not found" });
+      }
+
+      res.json(updatedAsset);
+    } catch (error) {
+      console.error("Error updating asset:", error);
+      res.status(500).json({ error: "Failed to update asset" });
+    }
+  });
+
+  // Delete asset
+  app.delete("/api/assets/:id", methodFilter(['DELETE']), authenticateRequest, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteAsset(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ error: "Asset not found" });
+      }
+
+      res.json({ success: true, message: "Asset deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting asset:", error);
+      res.status(500).json({ error: "Failed to delete asset" });
+    }
+  });
+
   // Document management routes
   
   // Get all documents
