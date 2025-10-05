@@ -9,13 +9,15 @@ import {
   Tags,
   Building2,
   Shield,
-  GitBranch
+  GitBranch,
+  Box
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: BarChart3 },
   { name: "Inventario PC", href: "/inventory", icon: Monitor },
+  { name: "Altri Asset", href: "/assets", icon: Box },
   { name: "Dipendenti", href: "/employees", icon: Users },
   { name: "Assegnazione PC", href: "/workflow", icon: GitBranch },
   { name: "Documenti", href: "/documents", icon: Shield },
