@@ -93,6 +93,28 @@ export default function Documents() {
     queryKey: ["/api/pcs"]
   });
 
+  // Delete document mutation
+  const deleteDocumentMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest('DELETE', `/api/documents/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      toast({
+        title: "Successo",
+        description: "Documento eliminato con successo",
+      });
+    },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : "Impossibile eliminare il documento";
+      toast({
+        title: "Errore",
+        description: message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const form = useForm<DocumentFormData>({
     resolver: zodResolver(documentSchema),
     defaultValues: {
@@ -674,11 +696,13 @@ export default function Documents() {
                             variant="ghost"
                             size="sm"
                             className="h-8 w-8 p-0 text-red-600"
-                            title="Elimina"
                             onClick={() => {
-                              // Logica per eliminare documento
-                              // TODO: implementare eliminazione documento
+                              if (confirm('Sei sicuro di voler eliminare questo documento?')) {
+                                deleteDocumentMutation.mutate(document.id);
+                              }
                             }}
+                            title="Elimina documento"
+                            data-testid={`button-delete-document-${document.id}`}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
