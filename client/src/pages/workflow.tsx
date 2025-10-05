@@ -46,16 +46,16 @@ export default function Workflow() {
   const queryClient = useQueryClient();
   const [isGeneratingManleva, setIsGeneratingManleva] = useState(false);
 
-  const { data: pcs = [], isLoading: pcsLoading } = useQuery<any[]>({
-    queryKey: ["/api/pcs"],
+  const { data: assets = [], isLoading: assetsLoading } = useQuery<any[]>({
+    queryKey: ["/api/assets"],
   });
 
   const { data: employees = [], isLoading: employeesLoading } = useQuery<any[]>({
     queryKey: ["/api/employees"],
   });
 
-  // Filtra PC non assegnati
-  const availablePCs = pcs.filter((pc: any) => !pc.employeeId);
+  // Filtra asset non assegnati
+  const availableAssets = assets.filter((asset: any) => !asset.employeeId && asset.status === 'disponibile');
 
   const generateManlevaPDF = async (pcId: string, employeeId: string) => {
     try {
@@ -89,30 +89,32 @@ export default function Workflow() {
     }
   };
 
-  const assignPcMutation = useMutation({
-    mutationFn: async (data: { pcId: string; employeeId: string }) => {
-      // Prima assegna il PC
-      const result = await apiRequest(`/api/pcs/${data.pcId}/assign`, "POST", {
-        employeeId: data.employeeId
+  const assignAssetMutation = useMutation({
+    mutationFn: async (data: { assetId: string; employeeId: string }) => {
+      // Assegna l'asset tramite PATCH
+      const result = await apiRequest("PATCH", `/api/assets/${data.assetId}`, {
+        employeeId: data.employeeId,
+        status: "assegnato"
       });
       
-      // Poi genera automaticamente la manleva
-      await generateManlevaPDF(data.pcId, data.employeeId);
+      // TODO: Genera automaticamente la manleva se necessario
+      // await generateManlevaPDF(data.assetId, data.employeeId);
       
       return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/pcs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/assets"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       setWorkflowData(prev => ({ ...prev, step: 6, completed: true }));
       toast({
         title: "Assegnazione Completata",
-        description: "PC assegnato con successo e manleva generata automaticamente",
+        description: "Asset assegnato con successo",
       });
     },
     onError: () => {
       toast({
         title: "Errore",
-        description: "Errore durante l'assegnazione del PC",
+        description: "Errore durante l'assegnazione",
         variant: "destructive",
       });
     },
@@ -120,9 +122,9 @@ export default function Workflow() {
 
   const steps: AssignmentStep[] = [
     {
-      id: "select-pc",
-      title: "Seleziona PC",
-      description: "Scegli il computer da assegnare",
+      id: "select-asset",
+      title: "Seleziona Asset",
+      description: "Scegli il dispositivo da assegnare",
       completed: !!workflowData.selectedPc,
       icon: Monitor
     },
@@ -149,7 +151,7 @@ export default function Workflow() {
     },
     {
       id: "document",
-      title: "Genera Manleva",
+      title: "Genera Documento",
       description: "Stampa documento per firma",
       completed: workflowData.step >= 5,
       icon: FileText
@@ -157,7 +159,7 @@ export default function Workflow() {
     {
       id: "complete",
       title: "Assegnazione",
-      description: "PC assegnato e manleva creata",
+      description: "Asset assegnato con successo",
       completed: workflowData.completed,
       icon: GitBranch
     }
@@ -175,8 +177,8 @@ export default function Workflow() {
     if (workflowData.step < 5) {
       setWorkflowData(prev => ({ ...prev, step: prev.step + 1 }));
     } else if (workflowData.step === 5 && workflowData.selectedPc && workflowData.selectedEmployee) {
-      assignPcMutation.mutate({
-        pcId: workflowData.selectedPc.id,
+      assignAssetMutation.mutate({
+        assetId: workflowData.selectedPc.id,
         employeeId: workflowData.selectedEmployee.id
       });
     }
@@ -278,14 +280,14 @@ export default function Workflow() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {availablePCs.length === 0 ? (
+              {availableAssets.length === 0 ? (
                 <div className="text-center py-8">
                   <AlertTriangle className="h-12 w-12 text-orange-500 mx-auto mb-4" />
-                  <p className="text-muted-foreground">Nessun PC disponibile per l'assegnazione</p>
+                  <p className="text-muted-foreground">Nessun asset disponibile per l'assegnazione</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {availablePCs.map((pc: any) => (
+                  {availableAssets.map((pc: any) => (
                     <div
                       key={pc.id}
                       className={`p-4 border rounded-lg cursor-pointer transition-all ${
@@ -576,12 +578,12 @@ export default function Workflow() {
             disabled={
               (workflowData.step === 1 && !workflowData.selectedPc) ||
               (workflowData.step === 2 && !workflowData.selectedEmployee) ||
-              assignPcMutation.isPending
+              assignAssetMutation.isPending
             }
             className="flex items-center gap-2"
           >
             {workflowData.step === 5 ? (
-              assignPcMutation.isPending ? (
+              assignAssetMutation.isPending ? (
                 <>
                   <Clock className="h-4 w-4 animate-spin" />
                   Assegnazione...
