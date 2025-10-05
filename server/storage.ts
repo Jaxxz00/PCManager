@@ -1,4 +1,4 @@
-import { type Employee, type InsertEmployee, type Pc, type InsertPc, type PcWithEmployee, type User, type InsertUser, type InviteToken, type InsertInviteToken, type PcHistory, type InsertPcHistory, type Document, type InsertDocument, type Maintenance, type InsertMaintenance, employees, pcs, users, sessions, inviteTokens, pcHistory, documents, maintenance } from "@shared/schema";
+import { type Employee, type InsertEmployee, type Pc, type InsertPc, type PcWithEmployee, type User, type InsertUser, type InviteToken, type InsertInviteToken, type PcHistory, type InsertPcHistory, type Document, type InsertDocument, type Maintenance, type InsertMaintenance, type Asset, type InsertAsset, employees, pcs, users, sessions, inviteTokens, pcHistory, documents, maintenance, assets } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
@@ -21,6 +21,14 @@ export interface IStorage {
   createPc(pc: InsertPc): Promise<Pc>;
   updatePc(id: string, pc: Partial<InsertPc>): Promise<Pc | undefined>;
   deletePc(id: string): Promise<boolean>;
+
+  // Asset methods (unified inventory management)
+  getAsset(id: string): Promise<Asset | undefined>;
+  getAssets(type?: string): Promise<Asset[]>;
+  getAssetByCode(assetCode: string): Promise<Asset | undefined>;
+  createAsset(asset: InsertAsset): Promise<Asset>;
+  updateAsset(id: string, asset: Partial<InsertAsset>): Promise<Asset | undefined>;
+  deleteAsset(id: string): Promise<boolean>;
 
   // User authentication methods
   getUser(id: string): Promise<User | undefined>;
@@ -103,12 +111,14 @@ export class MemStorage implements IStorage {
   }
   private employees: Map<string, Employee>;
   private pcs: Map<string, Pc>;
+  private assets: Map<string, Asset>;
   private users: Map<string, User>;
   private sessions: Map<string, { userId: string; expiresAt: Date }>;
 
   constructor() {
     this.employees = new Map();
     this.pcs = new Map();
+    this.assets = new Map();
     this.users = new Map();
     this.sessions = new Map();
     this.initializeTestData().catch(console.error);
@@ -289,6 +299,60 @@ export class MemStorage implements IStorage {
     return this.pcs.delete(id);
   }
 
+  // Asset methods (unified inventory management)
+  async getAsset(id: string): Promise<Asset | undefined> {
+    return this.assets.get(id);
+  }
+
+  async getAssets(type?: string): Promise<Asset[]> {
+    const allAssets = Array.from(this.assets.values());
+    if (type) {
+      return allAssets.filter(asset => asset.assetType === type);
+    }
+    return allAssets;
+  }
+
+  async getAssetByCode(assetCode: string): Promise<Asset | undefined> {
+    return Array.from(this.assets.values()).find(asset => asset.assetCode === assetCode);
+  }
+
+  async createAsset(insertAsset: InsertAsset): Promise<Asset> {
+    const id = randomUUID();
+    const asset: Asset = {
+      ...insertAsset,
+      id,
+      employeeId: insertAsset.employeeId || null,
+      brand: insertAsset.brand || null,
+      model: insertAsset.model || null,
+      serialNumber: insertAsset.serialNumber || null,
+      purchaseDate: insertAsset.purchaseDate || null,
+      warrantyExpiry: insertAsset.warrantyExpiry || null,
+      status: insertAsset.status || "disponibile",
+      specs: insertAsset.specs || null,
+      notes: insertAsset.notes || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.assets.set(id, asset);
+    return asset;
+  }
+
+  async updateAsset(id: string, updateData: Partial<InsertAsset>): Promise<Asset | undefined> {
+    const asset = this.assets.get(id);
+    if (!asset) return undefined;
+
+    const updatedAsset: Asset = {
+      ...asset,
+      ...updateData,
+      updatedAt: new Date(),
+    };
+    this.assets.set(id, updatedAsset);
+    return updatedAsset;
+  }
+
+  async deleteAsset(id: string): Promise<boolean> {
+    return this.assets.delete(id);
+  }
 
   // User authentication methods (placeholder for MemStorage)
   async getUser(id: string): Promise<User | undefined> {
@@ -683,6 +747,51 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(pcs)
       .where(eq(pcs.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Asset methods (unified inventory management)
+  async getAsset(id: string): Promise<Asset | undefined> {
+    const [asset] = await db.select().from(assets).where(eq(assets.id, id));
+    return asset || undefined;
+  }
+
+  async getAssets(type?: string): Promise<Asset[]> {
+    if (type) {
+      return await db.select().from(assets).where(eq(assets.assetType, type));
+    }
+    return await db.select().from(assets);
+  }
+
+  async getAssetByCode(assetCode: string): Promise<Asset | undefined> {
+    const [asset] = await db.select().from(assets).where(eq(assets.assetCode, assetCode));
+    return asset || undefined;
+  }
+
+  async createAsset(insertAsset: InsertAsset): Promise<Asset> {
+    const [asset] = await db
+      .insert(assets)
+      .values(insertAsset)
+      .returning();
+    return asset;
+  }
+
+  async updateAsset(id: string, updateData: Partial<InsertAsset>): Promise<Asset | undefined> {
+    const [asset] = await db
+      .update(assets)
+      .set({
+        ...updateData,
+        updatedAt: sql`now()`,
+      })
+      .where(eq(assets.id, id))
+      .returning();
+    return asset || undefined;
+  }
+
+  async deleteAsset(id: string): Promise<boolean> {
+    const result = await db
+      .delete(assets)
+      .where(eq(assets.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 
