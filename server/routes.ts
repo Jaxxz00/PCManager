@@ -619,13 +619,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/employees/:id", authenticateRequest, async (req, res) => {
     try {
-      // Check if employee has assigned assets
+      // Check if employee has assigned assets or PCs
       const assets = await storage.getAssets();
+      const pcs = await storage.getPcs();
       const assignedAssets = assets.filter(a => a.employeeId === req.params.id);
+      const assignedPcs = pcs.filter(p => p.employeeId === req.params.id);
       
-      if (assignedAssets.length > 0) {
+      const totalAssigned = assignedAssets.length + assignedPcs.length;
+      if (totalAssigned > 0) {
         return res.status(400).json({ 
-          message: `Impossibile eliminare. Il dipendente ha ${assignedAssets.length} asset assegnati. Rimuovere prima le assegnazioni.` 
+          message: `Impossibile eliminare. Il dipendente ha ${totalAssigned} asset/PC assegnati. Rimuovere prima le assegnazioni.` 
         });
       }
 
