@@ -561,9 +561,18 @@ div[data-radix-alert-dialog-content] {
 
 /* Fix overlay per assicurare non interferisca */
 [data-radix-dialog-overlay],
-[data-radix-alert-dialog-overlay] {
+[data-radix-alert-dialog-overlay],
+[data-radix-popover-content] ~ [data-radix-popper-content-wrapper],
+div[data-state="open"][data-radix-collection-item] {
   background: rgba(0, 0, 0, 0.8) !important;
   backdrop-filter: blur(2px) !important;
+}
+
+/* Forza background bianco sui dialog content */
+[data-radix-dialog-content],
+[data-radix-alert-dialog-content] {
+  background: white !important;
+  background-color: white !important;
 }
 
 .dark [data-radix-dialog-content] [data-radix-select-content],

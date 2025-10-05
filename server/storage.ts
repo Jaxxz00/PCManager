@@ -1331,4 +1331,5 @@ export class DatabaseStorage implements IStorage {
 }
 
 // Switch between storage implementations based on environment
-export const storage: IStorage = process.env.USE_DB === 'true' ? new DatabaseStorage() : new MemStorage();
+// Use DatabaseStorage if DATABASE_URL is available (PostgreSQL configured)
+export const storage: IStorage = process.env.DATABASE_URL ? new DatabaseStorage() : new MemStorage();
