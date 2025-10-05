@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, date, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, date, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -26,6 +26,24 @@ export const pcs = pgTable("pcs", {
   purchaseDate: date("purchase_date").notNull(),
   warrantyExpiry: date("warranty_expiry").notNull(),
   status: text("status").notNull().default("active"), // active, maintenance, retired
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Tabella asset unificata per tutti i tipi di dispositivi
+export const assets = pgTable("assets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  assetCode: text("asset_code").notNull().unique(), // PC-001, PHONE-001, SIM-001, KB-001, MON-001, OTHER-001
+  assetType: text("asset_type").notNull(), // pc, smartphone, sim, tastiera, monitor, altro
+  employeeId: varchar("employee_id").references(() => employees.id),
+  brand: text("brand"), // Non obbligatorio per SIM
+  model: text("model"), // Non obbligatorio per SIM
+  serialNumber: text("serial_number").unique(), // Opzionale per alcuni tipi
+  purchaseDate: date("purchase_date"),
+  warrantyExpiry: date("warranty_expiry"),
+  status: text("status").notNull().default("disponibile"), // disponibile, assegnato, manutenzione, dismesso
+  specs: jsonb("specs"), // Dati specifici del tipo (CPU/RAM per PC, IMEI per smartphone, numero SIM, ecc)
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -105,6 +123,12 @@ export const insertPcSchema = createInsertSchema(pcs).omit({
   updatedAt: true,
 });
 
+export const insertAssetSchema = createInsertSchema(assets).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
@@ -156,6 +180,8 @@ export type InsertEmployee = z.infer<typeof insertEmployeeSchema>;
 export type Employee = typeof employees.$inferSelect;
 export type InsertPc = z.infer<typeof insertPcSchema>;
 export type Pc = typeof pcs.$inferSelect;
+export type InsertAsset = z.infer<typeof insertAssetSchema>;
+export type Asset = typeof assets.$inferSelect;
 export type PcHistory = typeof pcHistory.$inferSelect;
 export type InsertPcHistory = z.infer<typeof insertPcHistorySchema>;
 export type Maintenance = typeof maintenance.$inferSelect;
