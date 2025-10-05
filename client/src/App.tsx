@@ -14,6 +14,7 @@ import Settings from "@/pages/settings";
 import Profile from "@/pages/profile";
 import Maintenance from "@/pages/maintenance";
 import Workflow from "@/pages/workflow";
+import Assets from "@/pages/assets";
 
 import LoginPage from "@/pages/login";
 import SetPasswordPage from "@/pages/set-password";
@@ -199,6 +200,13 @@ function Router() {
             {() => (
               <AuthenticatedLayout>
                 <Maintenance />
+              </AuthenticatedLayout>
+            )}
+          </Route>
+          <Route path="/assets">
+            {() => (
+              <AuthenticatedLayout>
+                <Assets />
               </AuthenticatedLayout>
             )}
           </Route>
