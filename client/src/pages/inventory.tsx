@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Edit, Trash2, Monitor, Smartphone, CreditCard, Keyboard, Box, Search, ScanBarcode } from "lucide-react";
+import { Plus, Edit, Trash2, Monitor, Smartphone, CreditCard, Keyboard, Box, Search, ScanBarcode, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -150,6 +150,27 @@ export default function Inventory() {
     },
   });
 
+  const unassignAssetMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiRequest("PATCH", `/api/assets/${id}`, {
+        employeeId: null,
+        status: "disponibile",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/assets"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      toast({ title: "Successo", description: "Assegnazione rimossa con successo" });
+    },
+    onError: (error: unknown) => {
+      toast({
+        title: "Errore",
+        description: error instanceof Error ? error.message : "Errore durante la rimozione",
+        variant: "destructive",
+      });
+    },
+  });
+
   const form = useForm<AssetFormData>({
     resolver: zodResolver(assetFormSchema),
     defaultValues: {
@@ -218,6 +239,13 @@ export default function Inventory() {
   const handleDelete = (id: string) => {
     if (confirm("Sei sicuro di voler eliminare questo asset?")) {
       deleteAssetMutation.mutate(id);
+    }
+  };
+
+  const handleUnassign = (asset: Asset) => {
+    const employeeName = getEmployeeName(asset.employeeId);
+    if (confirm(`Vuoi rimuovere l'assegnazione di ${asset.assetCode} da ${employeeName}?`)) {
+      unassignAssetMutation.mutate(asset.id);
     }
   };
 
@@ -399,6 +427,18 @@ export default function Inventory() {
                           <TableCell>{getStatusBadge(asset.status)}</TableCell>
                           <TableCell>
                             <div className="flex gap-2">
+                              {asset.employeeId && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                                  onClick={() => handleUnassign(asset)}
+                                  data-testid={`button-unassign-${asset.id}`}
+                                  title="Rimuovi assegnazione"
+                                >
+                                  <UserX className="w-4 h-4" />
+                                </Button>
+                              )}
                               <Button
                                 variant="ghost"
                                 size="sm"
