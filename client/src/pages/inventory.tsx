@@ -1,7 +1,7 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Edit, Trash2, Monitor, Smartphone, CreditCard, Keyboard, Box, Search } from "lucide-react";
+import { Plus, Edit, Trash2, Monitor, Smartphone, CreditCard, Keyboard, Box, Search, ScanBarcode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -52,6 +52,7 @@ export default function Inventory() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const debouncedSearch = useDebounce(searchTerm, 300);
+  const serialInputRef = useRef<HTMLInputElement>(null);
 
   const { data: assets = [], isLoading } = useQuery<Asset[]>({
     queryKey: ["/api/assets"],
@@ -507,7 +508,31 @@ export default function Inventory() {
                   <FormItem>
                     <FormLabel>Numero Seriale</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Numero seriale" data-testid="input-serial" />
+                      <div className="relative flex gap-2">
+                        <Input 
+                          {...field} 
+                          ref={serialInputRef}
+                          placeholder="Numero seriale o scansiona barcode" 
+                          data-testid="input-serial"
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => {
+                            serialInputRef.current?.focus();
+                            toast({
+                              title: "Scanner barcode pronto",
+                              description: "Scansiona il barcode del numero seriale",
+                            });
+                          }}
+                          data-testid="button-scan-serial"
+                          className="shrink-0"
+                        >
+                          <ScanBarcode className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
