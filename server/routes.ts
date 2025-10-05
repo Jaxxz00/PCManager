@@ -619,7 +619,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/employees/:id", authenticateRequest, async (req, res) => {
     try {
-      // Remove all assignments before deleting employee
+      // Remove all assignments and references before deleting employee
       const assets = await storage.getAssets();
       const pcs = await storage.getPcs();
       const assignedAssets = assets.filter(a => a.employeeId === req.params.id);
@@ -640,6 +640,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           status: "disponibile"
         });
       }
+
+      // Remove employee references from PC history (but keep the history records)
+      await storage.removeEmployeeFromHistory(req.params.id);
 
       const deleted = await storage.deleteEmployee(req.params.id);
       if (!deleted) {

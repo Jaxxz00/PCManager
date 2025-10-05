@@ -13,6 +13,7 @@ export interface IStorage {
   createEmployee(employee: InsertEmployee): Promise<Employee>;
   updateEmployee(id: string, employee: Partial<InsertEmployee>): Promise<Employee | undefined>;
   deleteEmployee(id: string): Promise<boolean>;
+  removeEmployeeFromHistory(employeeId: string): Promise<void>;
 
   // PC methods
   getPc(id: string): Promise<Pc | undefined>;
@@ -246,6 +247,10 @@ export class MemStorage implements IStorage {
 
   async deleteEmployee(id: string): Promise<boolean> {
     return this.employees.delete(id);
+  }
+
+  async removeEmployeeFromHistory(employeeId: string): Promise<void> {
+    // MemStorage doesn't have PC history, so this is a no-op
   }
 
   // PC methods
@@ -615,6 +620,14 @@ export class DatabaseStorage implements IStorage {
       .delete(employees)
       .where(eq(employees.id, id));
     return (result.rowCount ?? 0) > 0;
+  }
+
+  async removeEmployeeFromHistory(employeeId: string): Promise<void> {
+    // Set related_employee_id to NULL in pc_history to remove foreign key constraint
+    await db
+      .update(pcHistory)
+      .set({ relatedEmployeeId: null })
+      .where(eq(pcHistory.relatedEmployeeId, employeeId));
   }
 
   // PC methods
