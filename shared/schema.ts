@@ -87,6 +87,13 @@ export const insertPcSchema = createInsertSchema(pcs).omit({
   updatedAt: true,
 });
 
+// Schema for creating a PC via the API.
+// pcId is generated server-side, and employeeId is set server-side.
+export const createPcApiSchema = insertPcSchema.omit({
+  pcId: true,
+  employeeId: true,
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,

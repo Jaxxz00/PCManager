@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertEmployeeSchema, insertPcSchema, loginSchema, registerSchema, setup2FASchema, verify2FASchema, disable2FASchema, setPasswordSchema } from "@shared/schema";
+import { insertEmployeeSchema, insertPcSchema, loginSchema, registerSchema, setup2FASchema, verify2FASchema, disable2FASchema, setPasswordSchema, createPcApiSchema } from "@shared/schema";
 import { sendUserInviteEmail } from "./emailService";
 import { z } from "zod";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
@@ -686,12 +686,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/pcs", methodFilter(['POST']), strictContentType, authenticateRequest, validateInput(insertPcSchema), async (req, res) => {
+  app.post("/api/pcs", methodFilter(['POST']), strictContentType, authenticateRequest, validateInput(createPcApiSchema), async (req, res) => {
     try {
-      const validatedData = insertPcSchema.parse(req.body);
+      const validatedData = createPcApiSchema.parse(req.body);
       
       // Genera automaticamente pcId dal serialNumber
-      const pcId = `PC-${validatedData.serialNumber.substring(-6).toUpperCase()}`;
+      const pcId = `PC-${validatedData.serialNumber.slice(-6).toUpperCase()}`;
       
       // Check if PC ID already exists
       const existingPc = await storage.getPcByPcId(pcId);
