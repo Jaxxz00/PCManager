@@ -49,7 +49,7 @@ export default function Sidebar() {
             />
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-gray-900">PC Manager</h1>
+            <h1 className="font-semibold text-gray-900 text-[19px]">Asset Manager</h1>
             <p className="text-xs text-gray-500">Maori Group</p>
           </div>
         </div>
