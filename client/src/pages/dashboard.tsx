@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
+import type { Asset, Employee } from "@shared/schema";
 import { 
   AlertTriangle, 
   CheckCircle, 
@@ -20,35 +21,35 @@ import {
 } from "lucide-react";
 
 export default function Dashboard() {
-  const { data: pcs = [], isLoading: pcsLoading } = useQuery({
-    queryKey: ["/api/pcs"],
+  const { data: assets = [], isLoading: assetsLoading } = useQuery<Asset[]>({
+    queryKey: ["/api/assets"],
   });
 
-  const { data: employees = [], isLoading: employeesLoading } = useQuery({
+  const { data: employees = [], isLoading: employeesLoading } = useQuery<Employee[]>({
     queryKey: ["/api/employees"],
   });
 
   // Calcoli in tempo reale
-  const activePCs = pcs.filter((pc: any) => pc.status === 'active').length;
-  const maintenancePCs = pcs.filter((pc: any) => pc.status === 'maintenance').length;
-  const unassignedPCs = pcs.filter((pc: any) => !pc.employeeId).length;
+  const activeAssets = assets.filter((asset) => asset.status === 'active' || asset.status === 'assegnato').length;
+  const maintenanceAssets = assets.filter((asset) => asset.status === 'manutenzione').length;
+  const unassignedAssets = assets.filter((asset) => !asset.employeeId && asset.status === 'disponibile').length;
   
-  // PC con garanzia in scadenza (prossimi 30 giorni)
-  const warrantyExpiring = pcs.filter((pc: any) => {
-    if (!pc.warrantyExpiry) return false;
+  // Asset con garanzia in scadenza (prossimi 30 giorni)
+  const warrantyExpiring = assets.filter((asset) => {
+    if (!asset.warrantyExpiry) return false;
     const today = new Date();
-    const warrantyDate = new Date(pc.warrantyExpiry);
+    const warrantyDate = new Date(asset.warrantyExpiry);
     const diffTime = warrantyDate.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays <= 30 && diffDays >= 0;
   });
 
-  // PC aggiunti di recente (ultimi 7 giorni)
-  const recentPCs = pcs.filter((pc: any) => {
-    if (!pc.createdAt) return false;
+  // Asset aggiunti di recente (ultimi 7 giorni)
+  const recentAssets = assets.filter((asset) => {
+    if (!asset.createdAt) return false;
     const today = new Date();
-    const pcDate = new Date(pc.createdAt);
-    const diffTime = today.getTime() - pcDate.getTime();
+    const assetDate = new Date(asset.createdAt);
+    const diffTime = today.getTime() - assetDate.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays <= 7;
   });
@@ -59,7 +60,7 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground">Panoramica generale del sistema PC</p>
+          <p className="text-muted-foreground">Panoramica generale del sistema Asset</p>
         </div>
       </div>
 
@@ -84,16 +85,16 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent className="space-y-2">
               {warrantyExpiring.length > 0 ? (
-                warrantyExpiring.slice(0, 3).map((pc: any, index: number) => {
-                  const daysLeft = Math.ceil((new Date(pc.warrantyExpiry).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                warrantyExpiring.slice(0, 3).map((asset, index) => {
+                  const daysLeft = Math.ceil((new Date(asset.warrantyExpiry!).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
                   return (
                     <div key={index} className="flex items-center justify-between p-2 bg-orange-50 rounded-md">
                       <div>
-                        <p className="font-medium text-sm">{pc.pcId}</p>
+                        <p className="font-medium text-sm">{asset.assetCode}</p>
                         <p className="text-xs text-muted-foreground">{daysLeft} giorni</p>
                       </div>
                       <Badge variant={daysLeft <= 7 ? "destructive" : "secondary"} className="text-xs">
-                        {new Date(pc.warrantyExpiry).toLocaleDateString('it-IT')}
+                        {new Date(asset.warrantyExpiry!).toLocaleDateString('it-IT')}
                       </Badge>
                     </div>
                   );
@@ -109,22 +110,22 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* PC Non Assegnati */}
+          {/* Asset Non Assegnati */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center justify-between text-base">
                 <div className="flex items-center gap-2">
                   <Monitor className="h-4 w-4 text-blue-500" />
-                  PC Non Assegnati
+                  Asset Non Assegnati
                 </div>
-                <Badge variant="secondary">{unassignedPCs}</Badge>
+                <Badge variant="secondary">{unassignedAssets}</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {unassignedPCs > 0 ? (
+              {unassignedAssets > 0 ? (
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">
-                    {unassignedPCs} PC disponibili per l'assegnazione
+                    {unassignedAssets} asset disponibili per l'assegnazione
                   </p>
                   <Link href="/inventory">
                     <Button variant="outline" size="sm" className="w-full">
@@ -133,7 +134,7 @@ export default function Dashboard() {
                   </Link>
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">Tutti i PC sono assegnati</p>
+                <p className="text-sm text-muted-foreground text-center py-4">Tutti gli asset sono assegnati</p>
               )}
             </CardContent>
           </Card>
@@ -145,51 +146,51 @@ export default function Dashboard() {
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
                 <Activity className="h-4 w-4 text-green-500" />
-                PC Aggiunti di Recente
+                Asset Aggiunti di Recente
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {recentPCs.length > 0 ? (
+              {recentAssets.length > 0 ? (
                 <div className="space-y-3">
-                  {recentPCs.slice(0, 4).map((pc: any, index: number) => (
+                  {recentAssets.slice(0, 4).map((asset, index) => (
                     <div key={index} className="flex items-center justify-between p-2 bg-green-50 rounded-md">
                       <div>
-                        <p className="font-medium text-sm">{pc.pcId}</p>
-                        <p className="text-xs text-muted-foreground">{pc.brand} {pc.model}</p>
+                        <p className="font-medium text-sm">{asset.assetCode}</p>
+                        <p className="text-xs text-muted-foreground">{asset.brand} {asset.model}</p>
                       </div>
                       <Badge variant="outline" className="text-xs">
-                        {new Date(pc.createdAt).toLocaleDateString('it-IT')}
+                        {new Date(asset.createdAt!).toLocaleDateString('it-IT')}
                       </Badge>
                     </div>
                   ))}
-                  {recentPCs.length > 4 && (
+                  {recentAssets.length > 4 && (
                     <Button variant="outline" size="sm" className="w-full">
                       Vedi tutti <ArrowRight className="h-3 w-3 ml-1" />
                     </Button>
                   )}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">Nessun PC aggiunto di recente</p>
+                <p className="text-sm text-muted-foreground text-center py-4">Nessun asset aggiunto di recente</p>
               )}
             </CardContent>
           </Card>
 
-          {/* PC in Manutenzione */}
+          {/* Asset in Manutenzione */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center justify-between text-base">
                 <div className="flex items-center gap-2">
                   <Wrench className="h-4 w-4 text-yellow-500" />
-                  PC in Manutenzione
+                  Asset in Manutenzione
                 </div>
-                <Badge variant="secondary">{maintenancePCs}</Badge>
+                <Badge variant="secondary">{maintenanceAssets}</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {maintenancePCs > 0 ? (
+              {maintenanceAssets > 0 ? (
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">
-                    {maintenancePCs} PC richiedono attenzione
+                    {maintenanceAssets} asset richiedono attenzione
                   </p>
                   <Link href="/maintenance">
                     <Button variant="outline" size="sm" className="w-full">
@@ -198,7 +199,7 @@ export default function Dashboard() {
                   </Link>
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">Tutti i PC sono operativi</p>
+                <p className="text-sm text-muted-foreground text-center py-4">Tutti gli asset sono operativi</p>
               )}
             </CardContent>
           </Card>
@@ -217,8 +218,8 @@ export default function Dashboard() {
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center p-3 bg-blue-50 rounded-lg">
                   <Monitor className="h-6 w-6 text-blue-600 mx-auto mb-1" />
-                  <p className="text-xs text-muted-foreground">PC Totali</p>
-                  <p className="text-lg font-bold text-blue-600">{pcs.length}</p>
+                  <p className="text-xs text-muted-foreground">Asset Totali</p>
+                  <p className="text-lg font-bold text-blue-600">{assets.length}</p>
                 </div>
                 <div className="text-center p-3 bg-green-50 rounded-lg">
                   <Users className="h-6 w-6 text-green-600 mx-auto mb-1" />
@@ -227,8 +228,8 @@ export default function Dashboard() {
                 </div>
                 <div className="text-center p-3 bg-orange-50 rounded-lg">
                   <CheckCircle className="h-6 w-6 text-orange-600 mx-auto mb-1" />
-                  <p className="text-xs text-muted-foreground">PC Attivi</p>
-                  <p className="text-lg font-bold text-orange-600">{activePCs}</p>
+                  <p className="text-xs text-muted-foreground">Attivi</p>
+                  <p className="text-lg font-bold text-orange-600">{activeAssets}</p>
                 </div>
               </div>
             </CardContent>
@@ -243,7 +244,7 @@ export default function Dashboard() {
               <Link href="/inventory">
                 <Button className="w-full justify-start h-10" variant="outline">
                   <Plus className="h-4 w-4 mr-2" />
-                  Aggiungi Nuovo PC
+                  Aggiungi Nuovo Asset
                 </Button>
               </Link>
               <Link href="/employees">
