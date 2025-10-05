@@ -16,10 +16,9 @@ import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: BarChart3 },
-  { name: "Inventario PC", href: "/inventory", icon: Monitor },
-  { name: "Altri Asset", href: "/assets", icon: Box },
+  { name: "Inventario Asset", href: "/inventory", icon: Monitor },
   { name: "Dipendenti", href: "/employees", icon: Users },
-  { name: "Assegnazione PC", href: "/workflow", icon: GitBranch },
+  { name: "Assegnazione", href: "/workflow", icon: GitBranch },
   { name: "Documenti", href: "/documents", icon: Shield },
   { name: "Etichette", href: "/labels", icon: Tags },
   { name: "Report", href: "/reports", icon: FileText },
