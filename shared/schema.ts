@@ -76,6 +76,24 @@ export const pcHistory = pgTable("pc_history", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Tabella manutenzione PC
+export const maintenance = pgTable("maintenance", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  pcId: varchar("pc_id").notNull().references(() => pcs.id),
+  type: text("type").notNull(), // Tipo intervento (es: Sostituzione Hardware, Pulizia Sistema, etc.)
+  priority: text("priority").notNull().default("medium"), // low, medium, high, urgent
+  status: text("status").notNull().default("pending"), // pending, in_progress, completed, cancelled
+  description: text("description").notNull(),
+  technician: text("technician").notNull(),
+  scheduledDate: timestamp("scheduled_date"),
+  completedDate: timestamp("completed_date"),
+  estimatedCost: integer("estimated_cost"), // in EUR cents
+  actualCost: integer("actual_cost"), // in EUR cents
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertEmployeeSchema = createInsertSchema(employees).omit({
   id: true,
   createdAt: true,
@@ -128,12 +146,20 @@ export const insertPcHistorySchema = createInsertSchema(pcHistory).omit({
   createdAt: true,
 });
 
+export const insertMaintenanceSchema = createInsertSchema(maintenance).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export type InsertEmployee = z.infer<typeof insertEmployeeSchema>;
 export type Employee = typeof employees.$inferSelect;
 export type InsertPc = z.infer<typeof insertPcSchema>;
 export type Pc = typeof pcs.$inferSelect;
 export type PcHistory = typeof pcHistory.$inferSelect;
 export type InsertPcHistory = z.infer<typeof insertPcHistorySchema>;
+export type Maintenance = typeof maintenance.$inferSelect;
+export type InsertMaintenance = z.infer<typeof insertMaintenanceSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type LoginData = z.infer<typeof loginSchema>;

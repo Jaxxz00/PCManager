@@ -1,9 +1,10 @@
-import { type Employee, type InsertEmployee, type Pc, type InsertPc, type PcWithEmployee, type User, type InsertUser, type InviteToken, type InsertInviteToken, type PcHistory, type InsertPcHistory, type Document, type InsertDocument, employees, pcs, users, sessions, inviteTokens, pcHistory, documents } from "@shared/schema";
+import { type Employee, type InsertEmployee, type Pc, type InsertPc, type PcWithEmployee, type User, type InsertUser, type InviteToken, type InsertInviteToken, type PcHistory, type InsertPcHistory, type Document, type InsertDocument, type Maintenance, type InsertMaintenance, employees, pcs, users, sessions, inviteTokens, pcHistory, documents, maintenance } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { eq, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
+import { db } from "./db";
 
 export interface IStorage {
   // Employee methods
@@ -70,6 +71,13 @@ export interface IStorage {
   createDocument(document: InsertDocument): Promise<Document>;
   updateDocument(id: string, document: Partial<InsertDocument>): Promise<Document | undefined>;
   deleteDocument(id: string): Promise<boolean>;
+
+  // Maintenance methods
+  getMaintenance(id: string): Promise<Maintenance | undefined>;
+  getAllMaintenance(): Promise<Maintenance[]>;
+  createMaintenance(maintenance: InsertMaintenance): Promise<Maintenance>;
+  updateMaintenance(id: string, maintenance: Partial<InsertMaintenance>): Promise<Maintenance | undefined>;
+  deleteMaintenance(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -452,6 +460,27 @@ export class MemStorage implements IStorage {
 
   async deleteDocument(id: string): Promise<boolean> {
     throw new Error("Documents not supported in memory storage");
+  }
+
+  // Maintenance stub methods - not implemented in memory storage
+  async getMaintenance(id: string): Promise<Maintenance | undefined> {
+    throw new Error("Maintenance not supported in memory storage");
+  }
+
+  async getAllMaintenance(): Promise<Maintenance[]> {
+    throw new Error("Maintenance not supported in memory storage");
+  }
+
+  async createMaintenance(maintenance: InsertMaintenance): Promise<Maintenance> {
+    throw new Error("Maintenance not supported in memory storage");
+  }
+
+  async updateMaintenance(id: string, maintenance: Partial<InsertMaintenance>): Promise<Maintenance | undefined> {
+    throw new Error("Maintenance not supported in memory storage");
+  }
+
+  async deleteMaintenance(id: string): Promise<boolean> {
+    throw new Error("Maintenance not supported in memory storage");
   }
 }
 
@@ -1257,6 +1286,46 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(documents)
       .where(eq(documents.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Maintenance methods implementation
+  async getMaintenance(id: string): Promise<Maintenance | undefined> {
+    const [record] = await db
+      .select()
+      .from(maintenance)
+      .where(eq(maintenance.id, id));
+    return record || undefined;
+  }
+
+  async getAllMaintenance(): Promise<Maintenance[]> {
+    return await db
+      .select()
+      .from(maintenance)
+      .orderBy(sql`${maintenance.createdAt} DESC`);
+  }
+
+  async createMaintenance(maintenanceData: InsertMaintenance): Promise<Maintenance> {
+    const [newRecord] = await db
+      .insert(maintenance)
+      .values(maintenanceData)
+      .returning();
+    return newRecord;
+  }
+
+  async updateMaintenance(id: string, updateData: Partial<InsertMaintenance>): Promise<Maintenance | undefined> {
+    const [record] = await db
+      .update(maintenance)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(maintenance.id, id))
+      .returning();
+    return record || undefined;
+  }
+
+  async deleteMaintenance(id: string): Promise<boolean> {
+    const result = await db
+      .delete(maintenance)
+      .where(eq(maintenance.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 }

@@ -790,6 +790,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Maintenance routes
+  app.get("/api/maintenance", authenticateRequest, async (req, res) => {
+    try {
+      const maintenanceRecords = await storage.getAllMaintenance();
+      res.json(maintenanceRecords);
+    } catch (error) {
+      console.error("Error fetching maintenance records:", error);
+      res.status(500).json({ error: "Failed to fetch maintenance records" });
+    }
+  });
+
+  app.post("/api/maintenance", methodFilter(['POST']), strictContentType, authenticateRequest, async (req, res) => {
+    try {
+      const { insertMaintenanceSchema } = await import("@shared/schema");
+      const validationResult = insertMaintenanceSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: "Dati non validi", 
+          details: validationResult.error.errors 
+        });
+      }
+
+      const newRecord = await storage.createMaintenance(validationResult.data);
+      res.status(201).json(newRecord);
+    } catch (error) {
+      console.error("Error creating maintenance record:", error);
+      res.status(500).json({ error: "Failed to create maintenance record" });
+    }
+  });
+
+  app.patch("/api/maintenance/:id", methodFilter(['PATCH']), strictContentType, authenticateRequest, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updatedRecord = await storage.updateMaintenance(id, req.body);
+      
+      if (!updatedRecord) {
+        return res.status(404).json({ error: "Maintenance record not found" });
+      }
+
+      res.json(updatedRecord);
+    } catch (error) {
+      console.error("Error updating maintenance record:", error);
+      res.status(500).json({ error: "Failed to update maintenance record" });
+    }
+  });
+
+  app.delete("/api/maintenance/:id", methodFilter(['DELETE']), authenticateRequest, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteMaintenance(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ error: "Maintenance record not found" });
+      }
+
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting maintenance record:", error);
+      res.status(500).json({ error: "Failed to delete maintenance record" });
+    }
+  });
+
   // Create new document
   app.post("/api/documents", authenticateRequest, async (req, res) => {
     try {

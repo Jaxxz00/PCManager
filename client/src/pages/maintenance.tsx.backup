@@ -92,37 +92,115 @@ export default function Maintenance() {
 
   const debouncedSearch = useDebounce(searchTerm, 300);
 
-  // Fetch maintenance records from API
+  // Mock data con esempi realistici
   const { data: maintenanceRecords = [], isLoading } = useQuery<MaintenanceRecord[]>({
     queryKey: ["/api/maintenance"],
+    queryFn: async () => {
+      return [
+        {
+          id: "maint-001",
+          pcId: "49a472d5-0d12-47c4-954b-6c0a811696e3",
+          type: "Sostituzione Hardware",
+          priority: "high",
+          status: "in_progress",
+          description: "Sostituzione SSD da 256GB a 512GB per migliorare performance sistema operativo",
+          technician: "Marco Bianchi",
+          estimatedCost: 180,
+          actualCost: 165,
+          notes: "SSD Samsung 980 PRO 512GB - installazione completata",
+          createdAt: "2025-08-25T09:00:00Z",
+          scheduledDate: "2025-08-30T14:00:00Z",
+          pc: {
+            pcId: "PC-001",
+            brand: "Dell",
+            model: "OptiPlex 7090",
+            employee: { name: "Luca Rossi", email: "luca.rossi@maorigroup.com" }
+          }
+        },
+        {
+          id: "maint-002",
+          pcId: "pc-hp-002",
+          type: "Pulizia Sistema",
+          priority: "medium",
+          status: "completed",
+          description: "Pulizia completa del sistema operativo, rimozione malware e ottimizzazione prestazioni",
+          technician: "Sara Verdi",
+          estimatedCost: 50,
+          actualCost: 45,
+          notes: "Sistema completamente pulito, antivirus aggiornato",
+          createdAt: "2025-08-20T10:30:00Z",
+          scheduledDate: "2025-08-22T09:00:00Z",
+          completedDate: "2025-08-22T11:30:00Z",
+          pc: {
+            pcId: "PC-002",
+            brand: "HP",
+            model: "EliteDesk 800"
+          }
+        },
+        {
+          id: "maint-003",
+          pcId: "49a472d5-0d12-47c4-954b-6c0a811696e3",
+          type: "Aggiornamento Software",
+          priority: "urgent",
+          status: "pending",
+          description: "Aggiornamento critico Windows 11 e suite Office 365 per compatibilità con nuovi sistemi aziendali",
+          technician: "Andrea Neri",
+          estimatedCost: 0,
+          createdAt: "2025-08-28T16:00:00Z",
+          scheduledDate: "2025-08-31T08:00:00Z",
+          notes: "Aggiornamento da eseguire fuori orario lavorativo",
+          pc: {
+            pcId: "PC-001",
+            brand: "Dell",
+            model: "OptiPlex 7090",
+            employee: { name: "Luca Rossi", email: "luca.rossi@maorigroup.com" }
+          }
+        },
+        {
+          id: "maint-004",
+          pcId: "pc-lenovo-003",
+          type: "Installazione",
+          priority: "low",
+          status: "completed",
+          description: "Installazione nuovo software CAD AutoCAD 2024 per ufficio tecnico",
+          technician: "Marco Bianchi",
+          estimatedCost: 25,
+          actualCost: 25,
+          createdAt: "2025-08-15T14:00:00Z",
+          scheduledDate: "2025-08-18T09:00:00Z",
+          completedDate: "2025-08-18T10:45:00Z",
+          notes: "Licenza attivata, formazione utente completata",
+          pc: {
+            pcId: "PC-003",
+            brand: "Lenovo",
+            model: "ThinkCentre M90q",
+            employee: { name: "Giuseppe Alberti", email: "giuseppe.alberti@maorigroup.com" }
+          }
+        },
+        {
+          id: "maint-005",
+          pcId: "pc-asus-004",
+          type: "Diagnosi",
+          priority: "medium",
+          status: "in_progress",
+          description: "Diagnosi problemi di surriscaldamento e rallentamenti improvvisi durante uso intensivo",
+          technician: "Sara Verdi",
+          estimatedCost: 30,
+          createdAt: "2025-08-27T11:20:00Z",
+          scheduledDate: "2025-08-29T15:30:00Z",
+          notes: "Test hardware in corso, probabile problema ventole",
+          pc: {
+            pcId: "PC-004",
+            brand: "ASUS",
+            model: "ExpertCenter D500MA"
+          }
+        }
+      ];
+    }
   });
 
   const { data: pcs = [] } = useQuery<PcWithEmployee[]>({
     queryKey: ["/api/pcs"]
-  });
-
-  // Delete maintenance mutation
-  const deleteMaintenanceMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return await apiRequest(`/api/maintenance/${id}`, {
-        method: 'DELETE',
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/maintenance"] });
-      toast({
-        title: "Successo",
-        description: "Intervento eliminato con successo",
-      });
-    },
-    onError: (error: unknown) => {
-      const message = error instanceof Error ? error.message : "Impossibile eliminare l'intervento";
-      toast({
-        title: "Errore",
-        description: message,
-        variant: "destructive",
-      });
-    },
   });
 
   const form = useForm<MaintenanceFormData>({
@@ -920,13 +998,7 @@ export default function Maintenance() {
                             variant="ghost"
                             size="sm"
                             className="h-8 w-8 p-0 text-red-600"
-                            onClick={() => {
-                              if (confirm('Sei sicuro di voler eliminare questo intervento?')) {
-                                deleteMaintenanceMutation.mutate(record.id);
-                              }
-                            }}
                             title="Elimina intervento"
-                            data-testid={`button-delete-maintenance-${record.id}`}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
