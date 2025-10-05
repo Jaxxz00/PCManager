@@ -106,9 +106,7 @@ export default function Maintenance() {
   // Delete maintenance mutation
   const deleteMaintenanceMutation = useMutation({
     mutationFn: async (id: string) => {
-      return await apiRequest(`/api/maintenance/${id}`, {
-        method: 'DELETE',
-      });
+      return await apiRequest('DELETE', `/api/maintenance/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/maintenance"] });

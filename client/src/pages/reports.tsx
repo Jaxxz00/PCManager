@@ -8,14 +8,17 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DataExport from "@/components/data-export";
-import type { PcWithEmployee, Employee } from "@shared/schema";
+import type { Asset, Employee } from "@shared/schema";
 
 export default function Reports() {
   const [selectedPeriod, setSelectedPeriod] = useState("all");
 
-  const { data: pcs = [] } = useQuery<PcWithEmployee[]>({
-    queryKey: ["/api/pcs"],
+  const { data: assets = [] } = useQuery<Asset[]>({
+    queryKey: ["/api/assets"],
   });
+  
+  // Filter only PC assets for reports compatibility
+  const pcs = assets.filter(asset => asset.assetType === 'pc');
 
   const { data: employees = [] } = useQuery<Employee[]>({
     queryKey: ["/api/employees"],
@@ -30,7 +33,8 @@ export default function Reports() {
 
     // Statistiche per brand
     const brandStats = pcs.reduce((acc: Record<string, number>, pc) => {
-      acc[pc.brand] = (acc[pc.brand] || 0) + 1;
+      const brand = pc.brand || 'Sconosciuto';
+      acc[brand] = (acc[brand] || 0) + 1;
       return acc;
     }, {});
 
@@ -48,7 +52,7 @@ export default function Reports() {
 
     // Garanzie in scadenza
     const warrantyAnalysis = pcs.map(pc => {
-      const warrantyDate = new Date(pc.warrantyExpiry);
+      const warrantyDate = pc.warrantyExpiry ? new Date(pc.warrantyExpiry) : new Date();
       const daysUntilExpiry = Math.ceil((warrantyDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
       return { ...pc, daysUntilExpiry };
     });
@@ -58,7 +62,7 @@ export default function Reports() {
 
     // Analisi età hardware
     const hardwareAge = pcs.map(pc => {
-      const purchaseDate = new Date(pc.purchaseDate);
+      const purchaseDate = pc.purchaseDate ? new Date(pc.purchaseDate) : new Date();
       const ageInDays = Math.floor((now.getTime() - purchaseDate.getTime()) / (1000 * 60 * 60 * 24));
       const ageInMonths = Math.floor(ageInDays / 30);
       return { ...pc, ageInMonths };
@@ -76,8 +80,9 @@ export default function Reports() {
     // Costi (simulati basati su range medi)
     const estimatedCosts = pcs.reduce((total, pc) => {
       let estimatedPrice = 0;
-      if (pc.brand === 'Apple') estimatedPrice = 1500;
-      else if (pc.brand === 'Dell' || pc.brand === 'HP') estimatedPrice = 800;
+      const brand = pc.brand || '';
+      if (brand === 'Apple') estimatedPrice = 1500;
+      else if (brand === 'Dell' || brand === 'HP') estimatedPrice = 800;
       else estimatedPrice = 600;
       
       return total + estimatedPrice;
@@ -281,7 +286,7 @@ export default function Reports() {
               <CardContent>
                 <div className="space-y-4">
                   {[4, 8, 16, 32].map(ramSize => {
-                    const count = pcs.filter(pc => pc.ram === ramSize).length;
+                    const count = pcs.filter(pc => (pc.specs as any)?.ram === ramSize).length;
                     const percentage = count > 0 ? (count / pcs.length) * 100 : 0;
                     return (
                       <div key={ramSize} className="space-y-2">
@@ -316,8 +321,8 @@ export default function Reports() {
                     {stats.expiringWarranties.slice(0, 5).map(pc => (
                       <div key={pc.id} className="flex items-center justify-between p-3 border rounded-lg">
                         <div>
-                          <p className="font-medium">{pc.pcId}</p>
-                          <p className="text-sm text-muted-foreground">{pc.brand} {pc.model}</p>
+                          <p className="font-medium">{pc.assetCode}</p>
+                          <p className="text-sm text-muted-foreground">{pc.brand || 'N/A'} {pc.model || 'N/A'}</p>
                         </div>
                         <Badge variant="destructive">
                           {pc.daysUntilExpiry} giorni
@@ -349,8 +354,8 @@ export default function Reports() {
                     {stats.expiredWarranties.slice(0, 5).map(pc => (
                       <div key={pc.id} className="flex items-center justify-between p-3 border rounded-lg bg-red-50">
                         <div>
-                          <p className="font-medium">{pc.pcId}</p>
-                          <p className="text-sm text-muted-foreground">{pc.brand} {pc.model}</p>
+                          <p className="font-medium">{pc.assetCode}</p>
+                          <p className="text-sm text-muted-foreground">{pc.brand || 'N/A'} {pc.model || 'N/A'}</p>
                         </div>
                         <Badge variant="destructive">
                           Scaduta
