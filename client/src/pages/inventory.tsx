@@ -220,20 +220,46 @@ export default function Inventory() {
     }
   };
 
-  const handleAddNew = () => {
+  const handleAddNew = async () => {
     setEditingAsset(null);
-    form.reset({
-      assetCode: "",
-      assetType: selectedType,
-      brand: "",
-      model: "",
-      serialNumber: "",
-      purchaseDate: "",
-      warrantyExpiry: "",
-      status: "disponibile",
-      employeeId: "",
-      notes: "",
-    });
+    
+    // Fetch next asset code for the selected type
+    try {
+      const response = await fetch(`/api/assets/next-code?type=${selectedType}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
+        }
+      });
+      const data = await response.json();
+      
+      form.reset({
+        assetCode: data.code || "",
+        assetType: selectedType,
+        brand: "",
+        model: "",
+        serialNumber: "",
+        purchaseDate: "",
+        warrantyExpiry: "",
+        status: "disponibile",
+        employeeId: "",
+        notes: "",
+      });
+    } catch (error) {
+      console.error('Error fetching next asset code:', error);
+      form.reset({
+        assetCode: "",
+        assetType: selectedType,
+        brand: "",
+        model: "",
+        serialNumber: "",
+        purchaseDate: "",
+        warrantyExpiry: "",
+        status: "disponibile",
+        employeeId: "",
+        notes: "",
+      });
+    }
+    
     setShowAssetDialog(true);
   };
 
