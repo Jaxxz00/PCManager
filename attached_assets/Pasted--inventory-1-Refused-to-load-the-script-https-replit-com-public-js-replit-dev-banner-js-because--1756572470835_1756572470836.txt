@@ -1,0 +1,99 @@
+/inventory:1 Refused to load the script 'https://replit.com/public/js/replit-dev-banner.js' because it violates the following Content Security Policy directive: "script-src 'self' 'unsafe-inline' 'unsafe-eval'". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.
+Understand this error
+chunk-RPCDYKBN.js?v=cc0f67a1:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+inventory.tsx:38 Inventory Debug: Object
+inventory.tsx:74 === FILTER DEBUG START ===
+inventory.tsx:75 Raw PCs data: Array(0)
+inventory.tsx:76 PCs length: 0
+inventory.tsx:77 Search term: 
+inventory.tsx:78 Status filter: 
+inventory.tsx:79 Brand filter: 
+inventory.tsx:82 NO PCS AVAILABLE - returning empty array
+inventory.tsx:38 Inventory Debug: Object
+inventory.tsx:74 === FILTER DEBUG START ===
+inventory.tsx:75 Raw PCs data: Array(0)
+inventory.tsx:76 PCs length: 0
+inventory.tsx:77 Search term: 
+inventory.tsx:78 Status filter: 
+inventory.tsx:79 Brand filter: 
+inventory.tsx:82 NO PCS AVAILABLE - returning empty array
+inventory.tsx:38 Inventory Debug: Object
+inventory.tsx:74 === FILTER DEBUG START ===
+inventory.tsx:75 Raw PCs data: Array(0)
+inventory.tsx:76 PCs length: 0
+inventory.tsx:77 Search term: 
+inventory.tsx:78 Status filter: 
+inventory.tsx:79 Brand filter: 
+inventory.tsx:82 NO PCS AVAILABLE - returning empty array
+inventory.tsx:38 Inventory Debug: Object
+inventory.tsx:74 === FILTER DEBUG START ===
+inventory.tsx:75 Raw PCs data: Array(2)
+inventory.tsx:76 PCs length: 2
+inventory.tsx:77 Search term: 
+inventory.tsx:78 Status filter: 
+inventory.tsx:79 Brand filter: 
+inventory.tsx:88 NO FILTERS ACTIVE - returning all PCs: 2
+topbar.tsx:31 Global search changed to: d
+inventory.tsx:38 Inventory Debug: Object
+topbar.tsx:31 Global search changed to: de
+inventory.tsx:38 Inventory Debug: Object
+topbar.tsx:31 Global search changed to: del
+inventory.tsx:38 Inventory Debug: Object
+topbar.tsx:31 Global search changed to: dell
+inventory.tsx:38 Inventory Debug: Object
+inventory.tsx:38 Inventory Debug: Object
+inventory.tsx:74 === FILTER DEBUG START ===
+inventory.tsx:75 Raw PCs data: Array(2)
+inventory.tsx:76 PCs length: 2
+inventory.tsx:77 Search term: dell
+inventory.tsx:78 Status filter: 
+inventory.tsx:79 Brand filter: 
+inventory.tsx:94 Checking PC: PC-001 Dell OptiPlex 7090
+inventory.tsx:99 Applying search filter: dell to PC: PC-001
+inventory.tsx:111 Search match result: true
+inventory.tsx:127 PC ACCEPTED: PC-001
+inventory.tsx:94 Checking PC: PC-002 HP EliteDesk 800
+inventory.tsx:99 Applying search filter: dell to PC: PC-002
+inventory.tsx:111 Search match result: false
+inventory.tsx:131 === FILTER RESULT ===
+inventory.tsx:132 Filtered PCs: 1 out of 2
+inventory.tsx:133 Filtered data: Array(1)
+inventory.tsx:134 === FILTER DEBUG END ===
+topbar.tsx:31 Global search changed to: del
+inventory.tsx:38 Inventory Debug: Object
+topbar.tsx:31 Global search changed to: de
+inventory.tsx:38 Inventory Debug: Object
+topbar.tsx:31 Global search changed to: d
+inventory.tsx:38 Inventory Debug: Object
+topbar.tsx:31 Global search changed to: 
+inventory.tsx:38 Inventory Debug: Object
+inventory.tsx:38 Inventory Debug: Object
+inventory.tsx:74 === FILTER DEBUG START ===
+inventory.tsx:75 Raw PCs data: Array(2)
+inventory.tsx:76 PCs length: 2
+inventory.tsx:77 Search term: 
+inventory.tsx:78 Status filter: 
+inventory.tsx:79 Brand filter: 
+inventory.tsx:88 NO FILTERS ACTIVE - returning all PCs: 2
+topbar.tsx:31 Global search changed to: l
+topbar.tsx:31 Global search changed to: lu
+topbar.tsx:31 Global search changed to: luv
+topbar.tsx:31 Global search changed to: lu
+topbar.tsx:31 Global search changed to: luc
+topbar.tsx:31 Global search changed to: luca
+topbar.tsx:31 Global search changed to: luc
+topbar.tsx:31 Global search changed to: lu
+topbar.tsx:31 Global search changed to: l
+topbar.tsx:31 Global search changed to: 
+topbar.tsx:31 Global search changed to: d
+topbar.tsx:31 Global search changed to: de
+topbar.tsx:31 Global search changed to: del
+topbar.tsx:31 Global search changed to: dell
+topbar.tsx:31 Global search changed to: del
+topbar.tsx:31 Global search changed to: de
+topbar.tsx:31 Global search changed to: d
+topbar.tsx:31 Global search changed to: 
+topbar.tsx:31 Global search changed to: d
+topbar.tsx:31 Global search changed to: de
+topbar.tsx:31 Global search changed to: del
+topbar.tsx:31 

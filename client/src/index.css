@@ -1,0 +1,631 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Maori Group color palette - blu scuro design system con background grigio */
+    --background: 0 0% 88%;
+    --foreground: 210 11% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 210 11% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 11% 15%;
+    --primary: 214 84% 31%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 210 11% 15%;
+    --muted: 210 40% 98%;
+    --muted-foreground: 215 13% 65%;
+    --accent: 214 84% 31%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 214 84% 31%;
+    --radius: 0.75rem;
+    
+    /* Professional spacing */
+    --content-max-width: 1400px;
+    --sidebar-width: 280px;
+    --topbar-height: 96px;
+  }
+
+  .dark {
+    --background: 210 11% 4%;
+    --foreground: 213 31% 91%;
+    --card: 210 11% 6%;
+    --card-foreground: 213 31% 91%;
+    --popover: 210 11% 6%;
+    --popover-foreground: 213 31% 91%;
+    --primary: 214 84% 45%;
+    --primary-foreground: 210 11% 4%;
+    --secondary: 210 7% 12%;
+    --secondary-foreground: 213 31% 91%;
+    --muted: 210 7% 12%;
+    --muted-foreground: 215 14% 71%;
+    --accent: 214 84% 45%;
+    --accent-foreground: 210 11% 4%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 213 31% 91%;
+    --border: 210 7% 12%;
+    --input: 210 7% 12%;
+    --ring: 214 84% 45%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #f1f5f9 !important;
+  }
+  
+  main {
+    background-color: #f1f5f9 !important;
+  }
+
+  /* Professional typography */
+  h1 { @apply text-2xl font-semibold tracking-tight; }
+  
+  /* Card styles */
+  .bg-white, .bg-card, [class*="bg-white"], div.rounded-lg {
+    box-shadow: none !important;
+    border: 0px solid transparent !important;
+    border-radius: 12px !important;
+  }
+  
+  /* Remove all shadows globally (except hover states) */
+  .shadow-sm, .shadow, .shadow-md, .shadow-lg, [data-radix-popper-content-wrapper] {
+    box-shadow: none !important;
+  }
+  
+  /* Soft button styling */
+  button, .button, [role="button"] {
+    border-radius: 8px !important;
+  }
+  
+  /* Soft input styling */
+  input, select, textarea {
+    border-radius: 8px !important;
+    border: 1px solid #e2e8f0 !important;
+  }
+  h2 { @apply text-xl font-semibold tracking-tight; }
+  h3 { @apply text-lg font-medium; }
+  h4 { @apply text-base font-medium; }
+  
+  /* Monospace for technical content */
+  code, kbd, samp, pre {
+    font-family: 'JetBrains Mono', 'Monaco', 'Menlo', monospace;
+  }
+
+  /* Better visibility for list bullets and text */
+  ul li::marker {
+    color: hsl(210, 11%, 40%); /* Darker gray for better contrast */
+  }
+  
+  ol li::marker {
+    color: hsl(210, 11%, 40%); /* Darker gray for better contrast */
+  }
+
+  /* Improved text contrast for list items */
+  ul li, ol li {
+    color: hsl(210, 11%, 25%); /* Darker text for better readability */
+  }
+
+  /* Dark mode list styling */
+  .dark ul li::marker {
+    color: hsl(213, 31%, 75%); /* Light gray for dark mode */
+  }
+  
+  .dark ol li::marker {
+    color: hsl(213, 31%, 75%); /* Light gray for dark mode */
+  }
+
+  .dark ul li, .dark ol li {
+    color: hsl(213, 31%, 85%); /* Light text for dark mode */
+  }
+
+  /* Enhanced card contrast */
+  [data-card] {
+    border: 1px solid hsl(210, 11%, 85%); /* Slightly darker border */
+    background-color: hsl(0, 0%, 99%); /* Slightly off-white background */
+  }
+
+  .dark [data-card] {
+    border: 1px solid hsl(210, 7%, 20%); /* Darker border in dark mode */
+    background-color: hsl(210, 11%, 8%); /* Slightly lighter dark background */
+  }
+
+  /* Better text contrast for cards */
+  .card-text-primary {
+    color: hsl(210, 11%, 20%) !important; /* Darker primary text */
+  }
+
+  .dark .card-text-primary {
+    color: hsl(213, 31%, 90%) !important; /* Lighter text in dark mode */
+  }
+
+  .card-text-secondary {
+    color: hsl(210, 11%, 45%) !important; /* Darker secondary text */
+  }
+
+  .dark .card-text-secondary {
+    color: hsl(213, 31%, 75%) !important; /* Lighter secondary text in dark mode */
+  }
+}
+
+@layer components {
+  /* Professional card shadows */
+  .card {
+    @apply shadow-sm border bg-card text-card-foreground;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  }
+  
+  .card:hover {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    transition: box-shadow 0.2s ease-in-out;
+  }
+
+  /* Professional status badges */
+  .status-badge {
+    @apply inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors;
+  }
+
+  /* Dropdown overlay backdrop */
+  .dropdown-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.75) !important;
+    z-index: 99998 !important;
+    backdrop-filter: blur(4px) !important;
+  }
+
+  /* High contrast dropdown for dialogs */
+  .dialog-dropdown-special {
+    position: fixed !important;
+    z-index: 99999 !important;
+    background: #ffffff !important;
+    border: 4px solid #dc2626 !important;
+    border-radius: 16px !important;
+    box-shadow: 
+      0 0 0 8px rgba(220, 38, 38, 0.2),
+      0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
+    min-width: 240px !important;
+    max-height: 180px !important;
+    overflow: hidden !important;
+    animation: dropdown-appear 0.2s ease-out !important;
+  }
+
+  @keyframes dropdown-appear {
+    from {
+      opacity: 0;
+      transform: translateY(-10px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  
+  .status-active {
+    @apply bg-emerald-100 text-emerald-800 border-emerald-200;
+  }
+  
+  .status-maintenance {
+    @apply bg-amber-100 text-amber-800 border-amber-200;
+  }
+  
+  .status-retired {
+    @apply bg-red-100 text-red-800 border-red-200;
+  }
+
+  /* Dark mode status badges */
+  .dark .status-active {
+    @apply bg-emerald-900/30 text-emerald-300 border-emerald-800;
+  }
+  
+  .dark .status-maintenance {
+    @apply bg-amber-900/30 text-amber-300 border-amber-800;
+  }
+  
+  .dark .status-retired {
+    @apply bg-red-900/30 text-red-300 border-red-800;
+  }
+
+  /* Professional tables */
+  .table-professional {
+    @apply w-full border-collapse;
+  }
+  
+  .table-professional th {
+    @apply px-6 py-4 text-left text-sm font-semibold text-foreground border-b-2 border-border bg-muted/50;
+  }
+  
+  .table-professional td {
+    @apply px-6 py-4 text-sm text-foreground border-b border-border;
+  }
+  
+  .table-professional tr:hover td {
+    @apply bg-muted/50;
+  }
+
+  /* Professional buttons */
+  .btn-professional {
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium;
+    @apply transition-all duration-200 ease-in-out;
+    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  }
+  
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90;
+    @apply shadow-sm hover:shadow-md;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
+    @apply border border-input;
+  }
+
+  /* Professional navigation */
+  .nav-professional {
+    @apply flex items-center px-4 py-3 text-sm font-medium rounded-lg;
+    @apply transition-all duration-200 ease-in-out;
+  }
+  
+  .nav-professional:hover {
+    @apply bg-accent text-accent-foreground;
+  }
+  
+  .nav-professional.active {
+    @apply bg-primary text-primary-foreground shadow-sm;
+  }
+
+  /* Professional forms */
+  .form-professional .form-group {
+    @apply space-y-2;
+  }
+  
+  .form-professional label {
+    @apply block text-sm font-medium text-foreground;
+  }
+  
+  .form-professional input,
+  .form-professional select,
+  .form-professional textarea {
+    @apply block w-full px-3 py-2.5 text-sm;
+    @apply bg-background border border-input rounded-lg;
+    @apply transition-colors duration-200;
+    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring;
+  }
+
+  /* Professional metrics */
+  .metric-card {
+    @apply bg-card border rounded-xl p-6;
+    @apply shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+  
+  .metric-value {
+    @apply text-3xl font-bold text-foreground;
+  }
+  
+  .metric-label {
+    @apply text-sm font-medium text-muted-foreground;
+  }
+  
+  .metric-change {
+    @apply text-xs font-medium;
+  }
+  
+  .metric-change.positive {
+    @apply text-emerald-600;
+  }
+  
+  .metric-change.negative {
+    @apply text-red-600;
+  }
+}
+
+/* Status badges with improved contrast */
+.status-badge {
+  @apply inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium border;
+}
+
+.status-active {
+  @apply bg-emerald-100 text-emerald-800 border-emerald-200;
+}
+
+.status-maintenance {
+  @apply bg-amber-100 text-amber-800 border-amber-200;
+}
+
+.status-retired {
+  @apply bg-red-100 text-red-800 border-red-200;
+}
+
+.dark .status-active {
+  @apply bg-emerald-900/30 text-emerald-300 border-emerald-800/50;
+}
+
+.dark .status-maintenance {
+  @apply bg-amber-900/30 text-amber-300 border-amber-800/50;
+}
+
+.dark .status-retired {
+  @apply bg-red-900/30 text-red-300 border-red-800/50;
+}
+
+/* Enhanced dropdown menu styling with gradient background */
+.dropdown-menu-enhanced {
+  background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%);
+  backdrop-filter: blur(8px);
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  z-index: 50;
+}
+
+.dark .dropdown-menu-enhanced {
+  background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.15);
+}
+
+/* Universal dropdown z-index fix for dialogs */
+[data-radix-popper-content-wrapper] {
+  z-index: 9999 !important;
+}
+
+/* Ensure all select content has proper z-index in dialogs */
+[data-radix-select-content] {
+  z-index: 9999 !important;
+  background-color: white !important;
+  border: 1px solid #d1d5db !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Native select styling consistency */
+select.native-dropdown {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 8px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 32px;
+}
+
+/* Dialog background fix to ensure visibility */
+[data-radix-dialog-content] {
+  background-color: white !important;
+  border: 1px solid #d1d5db !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  border-radius: 0.5rem !important;
+}
+
+/* Dialog overlay for proper background */
+[data-radix-dialog-overlay] {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(2px) !important;
+}
+
+/* Popover background fix to ensure visibility */
+[data-radix-popover-content] {
+  background-color: white !important;
+  border: 1px solid #d1d5db !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  border-radius: 0.5rem !important;
+  z-index: 9999 !important;
+}
+
+/* Dark mode dialog fixes */
+.dark [data-radix-dialog-content] {
+  background-color: hsl(var(--background)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.dark [data-radix-popover-content] {
+  background-color: hsl(var(--background)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.dark [data-radix-select-content] {
+  background-color: hsl(var(--background)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Fix specifico per dialog PC Form - forza background solido */
+[data-radix-dialog-content][data-state="open"] {
+  background-color: white !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+}
+
+.dark [data-radix-dialog-content][data-state="open"] {
+  background-color: #1f2937 !important;
+  color: white !important;
+}
+
+/* Fix dropdown trasparenti dentro dialog - MEGA AGGRESSIVO */
+[data-radix-select-content] {
+  background: white !important;
+  background-color: white !important;
+  border: 2px solid #dc2626 !important;
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.3), 0 25px 50px -12px rgba(0, 0, 0, 0.8) !important;
+  z-index: 999999 !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  min-width: 200px !important;
+  min-height: 100px !important;
+  border-radius: 8px !important;
+  position: fixed !important;
+  transform: none !important;
+  visibility: visible !important;
+  display: block !important;
+  pointer-events: auto !important;
+}
+
+/* Backup selectors per tutti i possibili casi */
+[data-radix-popper-content-wrapper] [data-radix-select-content],
+[data-radix-dialog-content] [data-radix-select-content],
+div[data-radix-select-content],
+.radix-select-content {
+  background: white !important;
+  background-color: white !important;
+  border: 2px solid #dc2626 !important;
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.3), 0 25px 50px -12px rgba(0, 0, 0, 0.8) !important;
+  z-index: 999999 !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  min-width: 200px !important;
+  min-height: 100px !important;
+  border-radius: 8px !important;
+  position: fixed !important;
+  transform: none !important;
+  visibility: visible !important;
+  display: block !important;
+  pointer-events: auto !important;
+}
+
+/* Dark mode dropdown fix */
+.dark [data-radix-select-content] {
+  background: #1f2937 !important;
+  background-color: #1f2937 !important;
+  border: 2px solid #dc2626 !important;
+  color: white !important;
+}
+
+.dark [data-radix-popper-content-wrapper] [data-radix-select-content],
+.dark [data-radix-dialog-content] [data-radix-select-content],
+.dark div[data-radix-select-content],
+.dark .radix-select-content {
+  background: #1f2937 !important;
+  background-color: #1f2937 !important;
+  border: 2px solid #dc2626 !important;
+  color: white !important;
+}
+
+/* Fix dropdown items per assicurare visibilità */
+[data-radix-select-item],
+.radix-select-item {
+  background: transparent !important;
+  color: inherit !important;
+  padding: 8px 12px !important;
+  cursor: pointer !important;
+}
+
+[data-radix-select-item]:hover,
+.radix-select-item:hover {
+  background: #f3f4f6 !important;
+}
+
+.dark [data-radix-select-item]:hover,
+.dark .radix-select-item:hover {
+  background: #374151 !important;
+}
+
+/* FIX GLOBALE DIALOG TRASPARENTI - SOLUZIONE DEFINITIVA */
+[data-radix-dialog-content],
+[data-radix-alert-dialog-content],
+div[data-radix-dialog-content],
+div[data-radix-alert-dialog-content] {
+  background: white !important;
+  background-color: white !important;
+  border: 1px solid #e5e7eb !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  z-index: 50 !important;
+}
+
+/* Dark mode per tutti i dialog */
+.dark [data-radix-dialog-content],
+.dark [data-radix-alert-dialog-content],
+.dark div[data-radix-dialog-content],
+.dark div[data-radix-alert-dialog-content] {
+  background: #1f2937 !important;
+  background-color: #1f2937 !important;
+  border: 1px solid #374151 !important;
+  color: white !important;
+}
+
+/* Fix overlay per assicurare non interferisca */
+[data-radix-dialog-overlay],
+[data-radix-alert-dialog-overlay],
+[data-radix-popover-content] ~ [data-radix-popper-content-wrapper],
+div[data-state="open"][data-radix-collection-item] {
+  background: rgba(0, 0, 0, 0.8) !important;
+  backdrop-filter: blur(2px) !important;
+}
+
+/* Forza background bianco sui dialog content */
+[data-radix-dialog-content],
+[data-radix-alert-dialog-content] {
+  background: white !important;
+  background-color: white !important;
+}
+
+.dark [data-radix-dialog-content] [data-radix-select-content],
+.dark [data-radix-select-content] {
+  background: #1f2937 !important;
+  background-color: #1f2937 !important;
+  border: 3px solid #dc2626 !important;
+  color: white !important;
+}
+
+/* Fix dropdown trigger dentro dialog */
+[data-radix-dialog-content] [data-radix-select-trigger] {
+  background-color: white !important;
+  border: 1px solid #d1d5db !important;
+  opacity: 1 !important;
+}
+
+.dark [data-radix-dialog-content] [data-radix-select-trigger] {
+  background-color: #374151 !important;
+  border: 1px solid #6b7280 !important;
+  color: white !important;
+}
+
+/* Fix SelectItem trasparenti dentro dialog - ULTRA VISIBILE */
+[data-radix-dialog-content] [data-radix-select-item],
+[data-radix-select-item] {
+  background: white !important;
+  background-color: white !important;
+  opacity: 1 !important;
+  padding: 12px 16px !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  color: #111827 !important;
+  font-weight: 500 !important;
+}
+
+[data-radix-dialog-content] [data-radix-select-item]:hover,
+[data-radix-select-item]:hover {
+  background: #dc2626 !important;
+  background-color: #dc2626 !important;
+  color: white !important;
+}
+
+.dark [data-radix-dialog-content] [data-radix-select-item],
+.dark [data-radix-select-item] {
+  background: #1f2937 !important;
+  background-color: #1f2937 !important;
+  color: white !important;
+  opacity: 1 !important;
+}
+
+.dark [data-radix-dialog-content] [data-radix-select-item]:hover,
+.dark [data-radix-select-item]:hover {
+  background: #dc2626 !important;
+  background-color: #dc2626 !important;
+  color: white !important;
+}
