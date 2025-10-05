@@ -32,7 +32,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import type { Employee, PcWithEmployee } from "@shared/schema";
+import type { Employee, Asset } from "@shared/schema";
 import { z } from "zod";
 
 // Schema per i documenti
@@ -40,7 +40,7 @@ const documentSchema = z.object({
   title: z.string().min(1, "Il titolo è obbligatorio"),
   type: z.string().min(1, "Il tipo è obbligatorio"),
   description: z.string().optional(),
-  pcId: z.string().optional(),
+  assetId: z.string().optional(),
   employeeId: z.string().optional(),
   tags: z.string().optional(),
 });
@@ -52,15 +52,15 @@ interface Document {
   title: string;
   type: string;
   description?: string;
-  pcId?: string;
+  assetId?: string;
   employeeId?: string;
   tags?: string;
   fileName?: string;
   fileSize?: number;
   uploadedAt: string;
   uploadedBy: string;
-  pc?: {
-    pcId: string;
+  asset?: {
+    assetCode: string;
     brand: string;
     model: string;
   };
@@ -89,8 +89,8 @@ export default function Documents() {
     queryKey: ["/api/employees"]
   });
 
-  const { data: pcs = [] } = useQuery<PcWithEmployee[]>({
-    queryKey: ["/api/pcs"]
+  const { data: assets = [] } = useQuery<Asset[]>({
+    queryKey: ["/api/assets"]
   });
 
   // Delete document mutation
@@ -121,7 +121,7 @@ export default function Documents() {
       title: "",
       type: "",
       description: "",
-      pcId: "",
+      assetId: "",
       employeeId: "",
       tags: ""
     }
@@ -138,7 +138,7 @@ export default function Documents() {
           (doc.description || '').toLowerCase().includes(searchLower) ||
           (doc.tags || '').toLowerCase().includes(searchLower) ||
           (doc.fileName || '').toLowerCase().includes(searchLower) ||
-          (doc.pc?.pcId || '').toLowerCase().includes(searchLower) ||
+          (doc.asset?.assetCode || '').toLowerCase().includes(searchLower) ||
           (doc.employee?.name || '').toLowerCase().includes(searchLower)
         );
         if (!matches) return false;
@@ -196,7 +196,7 @@ export default function Documents() {
     return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i];
   };
 
-  const generateManlevaPDF = async (pcId: string, employeeId: string) => {
+  const generateManlevaPDF = async (assetId: string, employeeId: string) => {
     try {
       const response = await fetch('/api/manleva/generate', {
         method: 'POST',
@@ -204,7 +204,7 @@ export default function Documents() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         },
-        body: JSON.stringify({ pcId, employeeId })
+        body: JSON.stringify({ assetId, employeeId })
       });
 
       if (!response.ok) {
@@ -235,7 +235,7 @@ export default function Documents() {
     }
   };
 
-  const generateQRCode = async (pcId: string) => {
+  const generateQRCode = async (assetId: string) => {
     try {
       const response = await fetch('/api/qr/generate', {
         method: 'POST',
@@ -243,7 +243,7 @@ export default function Documents() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         },
-        body: JSON.stringify({ pcId })
+        body: JSON.stringify({ assetId })
       });
 
       if (!response.ok) {
@@ -255,7 +255,7 @@ export default function Documents() {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `etichetta_${pcId}_${Date.now()}.pdf`;
+      link.download = `etichetta_${assetId}_${Date.now()}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -340,19 +340,19 @@ export default function Documents() {
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="pcId"
+                    name="assetId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>PC Associato (opzionale)</FormLabel>
+                        <FormLabel>Asset Associato (opzionale)</FormLabel>
                         <FormControl>
                           <select
                             {...field}
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                           >
-                            <option value="">Nessun PC</option>
-                            {pcs.map(pc => (
-                              <option key={pc.id} value={pc.id}>
-                                {pc.pcId} - {pc.brand} {pc.model}
+                            <option value="">Nessun Asset</option>
+                            {assets.map(asset => (
+                              <option key={asset.id} value={asset.id}>
+                                {asset.assetCode} - {asset.brand} {asset.model}
                               </option>
                             ))}
                           </select>
@@ -564,7 +564,7 @@ export default function Documents() {
                 <TableRow className="bg-muted/50">
                   <TableHead className="font-medium min-w-[200px]">Titolo</TableHead>
                   <TableHead className="font-medium min-w-[100px]">Tipo</TableHead>
-                  <TableHead className="font-medium min-w-[150px]">PC/Dipendente</TableHead>
+                  <TableHead className="font-medium min-w-[150px]">Asset/Dipendente</TableHead>
                   <TableHead className="font-medium min-w-[120px]">Dimensione</TableHead>
                   <TableHead className="font-medium min-w-[120px]">Data Upload</TableHead>
                   <TableHead className="font-medium min-w-[150px]">Tag</TableHead>
@@ -603,10 +603,10 @@ export default function Documents() {
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1">
-                          {document.pc && (
+                          {document.asset && (
                             <div className="flex items-center gap-1 text-sm">
                               <Monitor className="h-3 w-3" />
-                              <span>{document.pc.pcId}</span>
+                              <span>{document.asset.assetCode}</span>
                             </div>
                           )}
                           {document.employee && (
@@ -659,12 +659,12 @@ export default function Documents() {
                             className="h-8 w-8 p-0"
                             title="Download Manleva PDF"
                             onClick={() => {
-                              if (document.pcId && document.employeeId) {
-                                generateManlevaPDF(document.pcId, document.employeeId);
+                              if (document.assetId && document.employeeId) {
+                                generateManlevaPDF(document.assetId, document.employeeId);
                               } else {
                                 toast({
                                   title: "Errore",
-                                  description: "PC o dipendente non trovato per questa manleva",
+                                  description: "Asset o dipendente non trovato per questa manleva",
                                   variant: "destructive"
                                 });
                               }
@@ -679,12 +679,12 @@ export default function Documents() {
                             title="Genera QR Code"
                             onClick={() => {
                               // Logica per generare QR code
-                              if (document.pcId) {
-                                generateQRCode(document.pcId);
+                              if (document.assetId) {
+                                generateQRCode(document.assetId);
                               } else {
                                 toast({
                                   title: "Errore", 
-                                  description: "Nessun PC associato a questa manleva",
+                                  description: "Nessun Asset associato a questa manleva",
                                   variant: "destructive"
                                 });
                               }

@@ -6,23 +6,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import type { PcWithEmployee } from "@shared/schema";
+import type { Asset } from "@shared/schema";
 
 export default function Labels() {
-  const [selectedPc, setSelectedPc] = useState<string>("");
+  const [selectedAsset, setSelectedAsset] = useState<string>("");
   const { toast } = useToast();
 
-  const { data: pcs = [], isLoading } = useQuery<PcWithEmployee[]>({
-    queryKey: ["/api/pcs"],
+  const { data: assets = [], isLoading } = useQuery<Asset[]>({
+    queryKey: ["/api/assets"],
   });
 
-  const selectedPcData = pcs.find(pc => pc.id === selectedPc);
+  const selectedAssetData = assets.find(asset => asset.id === selectedAsset);
 
   const handlePrint = () => {
-    if (!selectedPcData) {
+    if (!selectedAssetData) {
       toast({
-        title: "Nessun PC selezionato",
-        description: "Seleziona un PC per stampare l'etichetta.",
+        title: "Nessun asset selezionato",
+        description: "Seleziona un asset per stampare l'etichetta.",
         variant: "destructive"
       });
       return;
@@ -30,15 +30,15 @@ export default function Labels() {
 
     toast({
       title: "Stampa avviata",
-      description: `Stampa etichetta per ${selectedPcData.pcId}`
+      description: `Stampa etichetta per ${selectedAssetData.assetCode}`
     });
   };
 
   const handleDownload = () => {
-    if (!selectedPcData) {
+    if (!selectedAssetData) {
       toast({
-        title: "Nessun PC selezionato",
-        description: "Seleziona un PC per scaricare l'etichetta.",
+        title: "Nessun asset selezionato",
+        description: "Seleziona un asset per scaricare l'etichetta.",
         variant: "destructive"
       });
       return;
@@ -46,7 +46,7 @@ export default function Labels() {
 
     toast({
       title: "Download avviato",
-      description: `Download etichetta per ${selectedPcData.pcId}`
+      description: `Download etichetta per ${selectedAssetData.assetCode}`
     });
   };
 
@@ -56,13 +56,13 @@ export default function Labels() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Etichette</h1>
-          <p className="text-muted-foreground">Genera etichette per PC aziendali</p>
+          <p className="text-muted-foreground">Genera etichette per Asset aziendali</p>
         </div>
         <div className="flex gap-2">
           <Button 
             variant="outline" 
             onClick={handleDownload}
-            disabled={!selectedPc}
+            disabled={!selectedAsset}
             className="flex items-center gap-2"
           >
             <Download className="h-4 w-4" />
@@ -70,7 +70,7 @@ export default function Labels() {
           </Button>
           <Button 
             onClick={handlePrint}
-            disabled={!selectedPc}
+            disabled={!selectedAsset}
             className="bg-primary flex items-center gap-2"
           >
             <Printer className="h-4 w-4" />
@@ -88,8 +88,8 @@ export default function Labels() {
                 <Monitor className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">PC Totali</p>
-                <p className="text-2xl font-bold">{pcs.length}</p>
+                <p className="text-sm font-medium text-muted-foreground">Asset Totali</p>
+                <p className="text-2xl font-bold">{assets.length}</p>
               </div>
             </div>
           </CardContent>
@@ -102,8 +102,8 @@ export default function Labels() {
                 <QrCode className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">PC Attivi</p>
-                <p className="text-2xl font-bold">{pcs.filter(pc => pc.status === 'active').length}</p>
+                <p className="text-sm font-medium text-muted-foreground">Asset Attivi</p>
+                <p className="text-2xl font-bold">{assets.filter(asset => asset.status === 'disponibile').length}</p>
               </div>
             </div>
           </CardContent>
@@ -117,7 +117,7 @@ export default function Labels() {
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Selezionato</p>
-                <p className="text-2xl font-bold">{selectedPc ? 1 : 0}</p>
+                <p className="text-2xl font-bold">{selectedAsset ? 1 : 0}</p>
               </div>
             </div>
           </CardContent>
@@ -125,47 +125,47 @@ export default function Labels() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Selezione PC */}
+        {/* Selezione Asset */}
         <Card>
           <CardHeader>
-            <CardTitle>Seleziona PC</CardTitle>
+            <CardTitle>Seleziona Asset</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="pc-select">PC</Label>
+              <Label htmlFor="asset-select">Asset</Label>
               <select
-                id="pc-select"
-                value={selectedPc}
-                onChange={(e) => setSelectedPc(e.target.value)}
+                id="asset-select"
+                value={selectedAsset}
+                onChange={(e) => setSelectedAsset(e.target.value)}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
-                <option value="">Seleziona un PC</option>
-                {pcs.map(pc => (
-                  <option key={pc.id} value={pc.id}>
-                    {pc.pcId} - {pc.brand} {pc.model}
+                <option value="">Seleziona un Asset</option>
+                {assets.map(asset => (
+                  <option key={asset.id} value={asset.id}>
+                    {asset.assetCode} - {asset.brand} {asset.model}
                   </option>
                 ))}
               </select>
             </div>
 
-            {selectedPcData && (
+            {selectedAssetData && (
               <div className="space-y-2 p-4 bg-muted/50 rounded-lg">
-                <h3 className="font-medium">Dettagli PC Selezionato</h3>
+                <h3 className="font-medium">Dettagli Asset Selezionato</h3>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
-                    <span className="font-medium">ID:</span> {selectedPcData.pcId}
+                    <span className="font-medium">Codice:</span> {selectedAssetData.assetCode}
                   </div>
                   <div>
-                    <span className="font-medium">Marca:</span> {selectedPcData.brand}
+                    <span className="font-medium">Marca:</span> {selectedAssetData.brand}
                   </div>
                   <div>
-                    <span className="font-medium">Modello:</span> {selectedPcData.model}
+                    <span className="font-medium">Modello:</span> {selectedAssetData.model}
                   </div>
                   <div>
-                    <span className="font-medium">Serial:</span> {selectedPcData.serialNumber}
+                    <span className="font-medium">Serial:</span> {selectedAssetData.serialNumber}
                   </div>
                   <div className="col-span-2">
-                    <span className="font-medium">Dipendente:</span> {selectedPcData.employee?.name || 'Non assegnato'}
+                    <span className="font-medium">Stato:</span> {selectedAssetData.status || 'Non disponibile'}
                   </div>
                 </div>
               </div>
@@ -179,13 +179,13 @@ export default function Labels() {
             <CardTitle>Anteprima Etichetta</CardTitle>
           </CardHeader>
           <CardContent>
-            {selectedPcData ? (
+            {selectedAssetData ? (
               <div className="border border-gray-300 bg-white p-4 rounded-lg">
                 <div className="text-center space-y-2">
                   <div className="text-xs font-bold text-blue-800">MAORI GROUP</div>
-                  <div className="text-sm font-semibold">{selectedPcData.pcId}</div>
-                  <div className="text-xs text-gray-600">{selectedPcData.brand} {selectedPcData.model}</div>
-                  <div className="text-xs text-gray-500">{selectedPcData.serialNumber}</div>
+                  <div className="text-sm font-semibold">{selectedAssetData.assetCode}</div>
+                  <div className="text-xs text-gray-600">{selectedAssetData.brand} {selectedAssetData.model}</div>
+                  <div className="text-xs text-gray-500">{selectedAssetData.serialNumber}</div>
                   <div className="bg-black text-white text-xs p-2 font-mono">
                     [QR CODE PLACEHOLDER]
                   </div>
@@ -193,7 +193,7 @@ export default function Labels() {
               </div>
             ) : (
               <div className="border border-dashed border-gray-300 p-8 rounded-lg text-center text-muted-foreground">
-                Seleziona un PC per vedere l'anteprima dell'etichetta
+                Seleziona un Asset per vedere l'anteprima dell'etichetta
               </div>
             )}
           </CardContent>

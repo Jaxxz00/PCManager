@@ -16,7 +16,7 @@ import { insertEmployeeSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { z } from "zod";
-import type { Employee, PcWithEmployee } from "@shared/schema";
+import type { Employee, Asset } from "@shared/schema";
 
 type EmployeeFormData = z.infer<typeof insertEmployeeSchema>;
 
@@ -32,8 +32,8 @@ export default function Employees() {
     queryKey: ["/api/employees"],
   });
 
-  const { data: pcs = [] } = useQuery<PcWithEmployee[]>({
-    queryKey: ["/api/pcs"],
+  const { data: assets = [] } = useQuery<Asset[]>({
+    queryKey: ["/api/assets"],
   });
 
   const form = useForm<EmployeeFormData>({
@@ -110,8 +110,8 @@ export default function Employees() {
     return result;
   }, [employees, debouncedSearch]);
 
-  const getEmployeePcCount = (employeeId: string) => {
-    return pcs.filter((pc) => pc.employeeId === employeeId).length;
+  const getEmployeeAssetCount = (employeeId: string) => {
+    return assets.filter((asset) => asset.employeeId === employeeId).length;
   };
 
   const onSubmit = (data: EmployeeFormData) => {
@@ -119,11 +119,11 @@ export default function Employees() {
   };
 
   const handleDeleteEmployee = (id: string) => {
-    const assignedPcs = getEmployeePcCount(id);
-    if (assignedPcs > 0) {
+    const assignedAssets = getEmployeeAssetCount(id);
+    if (assignedAssets > 0) {
       toast({
         title: "Impossibile eliminare",
-        description: `Il dipendente ha ${assignedPcs} PC assegnati. Rimuovere prima le assegnazioni.`,
+        description: `Il dipendente ha ${assignedAssets} asset assegnati. Rimuovere prima le assegnazioni.`,
         variant: "destructive",
       });
       return;
