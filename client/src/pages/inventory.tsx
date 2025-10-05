@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Edit, Trash2, Monitor, Smartphone, CreditCard, Keyboard, Box, Search } from "lucide-react";
@@ -164,6 +164,30 @@ export default function Inventory() {
       notes: "",
     },
   });
+
+  // Auto-generate asset code when asset type changes
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      // Solo quando cambia il tipo e non stiamo editando un asset esistente
+      if (name === 'assetType' && value.assetType && !editingAsset) {
+        fetch(`/api/assets/next-code?type=${value.assetType}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
+          }
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.code) {
+              form.setValue('assetCode', data.code);
+            }
+          })
+          .catch(err => {
+            console.error('Error fetching next asset code:', err);
+          });
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form, editingAsset]);
 
   const onSubmit = (data: AssetFormData) => {
     if (editingAsset) {
