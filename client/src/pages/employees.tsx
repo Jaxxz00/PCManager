@@ -81,10 +81,11 @@ export default function Employees() {
         description: "Il dipendente è stato rimosso dal sistema.",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      const message = error?.message || "Impossibile eliminare il dipendente.";
       toast({
         title: "Errore",
-        description: "Impossibile eliminare il dipendente.",
+        description: message,
         variant: "destructive",
       });
     },

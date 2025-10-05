@@ -619,12 +619,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/employees/:id", authenticateRequest, async (req, res) => {
     try {
+      // Check if employee has assigned assets
+      const assets = await storage.getAssets();
+      const assignedAssets = assets.filter(a => a.employeeId === req.params.id);
+      
+      if (assignedAssets.length > 0) {
+        return res.status(400).json({ 
+          message: `Impossibile eliminare. Il dipendente ha ${assignedAssets.length} asset assegnati. Rimuovere prima le assegnazioni.` 
+        });
+      }
+
       const deleted = await storage.deleteEmployee(req.params.id);
       if (!deleted) {
         return res.status(404).json({ message: "Employee not found" });
       }
       res.status(204).send();
     } catch (error) {
+      console.error("Error deleting employee:", error);
       res.status(500).json({ message: "Failed to delete employee" });
     }
   });
