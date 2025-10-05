@@ -779,6 +779,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Asset management routes (unified inventory for all device types)
   
+  // Get next available asset code for a given type
+  app.get("/api/assets/next-code", authenticateRequest, async (req, res) => {
+    try {
+      const { type } = req.query;
+      
+      if (!type || typeof type !== 'string') {
+        return res.status(400).json({ error: "Asset type is required" });
+      }
+
+      const validTypes = ['pc', 'smartphone', 'sim', 'tastiera', 'monitor', 'altro'];
+      if (!validTypes.includes(type)) {
+        return res.status(400).json({ error: "Invalid asset type" });
+      }
+
+      const nextCode = await storage.getNextAssetCode(type);
+      res.json({ code: nextCode });
+    } catch (error) {
+      console.error("Error generating next asset code:", error);
+      res.status(500).json({ error: "Failed to generate asset code" });
+    }
+  });
+  
   // Get all assets with optional type filter
   app.get("/api/assets", authenticateRequest, async (req, res) => {
     try {
