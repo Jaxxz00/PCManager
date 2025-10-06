@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, AlertCircle, Eye, EyeOff } from "lucide-react";
-import logoImg from "@assets/IMG_4622_1755594689547.jpeg";
+import logoImg from "@/assets/IMG_4622_1755594689547.jpeg";
 
 // Schema per impostare la password
 const setPasswordSchema = z.object({

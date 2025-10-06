@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { UserPlus, Eye, EyeOff, User, Mail, Lock, Shield } from "lucide-react";
 import { registerSchema, type RegisterData } from "@shared/schema";
-import logoUrl from "@assets/IMG_4622_1755594689547.jpeg";
+import logoUrl from "@/assets/IMG_4622_1755594689547.jpeg";
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
