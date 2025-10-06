@@ -717,8 +717,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertPcSchema.parse(req.body);
       
       // Genera automaticamente pcId dal serialNumber
-      const pcId = `PC-${validatedData.serialNumber.substring(-6).toUpperCase()}`;
-      
+      const pcId = `PC-${validatedData.serialNumber.slice(-6).toUpperCase()}`;
+    
       // Check if PC ID already exists
       const existingPc = await storage.getPcByPcId(pcId);
       if (existingPc) {

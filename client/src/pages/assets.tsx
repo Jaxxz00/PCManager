@@ -62,7 +62,8 @@ export default function Assets() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/assets"] });
-      toast({
+      queryClient.invalidateQueries({ queryKey: ["/api/employees"] }); // <-- AGGIUNGI QUESTA
+      toast({fatt
         title: "Successo",
         description: "Asset creato con successo",
       });
@@ -86,6 +87,7 @@ export default function Assets() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/assets"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/employees"] }); // <-- AGGIUNGI
       toast({
         title: "Successo",
         description: "Asset aggiornato con successo",
@@ -111,6 +113,7 @@ export default function Assets() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/assets"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/employees"] }); // <-- AGGIUNGI
       toast({
         title: "Successo",
         description: "Asset eliminato con successo",
