@@ -142,77 +142,7 @@ export class MemStorage implements IStorage {
       password: "admin123"
     });
 
-    // Add some test employees
-    const testEmployees: Employee[] = [
-      {
-        id: "emp-1",
-        name: "Luca Bianchi",
-        email: "luca.bianchi@company.com",
-        department: "IT",
-        company: "Maori Group",
-        createdAt: new Date(),
-      },
-      {
-        id: "emp-2",
-        name: "Sara Verdi",
-        email: "sara.verdi@company.com",
-        department: "Marketing",
-        company: "Maori Group",
-        createdAt: new Date(),
-      },
-      {
-        id: "emp-3",
-        name: "Marco Neri",
-        email: "marco.neri@company.com",
-        department: "Sales",
-        company: "Maori Group",
-        createdAt: new Date(),
-      },
-    ];
-
-    testEmployees.forEach(emp => this.employees.set(emp.id, emp));
-
-    // Add some test PCs
-    const testPCs: Pc[] = [
-      {
-        id: "pc-uuid-1",
-        pcId: "PC-001",
-        employeeId: "emp-1",
-        brand: "Dell",
-        model: "OptiPlex 7090",
-        cpu: "Intel i7-11700",
-        ram: 16,
-        storage: "512GB SSD",
-        operatingSystem: "Windows 11 Pro",
-        serialNumber: "DL001234567",
-        purchaseDate: "2024-01-15",
-        warrantyExpiry: "2027-01-15",
-        status: "active",
-        notes: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        id: "pc-uuid-2",
-        pcId: "PC-002",
-        employeeId: "emp-2",
-        brand: "HP",
-        model: "EliteDesk 800",
-        cpu: "Intel i5-11500",
-        ram: 8,
-        storage: "256GB SSD",
-        operatingSystem: "Windows 11 Pro",
-        serialNumber: "HP001234567",
-        purchaseDate: "2024-02-10",
-        warrantyExpiry: "2027-02-10",
-        status: "maintenance",
-        notes: "Scheduled maintenance",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ];
-
-    testPCs.forEach(pc => this.pcs.set(pc.id, pc));
+  
   }
 
   // Employee methods

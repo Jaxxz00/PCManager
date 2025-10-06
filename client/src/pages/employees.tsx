@@ -53,6 +53,7 @@ export default function Employees() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/assets"] });  // <-- AGGIUNGI QUESTA
       toast({
         title: "Dipendente aggiunto",
         description: "Il nuovo dipendente è stato registrato nel sistema.",
@@ -76,6 +77,7 @@ export default function Employees() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/assets"] });  // <-- AGGIUNGI QUESTA
       toast({
         title: "Dipendente eliminato",
         description: "Il dipendente è stato rimosso dal sistema.",
