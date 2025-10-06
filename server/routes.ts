@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertEmployeeSchema, insertPcSchema, loginSchema, registerSchema, setup2FASchema, verify2FASchema, disable2FASchema, setPasswordSchema } from "@shared/schema";
-import { sendUserInviteEmail } from "./emailService";
+import { generateInviteLink, generateInviteMessage } from "./emailService";
 import { z } from "zod";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
@@ -378,9 +378,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create invite token
       const inviteToken = await storage.createInviteToken(newUser.id);
 
-      // Send invitation email
-      const emailSent = await sendUserInviteEmail({
-        to: email,
+      // Generate invite link and message (no email sent automatically)
+      const inviteLink = generateInviteLink({
+        firstName,
+        lastName,
+        inviteToken,
+      });
+      
+      const inviteMessage = generateInviteMessage({
         firstName,
         lastName,
         inviteToken,
@@ -390,11 +395,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { passwordHash: _, twoFactorSecret, backupCodes, ...safeUser } = newUser;
       
       res.status(201).json({ 
-        message: emailSent 
-          ? "Utente creato con successo. Email di invito inviata."
-          : "Utente creato con successo. Email di invito non configurata - usa il token manualmente.",
+        message: "Utente creato con successo. Copia il link di invito da condividere.",
         user: safeUser,
-        inviteToken: !emailSent ? inviteToken : undefined, // Show token only if email wasn't sent
+        inviteLink,
+        inviteMessage,
+        inviteToken, // Also return token for manual use
       });
     } catch (error) {
       console.error("Error creating user:", error);
