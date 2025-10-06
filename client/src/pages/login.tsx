@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { Eye, EyeOff, User, Lock, Shield, KeyRound } from "lucide-react";
-import logoUrl from "@assets/IMG_4622_1755594689547.jpeg";
+import logoUrl from "@/assets/IMG_4622_1755594689547.jpeg";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
