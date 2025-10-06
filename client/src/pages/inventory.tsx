@@ -203,8 +203,8 @@ export default function Inventory() {
               form.setValue('assetCode', data.code);
             }
           })
-          .catch(err => {
-            console.error('Error fetching next asset code:', err);
+          .catch(() => {
+            // Silently handle error - user can manually enter asset code
           });
       }
     });
@@ -273,8 +273,8 @@ export default function Inventory() {
         employeeId: "",
         notes: "",
       });
-    } catch (error) {
-      console.error('Error fetching next asset code:', error);
+    } catch {
+      // Silently handle error - user can manually enter asset code
       form.reset({
         assetCode: "",
         assetType: selectedType,

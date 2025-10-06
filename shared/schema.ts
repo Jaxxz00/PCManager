@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, date, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, date, timestamp, boolean, jsonb, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -10,7 +10,10 @@ export const employees = pgTable("employees", {
   department: text("department").notNull(),
   company: text("company").notNull().default("Maori Group"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  emailIdx: index("employees_email_idx").on(table.email),
+  nameIdx: index("employees_name_idx").on(table.name),
+}));
 
 export const pcs = pgTable("pcs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -29,7 +32,12 @@ export const pcs = pgTable("pcs", {
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => ({
+  pcIdIdx: index("pcs_pc_id_idx").on(table.pcId),
+  serialNumberIdx: index("pcs_serial_number_idx").on(table.serialNumber),
+  employeeIdIdx: index("pcs_employee_id_idx").on(table.employeeId),
+  statusIdx: index("pcs_status_idx").on(table.status),
+}));
 
 // Tabella asset unificata per tutti i tipi di dispositivi
 export const assets = pgTable("assets", {
@@ -47,7 +55,13 @@ export const assets = pgTable("assets", {
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => ({
+  assetCodeIdx: index("assets_asset_code_idx").on(table.assetCode),
+  assetTypeIdx: index("assets_asset_type_idx").on(table.assetType),
+  employeeIdIdx: index("assets_employee_id_idx").on(table.employeeId),
+  statusIdx: index("assets_status_idx").on(table.status),
+  serialNumberIdx: index("assets_serial_number_idx").on(table.serialNumber),
+}));
 
 // Tabella utenti per l'autenticazione
 export const users = pgTable("users", {
@@ -66,7 +80,10 @@ export const users = pgTable("users", {
   backupCodes: text("backup_codes").array(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => ({
+  usernameIdx: index("users_username_idx").on(table.username),
+  emailIdx: index("users_email_idx").on(table.email),
+}));
 
 // Tabella sessioni per gestire le sessioni utente
 export const sessions = pgTable("sessions", {
@@ -74,7 +91,10 @@ export const sessions = pgTable("sessions", {
   userId: varchar("user_id").notNull().references(() => users.id),
   expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  userIdIdx: index("sessions_user_id_idx").on(table.userId),
+  expiresAtIdx: index("sessions_expires_at_idx").on(table.expiresAt),
+}));
 
 // Tabella storico PC per tracciare cambiamenti e eventi
 export const pcHistory = pgTable("pc_history", {
@@ -141,6 +161,10 @@ export const insertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
   updatedAt: true,
   lastLogin: true,
+  passwordHash: true, // Password will be handled separately
+  twoFactorSecret: true,
+  twoFactorEnabled: true,
+  backupCodes: true,
 });
 
 export const loginSchema = z.object({
