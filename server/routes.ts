@@ -113,8 +113,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         imgSrc: ["'self'", "data:", "https:", "blob:"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://replit.com"], // Permette Vite HMR e banner Replit
-        connectSrc: ["'self'", "ws:", "wss:", "http:", "https:"], // WebSocket per HMR
+        scriptSrc: process.env.NODE_ENV === 'production' 
+          ? ["'self'"] 
+          : ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // unsafe-* solo in dev per HMR
+        connectSrc: process.env.NODE_ENV === 'production'
+          ? ["'self'"]
+          : ["'self'", "ws:", "wss:", "http:", "https:"], // WebSocket solo in dev per HMR
         objectSrc: ["'none'"],
       },
     },
@@ -362,11 +366,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create user with temporary password (will be changed via invite token)
       const temporaryPassword = Math.random().toString(36).slice(-12);
       const newUser = await storage.createUser({
-        username,
-        email,
-        firstName,
-        lastName,
-        role,
+        username: username as string,
+        email: email as string,
+        firstName: firstName as string,
+        lastName: lastName as string,
+        role: role as string,
         isActive: false, // User will be activated when they set their password
         password: temporaryPassword,
       });

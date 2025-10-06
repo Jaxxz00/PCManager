@@ -3,18 +3,21 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/not-found";
-import Dashboard from "@/pages/dashboard";
-import Inventory from "@/pages/inventory";
-import Employees from "@/pages/employees";
-import Documents from "@/pages/documents";
-import Labels from "@/pages/labels";
-import Reports from "@/pages/reports";
-import Settings from "@/pages/settings";
-import Profile from "@/pages/profile";
-import Maintenance from "@/pages/maintenance";
-import Workflow from "@/pages/workflow";
-import Assets from "@/pages/assets";
+import { lazy, Suspense } from "react";
+
+// Lazy load delle pagine per ottimizzare bundle size
+const NotFound = lazy(() => import("@/pages/not-found"));
+const Dashboard = lazy(() => import("@/pages/dashboard"));
+const Inventory = lazy(() => import("@/pages/inventory"));
+const Employees = lazy(() => import("@/pages/employees"));
+const Documents = lazy(() => import("@/pages/documents"));
+const Labels = lazy(() => import("@/pages/labels"));
+const Reports = lazy(() => import("@/pages/reports"));
+const Settings = lazy(() => import("@/pages/settings"));
+const Profile = lazy(() => import("@/pages/profile"));
+const Maintenance = lazy(() => import("@/pages/maintenance"));
+const Workflow = lazy(() => import("@/pages/workflow"));
+const Assets = lazy(() => import("@/pages/assets"));
 
 import LoginPage from "@/pages/login";
 import SetPasswordPage from "@/pages/set-password";
@@ -139,7 +142,15 @@ function Router() {
   }
 
   return (
-    <Switch>
+    <Suspense fallback={
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+          <p className="text-gray-600">Caricamento...</p>
+        </div>
+      </div>
+    }>
+      <Switch>
       {/* Route pubbliche */}
       <Route path="/login" component={LoginPage} />
       <Route path="/invite/:token" component={SetPasswordPage} />
@@ -186,13 +197,6 @@ function Router() {
             {() => (
               <AuthenticatedLayout>
                 <Reports />
-              </AuthenticatedLayout>
-            )}
-          </Route>
-          <Route path="/documents">
-            {() => (
-              <AuthenticatedLayout>
-                <Documents />
               </AuthenticatedLayout>
             )}
           </Route>
@@ -244,7 +248,8 @@ function Router() {
         // Redirigi al login se non autenticato
         <Route component={() => { window.location.href = '/login'; return null; }} />
       )}
-    </Switch>
+      </Switch>
+    </Suspense>
   );
 }
 
