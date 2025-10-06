@@ -63,7 +63,7 @@ export default function Assets() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/assets"] });
       queryClient.invalidateQueries({ queryKey: ["/api/employees"] }); // <-- AGGIUNGI QUESTA
-      toast({fatt
+      toast({
         title: "Successo",
         description: "Asset creato con successo",
       });
