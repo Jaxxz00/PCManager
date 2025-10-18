@@ -2,7 +2,35 @@
   "employees": [],
   "pcs": [],
   "assets": [],
-  "users": [],
-  "sessions": [],
+  "users": [
+    {
+      "username": "admin",
+      "email": "admin@maorigroup.com",
+      "firstName": "Amministratore",
+      "lastName": "Sistema",
+      "role": "admin",
+      "isActive": true,
+      "id": "admin-123",
+      "passwordHash": "$2b$12$0D.xn0YMlylfJfrNgXd2VOZq5ck5BYh2tirfcIQREz.mkjjYgp8bW",
+      "lastLogin": "2025-10-18T23:56:29.331Z",
+      "twoFactorSecret": null,
+      "twoFactorEnabled": false,
+      "backupCodes": null,
+      "createdAt": "2025-10-18T23:50:00.000Z",
+      "updatedAt": "2025-10-18T23:50:00.000Z"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "208a2ef8-5fa0-4f91-b5bd-5eb8dd6c6d4e",
+      "userId": "admin-123",
+      "expiresAt": "2025-10-25T23:55:54.544Z"
+    },
+    {
+      "id": "6bfeb886-0f43-4979-aa3b-179b775fc0cb",
+      "userId": "admin-123",
+      "expiresAt": "2025-10-25T23:56:29.344Z"
+    }
+  ],
   "maintenance": []
 }

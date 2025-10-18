@@ -307,8 +307,8 @@ export class JsonStorage {
     }
   }
 
-  async validatePassword(username: string, password: string): Promise<User | null> {
-    const user = await this.getUserByUsername(username);
+  async validatePassword(email: string, password: string): Promise<User | null> {
+    const user = await this.getUserByEmail(email);
     if (!user) return null;
     
     const isValid = await bcrypt.compare(password, user.passwordHash);

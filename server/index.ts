@@ -51,27 +51,14 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Wait for database connection to be ready
-  const { hasDb } = await import("./db");
-  // Temporarily disable database connection due to MySQL compatibility issues
-  // if (process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '') {
-  //   // Wait for database connection
-  //   let attempts = 0;
-  //   while (!hasDb() && attempts < 30) {
-  //     await new Promise(resolve => setTimeout(resolve, 1000));
-  //     attempts++;
-  //   }
-  //   if (!hasDb()) {
-  //     throw new Error("Database connection timeout");
-  //   }
-  // }
-  
-  // Initialize database with test data on first run
+  // Always use JsonStorage for development
   const { JsonStorage } = await import("./jsonStorage");
   const storage = new JsonStorage();
-  if (storage.initializeWithTestData) {
-    await storage.initializeWithTestData();
-  }
+  
+  // Initialize with test data on first run - DISABLED
+  // if (storage.initializeWithTestData) {
+  //   await storage.initializeWithTestData();
+  // }
   
   const server = await registerRoutes(app, storage);
 
