@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Smartphone, CreditCard, Keyboard, Monitor, Box, Plus, Pencil, Trash2 } from "lucide-react";
+import { Smartphone, CreditCard, Keyboard, Monitor, Box, Tablet, Plus, Pencil, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -17,25 +17,31 @@ import type { Asset } from "@shared/schema";
 
 // Asset types con icone
 const assetTypes = [
-  { value: "smartphone", label: "Smartphone", icon: Smartphone },
-  { value: "sim", label: "SIM", icon: CreditCard },
-  { value: "tastiera", label: "Tastiere", icon: Keyboard },
-  { value: "monitor", label: "Monitor", icon: Monitor },
   { value: "altro", label: "Altro", icon: Box },
+  { value: "computer", label: "Computer", icon: Keyboard },
+  { value: "monitor", label: "Monitor", icon: Monitor },
+  { value: "sim", label: "SIM", icon: CreditCard },
+  { value: "smartphone", label: "Smartphone", icon: Smartphone },
+  { value: "tablet", label: "Tablet", icon: Tablet },
 ] as const;
 
 // Schema form per asset
 const assetFormSchema = z.object({
-  assetCode: z.string().min(1, "Codice asset richiesto"),
+  // assetCode generato automaticamente lato server
+  assetCode: z.string().optional(),
   assetType: z.string().min(1, "Tipo asset richiesto"),
-  brand: z.string().optional(),
-  model: z.string().optional(),
-  serialNumber: z.string().optional(),
+  brand: z.string().min(1, "Marca richiesta"),
+  model: z.string().min(1, "Modello richiesto"),
+  serialNumber: z.string().min(1, "Seriale richiesto"),
   purchaseDate: z.string().optional(),
   warrantyExpiry: z.string().optional(),
   status: z.string().default("disponibile"),
   specs: z.record(z.any()).optional(),
   notes: z.string().optional(),
+  // Campi specifici per SIM
+  carrier: z.string().optional(),
+  phoneNumber: z.string().optional(),
+  holder: z.string().optional(),
 });
 
 type AssetFormData = z.infer<typeof assetFormSchema>;
@@ -132,7 +138,6 @@ export default function Assets() {
   const form = useForm<AssetFormData>({
     resolver: zodResolver(assetFormSchema),
     defaultValues: {
-      assetCode: "",
       assetType: selectedType,
       brand: "",
       model: "",
@@ -155,13 +160,12 @@ export default function Assets() {
   const handleEdit = (asset: Asset) => {
     setEditingAsset(asset);
     form.reset({
-      assetCode: asset.assetCode,
       assetType: asset.assetType,
       brand: asset.brand || "",
       model: asset.model || "",
       serialNumber: asset.serialNumber || "",
-      purchaseDate: asset.purchaseDate || "",
-      warrantyExpiry: asset.warrantyExpiry || "",
+      purchaseDate: asset.purchaseDate ? (typeof asset.purchaseDate === "string" ? asset.purchaseDate : asset.purchaseDate.toISOString().slice(0, 10)) : "",
+      warrantyExpiry: asset.warrantyExpiry ? (typeof asset.warrantyExpiry === "string" ? asset.warrantyExpiry : asset.warrantyExpiry.toISOString().slice(0, 10)) : "",
       status: asset.status,
       notes: asset.notes || "",
     });
@@ -196,11 +200,11 @@ export default function Assets() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-semibold text-gray-900">Altri Asset</h1>
-            <p className="text-sm text-gray-600 mt-1">Gestione smartphone, SIM, tastiere, monitor e altri dispositivi</p>
+            <p className="text-sm text-gray-600 mt-1">Gestione smartphone, SIM, computer, tablet, monitor e altri dispositivi</p>
           </div>
           <Dialog open={showAssetDialog} onOpenChange={setShowAssetDialog}>
             <DialogTrigger asChild>
-              <Button onClick={handleAddNew} data-testid="button-add-asset">
+              <Button onClick={handleAddNew} className="bg-blue-600 hover:bg-blue-700 text-white" data-testid="button-add-asset">
                 <Plus className="w-4 h-4 mr-2" />
                 Nuovo Asset
               </Button>
@@ -212,19 +216,7 @@ export default function Assets() {
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="assetCode"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Codice Asset *</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="es: PHONE-001" data-testid="input-asset-code" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {/* Codice Asset rimosso: verrà generato automaticamente */}
                     <FormField
                       control={form.control}
                       name="assetType"
@@ -246,34 +238,59 @@ export default function Assets() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="brand"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Marca</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="es: Samsung" data-testid="input-brand" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="model"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Modello</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="es: Galaxy S24" data-testid="input-model" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  {/* Campi Marca e Modello solo per asset non-SIM */}
+                  {form.watch("assetType") !== "sim" && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="brand"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Marca</FormLabel>
+                            <FormControl>
+                              <Input 
+                                {...field} 
+                                placeholder={
+                                  form.watch("assetType") === "computer" ? "Dell" : 
+                                  form.watch("assetType") === "altro" ? "Marca" : 
+                                  form.watch("assetType") === "monitor" ? "Marca" : 
+                                  form.watch("assetType") === "tablet" ? "Marca" : 
+                                  "es: Samsung"
+                                } 
+                                className="placeholder:text-gray-400" 
+                                data-testid="input-brand" 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="model"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Modello</FormLabel>
+                            <FormControl>
+                              <Input 
+                                {...field} 
+                                placeholder={
+                                  form.watch("assetType") === "computer" ? "Modello" : 
+                                  form.watch("assetType") === "altro" ? "Modello" : 
+                                  form.watch("assetType") === "monitor" ? "Modello" : 
+                                  form.watch("assetType") === "tablet" ? "Modello" : 
+                                  "es: Galaxy S24"
+                                } 
+                                className="placeholder:text-gray-400" 
+                                data-testid="input-model" 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
 
                   <FormField
                     control={form.control}
@@ -282,60 +299,102 @@ export default function Assets() {
                       <FormItem>
                         <FormLabel>Numero Seriale</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Numero seriale" data-testid="input-serial" />
+                          <Input {...field} placeholder="Numero seriale" className="placeholder:text-gray-400" data-testid="input-serial" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="purchaseDate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Data Acquisto</FormLabel>
-                          <FormControl>
-                            <Input type="date" {...field} data-testid="input-purchase-date" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="warrantyExpiry"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Scadenza Garanzia</FormLabel>
-                          <FormControl>
-                            <Input type="date" {...field} data-testid="input-warranty" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  {/* Campi specifici per SIM */}
+                  {form.watch("assetType") === "sim" ? (
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="carrier"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Carrier</FormLabel>
+                            <FormControl>
+                              <select {...field} className="w-full border rounded-md px-3 py-2" data-testid="select-carrier">
+                                <option value="">Seleziona carrier</option>
+                                <option value="TIM">TIM</option>
+                                <option value="Vodafone">Vodafone</option>
+                                <option value="Wind Tre">Wind Tre</option>
+                                <option value="Iliad">Iliad</option>
+                                <option value="Fastweb">Fastweb</option>
+                                <option value="PosteMobile">PosteMobile</option>
+                                <option value="CoopVoce">CoopVoce</option>
+                                <option value="Altro">Altro</option>
+                              </select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="phoneNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Numero</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="es: +39 123 456 7890" className="placeholder:text-gray-400" data-testid="input-phone" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="purchaseDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Data Acquisto</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} className="placeholder:text-gray-400" data-testid="input-purchase-date" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="warrantyExpiry"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Scadenza Garanzia</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} className="placeholder:text-gray-400" data-testid="input-warranty" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
 
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Stato</FormLabel>
-                        <FormControl>
-                          <select {...field} className="w-full border rounded-md px-3 py-2" data-testid="select-status">
-                            <option value="disponibile">Disponibile</option>
-                            <option value="assegnato">Assegnato</option>
-                            <option value="manutenzione">Manutenzione</option>
-                            <option value="dismesso">Dismesso</option>
-                          </select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {/* Campo Intestazione per SIM */}
+                  {form.watch("assetType") === "sim" && (
+                    <FormField
+                      control={form.control}
+                      name="holder"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Intestazione</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Nome intestatario SIM" className="placeholder:text-gray-400" data-testid="input-holder" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  {/* Campo stato rimosso su richiesta */}
 
                   <FormField
                     control={form.control}
@@ -346,7 +405,7 @@ export default function Assets() {
                         <FormControl>
                           <textarea
                             {...field}
-                            className="w-full border rounded-md px-3 py-2 min-h-[80px]"
+                            className="w-full border rounded-md px-3 py-2 min-h-[80px] placeholder:text-gray-400"
                             placeholder="Note aggiuntive..."
                             data-testid="input-notes"
                           />
@@ -368,7 +427,7 @@ export default function Assets() {
                     >
                       Annulla
                     </Button>
-                    <Button type="submit" data-testid="button-save">
+                    <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white" data-testid="button-save">
                       {editingAsset ? "Aggiorna" : "Crea"}
                     </Button>
                   </div>
@@ -387,7 +446,12 @@ export default function Assets() {
                 const Icon = type.icon;
                 const count = assets.filter((a) => a.assetType === type.value).length;
                 return (
-                  <TabsTrigger key={type.value} value={type.value} data-testid={`tab-${type.value}`}>
+                  <TabsTrigger
+                    key={type.value}
+                    value={type.value}
+                    className="data-[state=active]:font-bold data-[state=active]:text-blue-600"
+                    data-testid={`tab-${type.value}`}
+                  >
                     <Icon className="w-4 h-4 mr-2" />
                     {type.label} ({count})
                   </TabsTrigger>

@@ -4,24 +4,18 @@ import {
   Monitor, 
   Users, 
   Wrench, 
-  FileText, 
   Settings,
-  Tags,
-  Building2,
   Shield,
-  GitBranch,
-  Box
+  GitBranch
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: BarChart3 },
   { name: "Inventario Asset", href: "/inventory", icon: Monitor },
-  { name: "Dipendenti", href: "/employees", icon: Users },
+  { name: "Collaboratori", href: "/employees", icon: Users },
   { name: "Assegnazione", href: "/workflow", icon: GitBranch },
   { name: "Documenti", href: "/documents", icon: Shield },
-  { name: "Etichette", href: "/labels", icon: Tags },
-  { name: "Report", href: "/reports", icon: FileText },
   { name: "Manutenzione", href: "/maintenance", icon: Wrench },
 ];
 

@@ -1,204 +1,477 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Printer, Download, QrCode, Monitor } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Printer, 
+  Search, 
+  Download, 
+  QrCode,
+  Monitor,
+  Smartphone,
+  Tablet,
+  Keyboard,
+  CreditCard,
+  Box
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { Asset } from "@shared/schema";
+import type { Asset, Pc } from "@shared/schema";
+
+// Icone per tipo di asset
+const assetIcons = {
+  computer: Keyboard,
+  smartphone: Smartphone,
+  tablet: Tablet,
+  monitor: Monitor,
+  sim: CreditCard,
+  altro: Box,
+};
 
 export default function Labels() {
-  const [selectedAsset, setSelectedAsset] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedAssets, setSelectedAssets] = useState<string[]>([]);
+  const [serviceDeskUrl, setServiceDeskUrl] = useState("http://alstom.service-now.com");
   const { toast } = useToast();
 
-  const { data: assets = [], isLoading } = useQuery<Asset[]>({
+  // Fetch assets e PCs
+  const { data: assets = [], isLoading: assetsLoading } = useQuery<Asset[]>({
     queryKey: ["/api/assets"],
   });
 
-  const selectedAssetData = assets.find(asset => asset.id === selectedAsset);
+  const { data: pcs = [], isLoading: pcsLoading } = useQuery<Pc[]>({
+    queryKey: ["/api/pcs"],
+  });
 
-  const handlePrint = () => {
-    if (!selectedAssetData) {
+  // Combina assets e PCs per la visualizzazione
+  const allItems = [
+    ...assets.map(asset => ({
+      id: asset.id,
+      type: 'asset',
+      assetCode: asset.assetCode,
+      brand: asset.brand,
+      model: asset.model,
+      serialNumber: asset.serialNumber,
+      assetType: asset.assetType,
+      status: asset.status,
+    })),
+    ...pcs.map(pc => ({
+      id: pc.id,
+      type: 'pc',
+      assetCode: pc.pcId,
+      brand: pc.brand,
+      model: pc.model,
+      serialNumber: pc.serialNumber,
+      assetType: 'computer',
+      status: pc.status,
+    }))
+  ];
+
+  // Filtra gli elementi
+  const filteredItems = allItems.filter(item => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      item.assetCode?.toLowerCase().includes(searchLower) ||
+      item.brand?.toLowerCase().includes(searchLower) ||
+      item.model?.toLowerCase().includes(searchLower) ||
+      item.serialNumber?.toLowerCase().includes(searchLower)
+    );
+  });
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedAssets(filteredItems.map(item => item.id));
+    } else {
+      setSelectedAssets([]);
+    }
+  };
+
+  const handleSelectItem = (itemId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedAssets(prev => [...prev, itemId]);
+    } else {
+      setSelectedAssets(prev => prev.filter(id => id !== itemId));
+    }
+  };
+
+  const generateLabelHTML = (item: any) => {
+    const Icon = assetIcons[item.assetType as keyof typeof assetIcons] || Box;
+    
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          @page { 
+            size: 4in 2in; 
+            margin: 0.1in; 
+          }
+          body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 8px; 
+            font-size: 10px;
+          }
+          .label { 
+            width: 100%; 
+            height: 100%; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            padding: 6px; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between;
+          }
+          .asset-id { 
+            font-weight: bold; 
+            font-size: 12px; 
+            margin-bottom: 2px; 
+          }
+          .info-line { 
+            margin: 1px 0; 
+            font-size: 9px; 
+          }
+          .service-desk { 
+            display: flex; 
+            align-items: center; 
+            margin-top: 4px; 
+          }
+          .service-desk-icon { 
+            width: 12px; 
+            height: 8px; 
+            margin-right: 4px; 
+            background: black; 
+            position: relative; 
+          }
+          .service-desk-icon::after { 
+            content: ''; 
+            position: absolute; 
+            right: -2px; 
+            top: 2px; 
+            width: 2px; 
+            height: 4px; 
+            background: black; 
+          }
+          .barcode { 
+            margin-top: 4px; 
+            height: 20px; 
+            background: repeating-linear-gradient(
+              90deg,
+              #000 0px,
+              #000 1px,
+              transparent 1px,
+              transparent 2px
+            );
+            background-size: 2px 20px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="label">
+          <div class="asset-id">Asset: ${item.assetCode}</div>
+          <div class="info-line">Model: ${item.brand || ''} ${item.model || ''}</div>
+          <div class="info-line">S/N: ${item.serialNumber || ''}</div>
+          <div class="service-desk">
+            <span>SD</span>
+            <div class="service-desk-icon"></div>
+            <span>: ${serviceDeskUrl}</span>
+          </div>
+          <div class="barcode"></div>
+        </div>
+      </body>
+      </html>
+    `;
+  };
+
+  const printLabels = () => {
+    if (selectedAssets.length === 0) {
       toast({
         title: "Nessun asset selezionato",
-        description: "Seleziona un asset per stampare l'etichetta.",
-        variant: "destructive"
+        description: "Seleziona almeno un asset per stampare le etichette.",
+        variant: "destructive",
       });
       return;
     }
+
+    const selectedItems = allItems.filter(item => selectedAssets.includes(item.id));
+    
+    // Crea una finestra di stampa per ogni etichetta
+    selectedItems.forEach((item, index) => {
+      setTimeout(() => {
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+          printWindow.document.write(generateLabelHTML(item));
+          printWindow.document.close();
+          printWindow.focus();
+          printWindow.print();
+          printWindow.close();
+        }
+      }, index * 500); // Stampa ogni etichetta con un piccolo delay
+    });
 
     toast({
       title: "Stampa avviata",
-      description: `Stampa etichetta per ${selectedAssetData.assetCode}`
+      description: `${selectedAssets.length} etichette in corso di stampa.`,
     });
   };
 
-  const handleDownload = () => {
-    if (!selectedAssetData) {
+  const downloadLabels = () => {
+    if (selectedAssets.length === 0) {
       toast({
         title: "Nessun asset selezionato",
-        description: "Seleziona un asset per scaricare l'etichetta.",
-        variant: "destructive"
+        description: "Seleziona almeno un asset per scaricare le etichette.",
+        variant: "destructive",
       });
       return;
     }
 
+    const selectedItems = allItems.filter(item => selectedAssets.includes(item.id));
+    const htmlContent = selectedItems.map(item => generateLabelHTML(item)).join('<div style="page-break-after: always;"></div>');
+    
+    const fullHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          @page { 
+            size: 4in 2in; 
+            margin: 0.1in; 
+          }
+          body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 8px; 
+            font-size: 10px;
+          }
+          .label { 
+            width: 100%; 
+            height: 100%; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            padding: 6px; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between;
+          }
+          .asset-id { 
+            font-weight: bold; 
+            font-size: 12px; 
+            margin-bottom: 2px; 
+          }
+          .info-line { 
+            margin: 1px 0; 
+            font-size: 9px; 
+          }
+          .service-desk { 
+            display: flex; 
+            align-items: center; 
+            margin-top: 4px; 
+          }
+          .service-desk-icon { 
+            width: 12px; 
+            height: 8px; 
+            margin-right: 4px; 
+            background: black; 
+            position: relative; 
+          }
+          .service-desk-icon::after { 
+            content: ''; 
+            position: absolute; 
+            right: -2px; 
+            top: 2px; 
+            width: 2px; 
+            height: 4px; 
+            background: black; 
+          }
+          .barcode { 
+            margin-top: 4px; 
+            height: 20px; 
+            background: repeating-linear-gradient(
+              90deg,
+              #000 0px,
+              #000 1px,
+              transparent 1px,
+              transparent 2px
+            );
+            background-size: 2px 20px;
+          }
+        </style>
+      </head>
+      <body>
+        ${htmlContent}
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob([fullHTML], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `etichette_${new Date().toISOString().split('T')[0]}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
     toast({
       title: "Download avviato",
-      description: `Download etichetta per ${selectedAssetData.assetCode}`
+      description: `${selectedAssets.length} etichette scaricate.`,
     });
   };
+
+  const isLoading = assetsLoading || pcsLoading;
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Etichette</h1>
-          <p className="text-muted-foreground">Genera etichette per Asset aziendali</p>
+          <h1 className="text-3xl font-bold text-foreground">Stampa Etichette</h1>
+          <p className="text-muted-foreground">Genera e stampa etichette per asset e PC</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <Button 
-            variant="outline" 
-            onClick={handleDownload}
-            disabled={!selectedAsset}
-            className="flex items-center gap-2"
+            onClick={printLabels}
+            disabled={selectedAssets.length === 0}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
           >
-            <Download className="h-4 w-4" />
-            Download
+            <Printer className="h-4 w-4 mr-2" />
+            Stampa Etichette ({selectedAssets.length})
           </Button>
           <Button 
-            onClick={handlePrint}
-            disabled={!selectedAsset}
-            className="bg-primary flex items-center gap-2"
+            onClick={downloadLabels}
+            disabled={selectedAssets.length === 0}
+            variant="outline"
           >
-            <Printer className="h-4 w-4" />
-            Stampa
+            <Download className="h-4 w-4 mr-2" />
+            Scarica HTML
           </Button>
         </div>
       </div>
 
-      {/* Statistiche */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Monitor className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Asset Totali</p>
-                <p className="text-2xl font-bold">{assets.length}</p>
-              </div>
+      {/* Configurazione Service Desk */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Configurazione Service Desk</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4">
+            <label className="text-sm font-medium">URL Service Desk:</label>
+            <Input
+              value={serviceDeskUrl}
+              onChange={(e) => setServiceDeskUrl(e.target.value)}
+              placeholder="http://alstom.service-now.com"
+              className="max-w-md"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Filtri e Selezione */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Selezione Asset</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4 mb-4">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Cerca asset..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <QrCode className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Asset Attivi</p>
-                <p className="text-2xl font-bold">{assets.filter(asset => asset.status === 'disponibile').length}</p>
-              </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="select-all"
+                checked={selectedAssets.length === filteredItems.length && filteredItems.length > 0}
+                onCheckedChange={handleSelectAll}
+              />
+              <label htmlFor="select-all" className="text-sm font-medium">
+                Seleziona Tutti ({filteredItems.length})
+              </label>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Printer className="h-5 w-5 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Selezionato</p>
-                <p className="text-2xl font-bold">{selectedAsset ? 1 : 0}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Selezione Asset */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Seleziona Asset</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="asset-select">Asset</Label>
-              <select
-                id="asset-select"
-                value={selectedAsset}
-                onChange={(e) => setSelectedAsset(e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              >
-                <option value="">Seleziona un Asset</option>
-                {assets.map(asset => (
-                  <option key={asset.id} value={asset.id}>
-                    {asset.assetCode} - {asset.brand} {asset.model}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {selectedAssetData && (
-              <div className="space-y-2 p-4 bg-muted/50 rounded-lg">
-                <h3 className="font-medium">Dettagli Asset Selezionato</h3>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
-                    <span className="font-medium">Codice:</span> {selectedAssetData.assetCode}
-                  </div>
-                  <div>
-                    <span className="font-medium">Marca:</span> {selectedAssetData.brand}
-                  </div>
-                  <div>
-                    <span className="font-medium">Modello:</span> {selectedAssetData.model}
-                  </div>
-                  <div>
-                    <span className="font-medium">Serial:</span> {selectedAssetData.serialNumber}
-                  </div>
-                  <div className="col-span-2">
-                    <span className="font-medium">Stato:</span> {selectedAssetData.status || 'Non disponibile'}
-                  </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Anteprima Etichetta */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Anteprima Etichetta</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {selectedAssetData ? (
-              <div className="border border-gray-300 bg-white p-4 rounded-lg">
-                <div className="text-center space-y-2">
-                  <div className="text-xs font-bold text-blue-800">MAORI GROUP</div>
-                  <div className="text-sm font-semibold">{selectedAssetData.assetCode}</div>
-                  <div className="text-xs text-gray-600">{selectedAssetData.brand} {selectedAssetData.model}</div>
-                  <div className="text-xs text-gray-500">{selectedAssetData.serialNumber}</div>
-                  <div className="bg-black text-white text-xs p-2 font-mono">
-                    [QR CODE PLACEHOLDER]
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="border border-dashed border-gray-300 p-8 rounded-lg text-center text-muted-foreground">
-                Seleziona un Asset per vedere l'anteprima dell'etichetta
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+          {/* Tabella Asset */}
+          <div className="border rounded-lg">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12"></TableHead>
+                  <TableHead>Codice</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Marca</TableHead>
+                  <TableHead>Modello</TableHead>
+                  <TableHead>Seriale</TableHead>
+                  <TableHead>Stato</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  [...Array(5)].map((_, i) => (
+                    <TableRow key={i}>
+                      {[...Array(7)].map((_, j) => (
+                        <TableCell key={j} className="animate-pulse">
+                          <div className="h-4 bg-muted rounded w-20"></div>
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : filteredItems.length > 0 ? (
+                  filteredItems.map((item) => {
+                    const Icon = assetIcons[item.assetType as keyof typeof assetIcons] || Box;
+                    const isSelected = selectedAssets.includes(item.id);
+                    
+                    return (
+                      <TableRow key={item.id} className={isSelected ? "bg-blue-50" : ""}>
+                        <TableCell>
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={(checked) => handleSelectItem(item.id, checked as boolean)}
+                          />
+                        </TableCell>
+                        <TableCell className="font-medium">{item.assetCode}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Icon className="h-4 w-4" />
+                            <span className="capitalize">{item.assetType}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{item.brand || "-"}</TableCell>
+                        <TableCell>{item.model || "-"}</TableCell>
+                        <TableCell>{item.serialNumber || "-"}</TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant={
+                              item.status === "disponibile" ? "default" :
+                              item.status === "assegnato" ? "secondary" :
+                              item.status === "manutenzione" ? "destructive" : "outline"
+                            }
+                          >
+                            {item.status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                      {searchTerm ? "Nessun asset corrisponde alla ricerca" : "Nessun asset trovato"}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

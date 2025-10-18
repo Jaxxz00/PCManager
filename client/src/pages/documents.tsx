@@ -196,7 +196,7 @@ export default function Documents() {
     return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i];
   };
 
-  const generateManlevaPDF = async (assetId: string, employeeId: string) => {
+  const generateManlevaPDF = async (itemId: string, employeeId: string, fileName?: string) => {
     try {
       const response = await fetch('/api/manleva/generate', {
         method: 'POST',
@@ -204,7 +204,7 @@ export default function Documents() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
         },
-        body: JSON.stringify({ assetId, employeeId })
+        body: JSON.stringify({ pcId: itemId, employeeId })
       });
 
       if (!response.ok) {
@@ -216,7 +216,7 @@ export default function Documents() {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'manleva.pdf';
+      link.download = fileName || 'manleva.pdf';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -295,136 +295,7 @@ export default function Documents() {
           <h1 className="text-3xl font-bold text-foreground">Manleve</h1>
           <p className="text-muted-foreground">Archivio manleve generate automaticamente durante l'assegnazione PC - {documents.filter(doc => doc.type === 'manleva').length} totali</p>
         </div>
-        <div className="flex space-x-2">
-          <Dialog open={showDocumentForm} onOpenChange={setShowDocumentForm}>
-            <DialogTrigger asChild>
-              <Button className="bg-primary">
-                <Plus className="mr-2 h-4 w-4" />
-                Registra Manleva
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Aggiungi Nuova Manleva</DialogTitle>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Titolo</FormLabel>
-                      <FormControl>
-                        <Input placeholder="es: Manleva PC Dell OptiPlex 7090" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Descrizione</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Descrizione del documento" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="assetId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Asset Associato (opzionale)</FormLabel>
-                        <FormControl>
-                          <select
-                            {...field}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                          >
-                            <option value="">Nessun Asset</option>
-                            {assets.map(asset => (
-                              <option key={asset.id} value={asset.id}>
-                                {asset.assetCode} - {asset.brand} {asset.model}
-                              </option>
-                            ))}
-                          </select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="employeeId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Dipendente Associato (opzionale)</FormLabel>
-                        <FormControl>
-                          <select
-                            {...field}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                          >
-                            <option value="">Nessun dipendente</option>
-                            {employees.map(employee => (
-                              <option key={employee.id} value={employee.id}>
-                                {employee.name} - {employee.email}
-                              </option>
-                            ))}
-                          </select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="tags"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tag (separati da virgola)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="es: consegna, responsabilità, firmata" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                  <Upload className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                  <p className="text-sm text-gray-600 mb-2">Trascina i file qui o clicca per selezionare</p>
-                  <Button type="button" variant="outline" size="sm">
-                    Scegli File
-                  </Button>
-                </div>
-
-                <div className="flex justify-end space-x-3 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowDocumentForm(false)}
-                  >
-                    Annulla
-                  </Button>
-                  <Button type="submit" className="bg-primary">
-                    Salva Manleva
-                  </Button>
-                </div>
-              </form>
-            </Form>
-            </DialogContent>
-          </Dialog>
-        </div>
+        {/* Rimosso il pulsante / dialog "Registra Manleva" su richiesta */}
       </div>
 
       {/* Statistiche Manleve */}
@@ -464,7 +335,7 @@ export default function Documents() {
                 <User className="h-5 w-5 text-purple-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Dipendenti</p>
+                <p className="text-sm font-medium text-muted-foreground">Collaboratori</p>
                 <p className="text-2xl font-bold">{new Set(documents.filter(doc => doc.employeeId).map(doc => doc.employeeId)).size}</p>
               </div>
             </div>
@@ -564,7 +435,7 @@ export default function Documents() {
                 <TableRow className="bg-muted/50">
                   <TableHead className="font-medium min-w-[200px]">Titolo</TableHead>
                   <TableHead className="font-medium min-w-[100px]">Tipo</TableHead>
-                  <TableHead className="font-medium min-w-[150px]">Asset/Dipendente</TableHead>
+                  <TableHead className="font-medium min-w-[150px]">Asset/Collaboratore</TableHead>
                   <TableHead className="font-medium min-w-[120px]">Dimensione</TableHead>
                   <TableHead className="font-medium min-w-[120px]">Data Upload</TableHead>
                   <TableHead className="font-medium min-w-[150px]">Tag</TableHead>
@@ -646,9 +517,55 @@ export default function Documents() {
                             size="sm"
                             className="h-8 w-8 p-0"
                             title="Visualizza"
-                            onClick={() => {
-                              // Logica per visualizzare il documento
-                              // TODO: implementare visualizzazione documento
+                            onClick={async () => {
+                              try {
+                                // Estrai itemId dai tags (formato: "tag1, tag2, itemId:XXXX")
+                                const itemIdMatch = document.tags?.match(/itemId:([^\s,]+)/);
+                                const itemId = itemIdMatch ? itemIdMatch[1] : null;
+                                
+                                if (itemId && document.employeeId) {
+                                  // Genera il PDF e aprilo in una nuova tab
+                                  const response = await fetch('/api/manleva/generate', {
+                                    method: 'POST',
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                      'Authorization': `Bearer ${localStorage.getItem('sessionId')}`
+                                    },
+                                    body: JSON.stringify({ pcId: itemId, employeeId: document.employeeId })
+                                  });
+
+                                  if (!response.ok) {
+                                    throw new Error('Errore nella generazione della manleva');
+                                  }
+
+                                  // Crea blob e URL per visualizzazione
+                                  const blob = await response.blob();
+                                  const url = window.URL.createObjectURL(blob);
+                                  
+                                  // Apri in nuova tab
+                                  window.open(url, '_blank');
+                                  
+                                  // Pulisci URL dopo un po' per liberare memoria
+                                  setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+                                  
+                                  toast({
+                                    title: "Manleva aperta",
+                                    description: "Il documento è stato aperto in una nuova tab."
+                                  });
+                                } else {
+                                  toast({
+                                    title: "Errore",
+                                    description: "Asset o collaboratore non trovato per questa manleva",
+                                    variant: "destructive"
+                                  });
+                                }
+                              } catch (error) {
+                                toast({
+                                  title: "Errore",
+                                  description: "Impossibile aprire la manleva",
+                                  variant: "destructive"
+                                });
+                              }
                             }}
                           >
                             <Eye className="h-4 w-4" />
@@ -659,12 +576,16 @@ export default function Documents() {
                             className="h-8 w-8 p-0"
                             title="Download Manleva PDF"
                             onClick={() => {
-                              if (document.assetId && document.employeeId) {
-                                generateManlevaPDF(document.assetId, document.employeeId);
+                              // Estrai itemId dai tags (formato: "tag1, tag2, itemId:XXXX")
+                              const itemIdMatch = document.tags?.match(/itemId:([^\s,]+)/);
+                              const itemId = itemIdMatch ? itemIdMatch[1] : null;
+                              
+                              if (itemId && document.employeeId) {
+                                generateManlevaPDF(itemId, document.employeeId, document.fileName);
                               } else {
                                 toast({
                                   title: "Errore",
-                                  description: "Asset o dipendente non trovato per questa manleva",
+                                  description: "Asset o collaboratore non trovato per questa manleva",
                                   variant: "destructive"
                                 });
                               }

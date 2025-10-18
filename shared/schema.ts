@@ -1,34 +1,34 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, date, timestamp, boolean, jsonb, index } from "drizzle-orm/pg-core";
+import { mysqlTable, varchar, int, date, timestamp, boolean, json, index, text } from "drizzle-orm/mysql-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const employees = pgTable("employees", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: text("name").notNull(),
-  email: text("email").notNull().unique(),
-  department: text("department").notNull(),
-  company: text("company").notNull().default("Maori Group"),
+export const employees = mysqlTable("employees", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  department: varchar("department", { length: 255 }).notNull(),
+  company: varchar("company", { length: 255 }).notNull().default("Maori Group"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
   emailIdx: index("employees_email_idx").on(table.email),
   nameIdx: index("employees_name_idx").on(table.name),
 }));
 
-export const pcs = pgTable("pcs", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  pcId: text("pc_id").notNull().unique(),
-  employeeId: varchar("employee_id").references(() => employees.id),
-  brand: text("brand").notNull(),
-  model: text("model").notNull(),
-  cpu: text("cpu").notNull(),
-  ram: integer("ram").notNull(), // in GB
-  storage: text("storage").notNull(),
-  operatingSystem: text("operating_system").notNull(),
-  serialNumber: text("serial_number").notNull().unique(),
+export const pcs = mysqlTable("pcs", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  pcId: varchar("pc_id", { length: 50 }).notNull().unique(),
+  employeeId: varchar("employee_id", { length: 36 }).references(() => employees.id),
+  brand: varchar("brand", { length: 100 }).notNull(),
+  model: varchar("model", { length: 100 }).notNull(),
+  cpu: varchar("cpu", { length: 100 }).notNull(),
+  ram: int("ram").notNull(), // in GB
+  storage: varchar("storage", { length: 100 }).notNull(),
+  operatingSystem: varchar("operating_system", { length: 100 }).notNull(),
+  serialNumber: varchar("serial_number", { length: 100 }).notNull().unique(),
   purchaseDate: date("purchase_date").notNull(),
   warrantyExpiry: date("warranty_expiry").notNull(),
-  status: text("status").notNull().default("active"), // active, maintenance, retired
+  status: varchar("status", { length: 20 }).notNull().default("active"), // active, maintenance, retired
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -40,18 +40,18 @@ export const pcs = pgTable("pcs", {
 }));
 
 // Tabella asset unificata per tutti i tipi di dispositivi
-export const assets = pgTable("assets", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  assetCode: text("asset_code").notNull().unique(), // PC-001, PHONE-001, SIM-001, KB-001, MON-001, OTHER-001
-  assetType: text("asset_type").notNull(), // pc, smartphone, sim, tastiera, monitor, altro
-  employeeId: varchar("employee_id").references(() => employees.id),
-  brand: text("brand"), // Non obbligatorio per SIM
-  model: text("model"), // Non obbligatorio per SIM
-  serialNumber: text("serial_number").unique(), // Opzionale per alcuni tipi
+export const assets = mysqlTable("assets", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  assetCode: varchar("asset_code", { length: 50 }).notNull().unique(), // PC-001, PHONE-001, SIM-001, KB-001, MON-001, OTHER-001
+  assetType: varchar("asset_type", { length: 20 }).notNull(), // pc, smartphone, sim, tastiera, monitor, altro
+  employeeId: varchar("employee_id", { length: 36 }).references(() => employees.id),
+  brand: varchar("brand", { length: 100 }), // Non obbligatorio per SIM
+  model: varchar("model", { length: 100 }), // Non obbligatorio per SIM
+  serialNumber: varchar("serial_number", { length: 100 }).unique(), // Opzionale per alcuni tipi
   purchaseDate: date("purchase_date"),
   warrantyExpiry: date("warranty_expiry"),
-  status: text("status").notNull().default("disponibile"), // disponibile, assegnato, manutenzione, dismesso
-  specs: jsonb("specs"), // Dati specifici del tipo (CPU/RAM per PC, IMEI per smartphone, numero SIM, ecc)
+  status: varchar("status", { length: 20 }).notNull().default("disponibile"), // disponibile, assegnato, manutenzione, dismesso
+  specs: json("specs"), // Dati specifici del tipo (CPU/RAM per PC, IMEI per smartphone, numero SIM, ecc)
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -64,20 +64,20 @@ export const assets = pgTable("assets", {
 }));
 
 // Tabella utenti per l'autenticazione
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  email: text("email").notNull().unique(),
+export const users = mysqlTable("users", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  username: varchar("username", { length: 100 }).notNull().unique(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
   passwordHash: text("password_hash").notNull(),
-  firstName: text("first_name").notNull(),
-  lastName: text("last_name").notNull(),
-  role: text("role").notNull().default("admin"), // admin, user
+  firstName: varchar("first_name", { length: 100 }).notNull(),
+  lastName: varchar("last_name", { length: 100 }).notNull(),
+  role: varchar("role", { length: 20 }).notNull().default("admin"), // admin, user
   isActive: boolean("is_active").notNull().default(true),
   lastLogin: timestamp("last_login"),
   // 2FA fields
   twoFactorSecret: text("two_factor_secret"),
   twoFactorEnabled: boolean("two_factor_enabled").notNull().default(false),
-  backupCodes: text("backup_codes").array(),
+  backupCodes: json("backup_codes"), // Changed from array to JSON
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
@@ -86,9 +86,9 @@ export const users = pgTable("users", {
 }));
 
 // Tabella sessioni per gestire le sessioni utente
-export const sessions = pgTable("sessions", {
-  id: varchar("id").primaryKey(),
-  userId: varchar("user_id").notNull().references(() => users.id),
+export const sessions = mysqlTable("sessions", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  userId: varchar("user_id", { length: 36 }).notNull().references(() => users.id),
   expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
@@ -97,46 +97,46 @@ export const sessions = pgTable("sessions", {
 }));
 
 // Tabella storico PC per tracciare cambiamenti e eventi
-export const pcHistory = pgTable("pc_history", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  pcId: varchar("pc_id").notNull().references(() => pcs.id),
-  serialNumber: text("serial_number").notNull(), // Duplicato per ricerche veloci
-  eventType: text("event_type").notNull(), // created, assigned, unassigned, maintenance, status_change, specs_update, notes_update
+export const pcHistory = mysqlTable("pc_history", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  pcId: varchar("pc_id", { length: 36 }).notNull().references(() => pcs.id),
+  serialNumber: varchar("serial_number", { length: 100 }).notNull(), // Duplicato per ricerche veloci
+  eventType: varchar("event_type", { length: 50 }).notNull(), // created, assigned, unassigned, maintenance, status_change, specs_update, notes_update
   eventDescription: text("event_description").notNull(),
   oldValue: text("old_value"), // Valore precedente se applicabile
   newValue: text("new_value"), // Nuovo valore se applicabile
-  performedBy: varchar("performed_by").references(() => users.id),
-  performedByName: text("performed_by_name"), // Nome utente per storico
-  relatedEmployeeId: varchar("related_employee_id").references(() => employees.id),
-  relatedEmployeeName: text("related_employee_name"), // Nome dipendente per storico
-  maintenanceId: varchar("maintenance_id"), // Riferimento a manutenzione se applicabile
+  performedBy: varchar("performed_by", { length: 36 }).references(() => users.id),
+  performedByName: varchar("performed_by_name", { length: 200 }), // Nome utente per storico
+  relatedEmployeeId: varchar("related_employee_id", { length: 36 }).references(() => employees.id),
+  relatedEmployeeName: varchar("related_employee_name", { length: 200 }), // Nome dipendente per storico
+  maintenanceId: varchar("maintenance_id", { length: 36 }), // Riferimento a manutenzione se applicabile
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Tabella manutenzione PC
-export const maintenance = pgTable("maintenance", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  pcId: varchar("pc_id").notNull().references(() => pcs.id),
-  type: text("type").notNull(), // Tipo intervento (es: Sostituzione Hardware, Pulizia Sistema, etc.)
-  priority: text("priority").notNull().default("medium"), // low, medium, high, urgent
-  status: text("status").notNull().default("pending"), // pending, in_progress, completed, cancelled
+export const maintenance = mysqlTable("maintenance", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  assetId: varchar("asset_id", { length: 36 }).notNull().references(() => assets.id),
+  type: varchar("type", { length: 100 }).notNull(), // Tipo intervento (es: Sostituzione Hardware, Pulizia Sistema, etc.)
+  priority: varchar("priority", { length: 20 }).notNull().default("medium"), // low, medium, high, urgent
+  status: varchar("status", { length: 20 }).notNull().default("pending"), // pending, in_progress, completed, cancelled
   description: text("description").notNull(),
-  technician: text("technician").notNull(),
+  technician: varchar("technician", { length: 100 }).notNull(),
   scheduledDate: timestamp("scheduled_date"),
   completedDate: timestamp("completed_date"),
-  estimatedCost: integer("estimated_cost"), // in EUR cents
-  actualCost: integer("actual_cost"), // in EUR cents
+  estimatedCost: int("estimated_cost"), // in EUR cents
+  actualCost: int("actual_cost"), // in EUR cents
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Tabella sequenze codici asset per auto-generazione
-export const assetCodeSequences = pgTable("asset_code_sequences", {
-  assetType: text("asset_type").primaryKey(), // pc, smartphone, sim, tastiera, monitor, altro
-  prefix: text("prefix").notNull(), // PC, PHONE, SIM, KB, MON, OTHER
-  lastValue: integer("last_value").notNull().default(0), // Ultimo numero usato
+export const assetCodeSequences = mysqlTable("asset_code_sequences", {
+  assetType: varchar("asset_type", { length: 20 }).primaryKey(), // pc, smartphone, sim, tastiera, monitor, altro
+  prefix: varchar("prefix", { length: 10 }).notNull(), // PC, PHONE, SIM, KB, MON, OTHER
+  lastValue: int("last_value").notNull().default(0), // Ultimo numero usato
 });
 
 export const insertEmployeeSchema = createInsertSchema(employees).omit({
@@ -144,16 +144,34 @@ export const insertEmployeeSchema = createInsertSchema(employees).omit({
   createdAt: true,
 });
 
-export const insertPcSchema = createInsertSchema(pcs).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
+export const insertPcSchema = z.object({
+  pcId: z.string().min(1).optional(), // Generato automaticamente se non fornito
+  brand: z.string().min(1),
+  model: z.string().min(1),
+  cpu: z.string().min(1),
+  ram: z.number().int().positive(),
+  storage: z.string().min(1),
+  operatingSystem: z.string().min(1),
+  serialNumber: z.string().min(1),
+  purchaseDate: z.string().min(1).transform((str) => new Date(str)),
+  warrantyExpiry: z.string().min(1).transform((str) => new Date(str)),
+  status: z.string().optional(),
+  notes: z.string().optional(),
+  employeeId: z.string().optional(),
 });
 
-export const insertAssetSchema = createInsertSchema(assets).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
+export const insertAssetSchema = z.object({
+  assetCode: z.string().optional().transform((v) => (v && v.trim().length > 0 ? v : undefined)),
+  assetType: z.string().min(1),
+  brand: z.string().min(1),
+  model: z.string().min(1),
+  serialNumber: z.string().min(1),
+  purchaseDate: z.string().optional().transform((str) => str ? new Date(str) : undefined),
+  warrantyExpiry: z.string().optional().transform((str) => str ? new Date(str) : undefined),
+  status: z.string().default("disponibile"),
+  employeeId: z.string().optional().transform((val) => val === '' ? undefined : val),
+  specs: z.record(z.any()).optional(),
+  notes: z.string().optional(),
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({
@@ -168,7 +186,7 @@ export const insertUserSchema = createInsertSchema(users).omit({
 });
 
 export const loginSchema = z.object({
-  username: z.string().min(1, "Username richiesto"),
+  email: z.string().email("Email non valida"),
   password: z.string().min(1, "Password richiesta"),
   twoFactorCode: z.string().optional(),
 });
@@ -223,10 +241,10 @@ export type LoginData = z.infer<typeof loginSchema>;
 export type RegisterData = z.infer<typeof registerSchema>;
 
 // Invite tokens table for password setup
-export const inviteTokens = pgTable("invite_tokens", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  token: varchar("token").notNull().unique(),
+export const inviteTokens = mysqlTable("invite_tokens", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: varchar("user_id", { length: 36 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  token: varchar("token", { length: 255 }).notNull().unique(),
   expiresAt: timestamp("expires_at").notNull(),
   used: boolean("used").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
@@ -248,16 +266,16 @@ export const setPasswordSchema = z.object({
 export type SetPasswordData = z.infer<typeof setPasswordSchema>;
 
 // Documents table for manleve and other documents
-export const documents = pgTable("documents", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  title: text("title").notNull(),
-  type: text("type").notNull(), // manleva, contratto, fattura, etc.
+export const documents = mysqlTable("documents", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  title: varchar("title", { length: 255 }).notNull(),
+  type: varchar("type", { length: 50 }).notNull(), // manleva, contratto, fattura, etc.
   description: text("description"),
-  fileName: text("file_name"),
-  fileSize: integer("file_size"), // size in bytes
-  pcId: varchar("pc_id").references(() => pcs.id),
-  employeeId: varchar("employee_id").references(() => employees.id),
-  tags: text("tags"), // comma-separated tags
+  fileName: varchar("file_name", { length: 255 }),
+  fileSize: int("file_size"), // size in bytes
+  pcId: varchar("pc_id", { length: 36 }).references(() => pcs.id),
+  employeeId: varchar("employee_id", { length: 36 }).references(() => employees.id),
+  tags: varchar("tags", { length: 500 }), // comma-separated tags
   uploadedAt: timestamp("uploaded_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -275,3 +293,4 @@ export type InsertDocument = z.infer<typeof insertDocumentSchema>;
 export type PcWithEmployee = Pc & {
   employee?: Pick<Employee, 'id' | 'name' | 'email'> | null;
 };
+

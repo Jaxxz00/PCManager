@@ -4,8 +4,7 @@ import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 
-// Trust proxy per corretto funzionamento dietro reverse proxy (Replit)
-// Configurato per funzionare correttamente con l'ambiente Replit
+// Trust proxy per corretto funzionamento dietro reverse proxy
 app.set('trust proxy', 1);
 
 // Sicurezza: Limite dimensione payload per prevenire DoS
@@ -52,13 +51,29 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Wait for database connection to be ready
+  const { hasDb } = await import("./db");
+  // Temporarily disable database connection due to MySQL compatibility issues
+  // if (process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '') {
+  //   // Wait for database connection
+  //   let attempts = 0;
+  //   while (!hasDb() && attempts < 30) {
+  //     await new Promise(resolve => setTimeout(resolve, 1000));
+  //     attempts++;
+  //   }
+  //   if (!hasDb()) {
+  //     throw new Error("Database connection timeout");
+  //   }
+  // }
+  
   // Initialize database with test data on first run
-  const { storage, DatabaseStorage } = await import("./storage");
-  if (storage instanceof DatabaseStorage) {
+  const { JsonStorage } = await import("./jsonStorage");
+  const storage = new JsonStorage();
+  if (storage.initializeWithTestData) {
     await storage.initializeWithTestData();
   }
   
-  const server = await registerRoutes(app);
+  const server = await registerRoutes(app, storage);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

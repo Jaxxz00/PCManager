@@ -1,9 +1,11 @@
 import StatsCards from "@/components/stats-cards";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
+import { useState } from "react";
 import type { Asset, Employee } from "@shared/schema";
 import { 
   AlertTriangle, 
@@ -21,6 +23,8 @@ import {
 } from "lucide-react";
 
 export default function Dashboard() {
+  const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
+  
   const { data: assets = [], isLoading: assetsLoading } = useQuery<Asset[]>({
     queryKey: ["/api/assets"],
   });
@@ -62,10 +66,40 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
           <p className="text-muted-foreground">Panoramica generale del sistema Asset</p>
         </div>
+        <div className="flex items-center gap-3">
+          <Popover open={isQuickActionsOpen} onOpenChange={setIsQuickActionsOpen}>
+            <PopoverTrigger asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white border-blue-600" size="sm">Azioni rapide</Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 bg-blue-50 border-blue-200 border shadow-lg" align="end">
+              <div className="flex flex-col gap-2">
+                <Link href="/inventory">
+                  <Button className="w-full justify-start h-9 bg-blue-600 hover:bg-blue-700 text-white hover:scale-[1.02] transition-all duration-200">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Aggiungi Nuovo Asset
+                  </Button>
+                </Link>
+                <Link href="/employees">
+                  <Button className="w-full justify-start h-9 hover:bg-blue-100 hover:scale-[1.02] transition-all duration-200" variant="outline">
+                    <Users className="h-4 w-4 mr-2" />
+                    Aggiungi Collaboratore
+                  </Button>
+                </Link>
+                <Link href="/maintenance">
+                  <Button className="w-full justify-center h-9 hover:bg-blue-100 hover:scale-[1.02] transition-all duration-200" variant="outline">
+                    <Wrench className="h-4 w-4 mr-2" />
+                    Programma Manutenzione
+                  </Button>
+                </Link>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
       {/* Stats Cards Principali */}
       <StatsCards />
+
 
       {/* Grid Principale */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -73,7 +107,7 @@ export default function Dashboard() {
         {/* Colonna Sinistra - Alerts */}
         <div className="space-y-4">
           {/* Garanzie in Scadenza */}
-          <Card>
+          <Card className="hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center justify-between text-base">
                 <div className="flex items-center gap-2">
@@ -111,7 +145,7 @@ export default function Dashboard() {
           </Card>
 
           {/* Asset Non Assegnati */}
-          <Card>
+          <Card className="hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center justify-between text-base">
                 <div className="flex items-center gap-2">
@@ -142,7 +176,7 @@ export default function Dashboard() {
 
         {/* Colonna Centrale - Attività Recente */}
         <div className="space-y-4">
-          <Card>
+          <Card className="hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
                 <Activity className="h-4 w-4 text-green-500" />
@@ -176,7 +210,7 @@ export default function Dashboard() {
           </Card>
 
           {/* Asset in Manutenzione */}
-          <Card>
+          <Card className="hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center justify-between text-base">
                 <div className="flex items-center gap-2">
@@ -207,7 +241,7 @@ export default function Dashboard() {
 
         {/* Colonna Destra - Stato Sistema */}
         <div className="space-y-4">
-          <Card>
+          <Card className="hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
                 <TrendingUp className="h-4 w-4 text-purple-500" />
@@ -223,7 +257,7 @@ export default function Dashboard() {
                 </div>
                 <div className="text-center p-3 bg-green-50 rounded-lg">
                   <Users className="h-6 w-6 text-green-600 mx-auto mb-1" />
-                  <p className="text-xs text-muted-foreground">Dipendenti</p>
+                  <p className="text-xs text-muted-foreground">Collaboratori</p>
                   <p className="text-lg font-bold text-green-600">{employees.length}</p>
                 </div>
                 <div className="text-center p-3 bg-orange-50 rounded-lg">
@@ -235,63 +269,11 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* Azioni Rapide */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Azioni Rapide</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Link href="/inventory">
-                <Button className="w-full justify-start h-10" variant="outline">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Aggiungi Nuovo Asset
-                </Button>
-              </Link>
-              <Link href="/employees">
-                <Button className="w-full justify-start h-10" variant="outline">
-                  <Users className="h-4 w-4 mr-2" />
-                  Aggiungi Dipendente
-                </Button>
-              </Link>
-              <Link href="/maintenance">
-                <Button className="w-full justify-start h-10" variant="outline">
-                  <Wrench className="h-4 w-4 mr-2" />
-                  Programma Manutenzione
-                </Button>
-              </Link>
-              <Link href="/reports">
-                <Button className="w-full justify-start h-10" variant="outline">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Genera Report
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+          {/* Azioni Rapide card rimossa (sostituita dal popover in alto) */}
         </div>
       </div>
 
-      {/* Sistema Status Bar */}
-      <Card>
-        <CardContent className="py-4">
-          <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-muted-foreground">Sistema Online</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Ultimo Backup: Oggi</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Activity className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">12 Utenti Attivi</span>
-              </div>
-            </div>
-            <Badge variant="outline">v2.1.0</Badge>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Status bar rimossa */}
     </div>
   );
 }

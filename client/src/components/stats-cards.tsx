@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Monitor, User, Wrench, AlertTriangle } from "lucide-react";
+import { Monitor, User, Wrench, AlertTriangle, Smartphone, Tablet, CreditCard } from "lucide-react";
 
 interface DashboardStats {
  totalPCs: number;
@@ -10,6 +10,13 @@ interface DashboardStats {
  totalEmployees: number;
  assignedPCs: number;
  availablePCs: number;
+ byType: {
+   pc: { total: number; active: number; assigned: number; };
+   smartphone: { total: number; active: number; assigned: number; };
+   tablet: { total: number; active: number; assigned: number; };
+   sim: { total: number; active: number; assigned: number; };
+   other: { total: number; active: number; assigned: number; };
+ };
 }
 
 export default function StatsCards() {
@@ -49,17 +56,18 @@ export default function StatsCards() {
   );
  }
 
- const statsData = [
+ // Statistiche principali (prima riga)
+ const mainStats = [
   {
-   title: "PC Totali",
+   title: "Asset Totali",
    value: stats?.totalPCs || 0,
    icon: Monitor,
-   description: "Computer nel sistema",
+   description: "Tutti gli asset",
    color: "text-blue-600",
    bgColor: "bg-blue-100",
   },
   {
-   title: "PC Attivi",
+   title: "Asset Attivi",
    value: stats?.activePCs || 0,
    icon: Monitor,
    description: "Operativi",
@@ -67,7 +75,7 @@ export default function StatsCards() {
    bgColor: "bg-green-100",
   },
   {
-   title: "Dipendenti",
+  title: "Collaboratori",
    value: stats?.totalEmployees || 0,
    icon: User,
    description: "Totale registrati",
@@ -78,37 +86,103 @@ export default function StatsCards() {
    title: "Manutenzione",
    value: stats?.maintenancePCs || 0,
    icon: Wrench,
-   description: "PC in riparazione",
+   description: "Asset in riparazione",
+   color: "text-orange-600",
+   bgColor: "bg-orange-100",
+  },
+ ];
+
+ // Statistiche per tipo (seconda riga)
+ const typeStats = [
+  {
+   title: "PC",
+   total: stats?.byType?.pc?.total || 0,
+   assigned: stats?.byType?.pc?.assigned || 0,
+   icon: Monitor,
+   color: "text-blue-600",
+   bgColor: "bg-blue-100",
+  },
+  {
+   title: "Smartphone",
+   total: stats?.byType?.smartphone?.total || 0,
+   assigned: stats?.byType?.smartphone?.assigned || 0,
+   icon: Smartphone,
+   color: "text-green-600",
+   bgColor: "bg-green-100",
+  },
+  {
+   title: "Tablet",
+   total: stats?.byType?.tablet?.total || 0,
+   assigned: stats?.byType?.tablet?.assigned || 0,
+   icon: Tablet,
+   color: "text-purple-600",
+   bgColor: "bg-purple-100",
+  },
+  {
+   title: "SIM",
+   total: stats?.byType?.sim?.total || 0,
+   assigned: stats?.byType?.sim?.assigned || 0,
+   icon: CreditCard,
    color: "text-orange-600",
    bgColor: "bg-orange-100",
   },
  ];
 
  return (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-   {statsData.map((stat) => {
-    const Icon = stat.icon;
-    return (
-     <Card key={stat.title} className="">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-       <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">
-        {stat.title}
-       </CardTitle>
-       <div className={`p-2 rounded-full ${stat.bgColor}`}>
-        <Icon className={`h-4 w-4 ${stat.color}`} />
-       </div>
-      </CardHeader>
-      <CardContent>
-       <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-        {stat.value}
-       </div>
-       <p className="text-xs text-gray-600 dark:text-gray-400">
-        {stat.description}
-       </p>
-      </CardContent>
-     </Card>
-    );
-   })}
+  <div className="space-y-6">
+   {/* Statistiche Principali */}
+   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    {mainStats.map((stat) => {
+     const Icon = stat.icon;
+     return (
+      <Card key={stat.title}>
+       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">
+         {stat.title}
+        </CardTitle>
+        <div className={`p-2 rounded-full ${stat.bgColor}`}>
+         <Icon className={`h-4 w-4 ${stat.color}`} />
+        </div>
+       </CardHeader>
+       <CardContent>
+        <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+         {stat.value}
+        </div>
+        <p className="text-xs text-gray-600 dark:text-gray-400">
+         {stat.description}
+        </p>
+       </CardContent>
+      </Card>
+     );
+    })}
+   </div>
+
+   {/* Statistiche per Tipo di Asset */}
+   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    {typeStats.map((stat) => {
+     const Icon = stat.icon;
+     return (
+      <Card key={stat.title}>
+       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">
+         {stat.title}
+        </CardTitle>
+        <div className={`p-2 rounded-full ${stat.bgColor}`}>
+         <Icon className={`h-4 w-4 ${stat.color}`} />
+        </div>
+       </CardHeader>
+       <CardContent>
+        <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+         {stat.total}
+        </div>
+        <p className="text-xs text-gray-600 dark:text-gray-400">
+         {stat.assigned} assegnati
+        </p>
+       </CardContent>
+      </Card>
+     );
+    })}
+   </div>
   </div>
  );
 }
