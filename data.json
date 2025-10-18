@@ -1,75 +1,8 @@
 {
-  "employees": [
-    {
-      "name": "Giuseppe D'Agostino",
-      "email": "Giuseppe.d@gruppobeyondus.com",
-      "department": "IT",
-      "company": "WE ON IT S.R.L.",
-      "id": "956e92f6-942e-455c-8412-ce1d74986987",
-      "createdAt": "2025-10-18T14:25:57.849Z"
-    }
-  ],
-  "pcs": [
-    {
-      "pcId": "PC-001",
-      "brand": "Dell",
-      "model": "OptiPlex 7090",
-      "cpu": "Intel i7-11700",
-      "ram": 16,
-      "storage": "512GB SSD",
-      "operatingSystem": "Windows 11 Pro",
-      "serialNumber": "DL001234567",
-      "purchaseDate": "2024-01-15T00:00:00.000Z",
-      "warrantyExpiry": "2027-01-15T00:00:00.000Z",
-      "status": "disponibile",
-      "notes": "Workstation principale sviluppo",
-      "id": "c1939c14-5e1b-4695-ac1a-68be369f7c39",
-      "createdAt": "2025-10-18T12:16:33.803Z",
-      "updatedAt": "2025-10-18T14:41:36.286Z"
-    }
-  ],
-  "assets": [
-    {
-      "assetCode": "PC-001",
-      "assetType": "computer",
-      "brand": "dell",
-      "model": "prova modello",
-      "serialNumber": "545645634",
-      "purchaseDate": "2025-10-08T00:00:00.000Z",
-      "warrantyExpiry": "2025-11-27T00:00:00.000Z",
-      "status": "assegnato",
-      "employeeId": "956e92f6-942e-455c-8412-ce1d74986987",
-      "notes": "",
-      "id": "3d7abac1-849d-4c66-bb27-01c295541dd7",
-      "specs": null,
-      "createdAt": "2025-10-18T14:40:52.267Z",
-      "updatedAt": "2025-10-18T15:32:05.203Z"
-    }
-  ],
-  "users": [
-    {
-      "username": "admin",
-      "email": "admin@maorigroup.com",
-      "firstName": "Amministratore",
-      "lastName": "Sistema",
-      "role": "admin",
-      "isActive": true,
-      "id": "1afa1d89-e5a0-4bdb-b8a9-645bc6e16176",
-      "passwordHash": "$2b$12$lOdZfExbgmExNInMVQQAcu3ce8E3Fx3AWeRfI6HUfY6.86bDHidqa",
-      "lastLogin": "2025-10-18T12:21:02.779Z",
-      "twoFactorSecret": null,
-      "twoFactorEnabled": false,
-      "backupCodes": null,
-      "createdAt": "2025-10-18T12:16:33.788Z",
-      "updatedAt": "2025-10-18T12:16:33.788Z"
-    }
-  ],
-  "sessions": [
-    {
-      "id": "3726dd98-81dd-4c15-ac8e-e255476327d6",
-      "userId": "1afa1d89-e5a0-4bdb-b8a9-645bc6e16176",
-      "expiresAt": "2025-10-25T12:21:02.784Z"
-    }
-  ],
+  "employees": [],
+  "pcs": [],
+  "assets": [],
+  "users": [],
+  "sessions": [],
   "maintenance": []
 }
