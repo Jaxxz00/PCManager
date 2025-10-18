@@ -355,56 +355,94 @@ export class JsonStorage {
     const allPcs = this.data.pcs;
     const allAssets = this.data.assets;
     const allEmployees = this.data.employees;
+    const allMaintenance = this.data.maintenance || [];
     
-    const totalPCs = allPcs.length + allAssets.length;
-    const activePCs = allPcs.filter(p => p.status === 'active' || p.status === 'assegnato').length + 
-                      allAssets.filter(a => a.status === 'active' || a.status === 'assegnato').length;
-    // Non contare più i PC con status maintenance - usa solo la tabella maintenance
-    const maintenancePCs = 0;
-    const retiredPCs = allPcs.filter(p => p.status === 'retired').length + 
-                      allAssets.filter(a => a.status === 'dismesso' || a.status === 'retired').length;
-    const assignedPCs = allPcs.filter(p => p.employeeId).length + allAssets.filter(a => a.employeeId).length;
-    const availablePCs = allPcs.filter(p => p.status === 'disponibile' && !p.employeeId).length + 
-                        allAssets.filter(a => a.status === 'disponibile' && !a.employeeId).length;
+    // Conteggi totali corretti
+    const totalPCs = allPcs.length;
+    const totalAssets = allAssets.length;
+    const totalDevices = totalPCs + totalAssets;
+    
+    // Conteggi status corretti
+    const activePCs = allPcs.filter(p => p.status === 'active' || p.status === 'assegnato').length;
+    const activeAssets = allAssets.filter(a => a.status === 'active' || a.status === 'assegnato').length;
+    const totalActive = activePCs + activeAssets;
+    
+    // Conteggio manutenzione corretto
+    const maintenancePCs = allMaintenance.filter(m => 
+      m.status === 'pending' || m.status === 'in_progress'
+    ).length;
+    
+    // Conteggi retired
+    const retiredPCs = allPcs.filter(p => p.status === 'retired' || p.status === 'dismesso').length;
+    const retiredAssets = allAssets.filter(a => a.status === 'retired' || a.status === 'dismesso').length;
+    const totalRetired = retiredPCs + retiredAssets;
+    
+    // Conteggi assegnati
+    const assignedPCs = allPcs.filter(p => p.employeeId).length;
+    const assignedAssets = allAssets.filter(a => a.employeeId).length;
+    const totalAssigned = assignedPCs + assignedAssets;
+    
+    // Conteggi disponibili
+    const availablePCs = allPcs.filter(p => p.status === 'disponibile' && !p.employeeId).length;
+    const availableAssets = allAssets.filter(a => a.status === 'disponibile' && !a.employeeId).length;
+    const totalAvailable = availablePCs + availableAssets;
 
+    // Conteggi per tipo corretti
     const byType = {
-      pc: { total: allPcs.length, active: allPcs.filter(p => p.status === 'active' || p.status === 'assegnato').length, assigned: allPcs.filter(p => p.employeeId).length },
+      pc: { 
+        total: allPcs.length, 
+        active: activePCs, 
+        assigned: assignedPCs 
+      },
       smartphone: { total: 0, active: 0, assigned: 0 },
       tablet: { total: 0, active: 0, assigned: 0 },
       sim: { total: 0, active: 0, assigned: 0 },
+      monitor: { total: 0, active: 0, assigned: 0 },
+      computer: { total: 0, active: 0, assigned: 0 },
       other: { total: 0, active: 0, assigned: 0 },
     };
     
     // Conta gli asset per tipo
     for (const asset of allAssets) {
       const type = (asset.assetType || '').toLowerCase();
+      const isActive = asset.status === 'active' || asset.status === 'assegnato';
+      const isAssigned = !!asset.employeeId;
+      
       if (type === 'smartphone' || type === 'phone') {
         byType.smartphone.total++;
-        if (asset.status === 'active' || asset.status === 'assegnato') byType.smartphone.active++;
-        if (asset.employeeId) byType.smartphone.assigned++;
+        if (isActive) byType.smartphone.active++;
+        if (isAssigned) byType.smartphone.assigned++;
       } else if (type === 'tablet') {
         byType.tablet.total++;
-        if (asset.status === 'active' || asset.status === 'assegnato') byType.tablet.active++;
-        if (asset.employeeId) byType.tablet.assigned++;
+        if (isActive) byType.tablet.active++;
+        if (isAssigned) byType.tablet.assigned++;
       } else if (type === 'sim') {
         byType.sim.total++;
-        if (asset.status === 'active' || asset.status === 'assegnato') byType.sim.active++;
-        if (asset.employeeId) byType.sim.assigned++;
+        if (isActive) byType.sim.active++;
+        if (isAssigned) byType.sim.assigned++;
+      } else if (type === 'monitor') {
+        byType.monitor.total++;
+        if (isActive) byType.monitor.active++;
+        if (isAssigned) byType.monitor.assigned++;
+      } else if (type === 'computer') {
+        byType.computer.total++;
+        if (isActive) byType.computer.active++;
+        if (isAssigned) byType.computer.assigned++;
       } else {
         byType.other.total++;
-        if (asset.status === 'active' || asset.status === 'assegnato') byType.other.active++;
-        if (asset.employeeId) byType.other.assigned++;
+        if (isActive) byType.other.active++;
+        if (isAssigned) byType.other.assigned++;
       }
     }
 
     return {
-      totalPCs,
-      activePCs,
-      maintenancePCs,
-      retiredPCs,
+      totalPCs: totalDevices, // Totale dispositivi (PC + Assets)
+      activePCs: totalActive, // Totale attivi
+      maintenancePCs, // Manutenzione corretta
+      retiredPCs: totalRetired, // Totale dismessi
       totalEmployees: allEmployees.length,
-      assignedPCs,
-      availablePCs,
+      assignedPCs: totalAssigned, // Totale assegnati
+      availablePCs: totalAvailable, // Totale disponibili
       byType,
     };
   }
