@@ -26,57 +26,6 @@
       "id": "c1939c14-5e1b-4695-ac1a-68be369f7c39",
       "createdAt": "2025-10-18T12:16:33.803Z",
       "updatedAt": "2025-10-18T14:41:36.286Z"
-    },
-    {
-      "pcId": "PC-002",
-      "brand": "HP",
-      "model": "EliteDesk 800",
-      "cpu": "Intel i5-11500",
-      "ram": 8,
-      "storage": "256GB SSD",
-      "operatingSystem": "Windows 11 Pro",
-      "serialNumber": "HP001234567",
-      "purchaseDate": "2024-02-10T00:00:00.000Z",
-      "warrantyExpiry": "2027-02-10T00:00:00.000Z",
-      "status": "disponibile",
-      "notes": "Manutenzione programmata",
-      "id": "b9b49756-2d36-4504-a445-0ade91bf4a53",
-      "createdAt": "2025-10-18T12:16:33.806Z",
-      "updatedAt": "2025-10-18T14:41:26.768Z"
-    },
-    {
-      "pcId": "PC-001",
-      "brand": "Dell",
-      "model": "OptiPlex 7090",
-      "cpu": "Intel i7-11700",
-      "ram": 16,
-      "storage": "512GB SSD",
-      "operatingSystem": "Windows 11 Pro",
-      "serialNumber": "DL001234567",
-      "purchaseDate": "2024-01-15T00:00:00.000Z",
-      "warrantyExpiry": "2027-01-15T00:00:00.000Z",
-      "status": "disponibile",
-      "notes": "Workstation principale sviluppo",
-      "id": "ae88a02b-93e4-4c9d-80ba-6933d5d496b3",
-      "createdAt": "2025-10-18T16:29:41.595Z",
-      "updatedAt": "2025-10-18T17:20:27.703Z"
-    },
-    {
-      "pcId": "PC-002",
-      "brand": "HP",
-      "model": "EliteDesk 800",
-      "cpu": "Intel i5-11500",
-      "ram": 8,
-      "storage": "256GB SSD",
-      "operatingSystem": "Windows 11 Pro",
-      "serialNumber": "HP001234567",
-      "purchaseDate": "2024-02-10T00:00:00.000Z",
-      "warrantyExpiry": "2027-02-10T00:00:00.000Z",
-      "status": "disponibile",
-      "notes": "Manutenzione programmata",
-      "id": "82e68a39-68a5-45e0-af0a-7f7e787ddd9b",
-      "createdAt": "2025-10-18T16:29:41.597Z",
-      "updatedAt": "2025-10-18T17:20:37.249Z"
     }
   ],
   "assets": [
@@ -113,38 +62,6 @@
       "backupCodes": null,
       "createdAt": "2025-10-18T12:16:33.788Z",
       "updatedAt": "2025-10-18T12:16:33.788Z"
-    },
-    {
-      "username": "admin",
-      "email": "admin@maorigroup.com",
-      "firstName": "Amministratore",
-      "lastName": "Sistema",
-      "role": "admin",
-      "isActive": true,
-      "id": "46e5b760-ba97-4041-8f3f-a8c3280b2529",
-      "passwordHash": "$2b$12$CZ7MRA2Og0j2S2erzeLuyu8aztUdJqX7H1a73FUtmqtJYb5CIzT76",
-      "lastLogin": null,
-      "twoFactorSecret": null,
-      "twoFactorEnabled": false,
-      "backupCodes": null,
-      "createdAt": "2025-10-18T16:29:41.579Z",
-      "updatedAt": "2025-10-18T16:29:41.579Z"
-    },
-    {
-      "username": "prova@admin.it",
-      "email": "prova@admin.it",
-      "firstName": "Giuseppe",
-      "lastName": "Dagostino",
-      "role": "admin",
-      "isActive": true,
-      "id": "4e51c1c0-da74-4262-ba77-cbec93c942c5",
-      "passwordHash": "$2b$12$f8E6p0miUHcTH1VqJxNLS.IBize/2pPL7vuBvVO1Ajl5j1JikkTYi",
-      "lastLogin": "2025-10-18T16:42:15.849Z",
-      "twoFactorSecret": null,
-      "twoFactorEnabled": false,
-      "backupCodes": null,
-      "createdAt": "2025-10-18T16:33:08.182Z",
-      "updatedAt": "2025-10-18T16:33:08.182Z"
     }
   ],
   "sessions": [
@@ -152,16 +69,7 @@
       "id": "3726dd98-81dd-4c15-ac8e-e255476327d6",
       "userId": "1afa1d89-e5a0-4bdb-b8a9-645bc6e16176",
       "expiresAt": "2025-10-25T12:21:02.784Z"
-    },
-    {
-      "id": "cd37f245-49f2-40c6-bcd7-8d6c7095ae4e",
-      "userId": "4e51c1c0-da74-4262-ba77-cbec93c942c5",
-      "expiresAt": "2025-10-25T16:33:34.114Z"
-    },
-    {
-      "id": "4c170b5b-9bdb-4aa0-9b56-c3db067aa8f5",
-      "userId": "4e51c1c0-da74-4262-ba77-cbec93c942c5",
-      "expiresAt": "2025-10-25T16:42:15.860Z"
     }
-  ]
+  ],
+  "maintenance": []
 }
