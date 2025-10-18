@@ -8,16 +8,15 @@ import { lazy, Suspense } from "react";
 // Lazy load delle pagine per ottimizzare bundle size
 const NotFound = lazy(() => import("@/pages/not-found"));
 const Dashboard = lazy(() => import("@/pages/dashboard"));
-const Inventory = lazy(() => import("@/pages/inventory"));
 const Employees = lazy(() => import("@/pages/employees"));
 const Documents = lazy(() => import("@/pages/documents"));
-const Labels = lazy(() => import("@/pages/labels"));
-const Reports = lazy(() => import("@/pages/reports"));
 const Settings = lazy(() => import("@/pages/settings"));
 const Profile = lazy(() => import("@/pages/profile"));
 const Maintenance = lazy(() => import("@/pages/maintenance"));
 const Workflow = lazy(() => import("@/pages/workflow"));
 const Assets = lazy(() => import("@/pages/assets"));
+const AssignedDevices = lazy(() => import("@/pages/assigned-devices"));
+const Labels = lazy(() => import("@/pages/labels"));
 
 import LoginPage from "@/pages/login";
 import SetPasswordPage from "@/pages/set-password";
@@ -168,10 +167,11 @@ function Router() {
           <Route path="/inventory">
             {() => (
               <AuthenticatedLayout>
-                <Inventory />
+                <Assets />
               </AuthenticatedLayout>
             )}
           </Route>
+          
           <Route path="/employees">
             {() => (
               <AuthenticatedLayout>
@@ -183,20 +183,6 @@ function Router() {
             {() => (
               <AuthenticatedLayout>
                 <Documents />
-              </AuthenticatedLayout>
-            )}
-          </Route>
-          <Route path="/labels">
-            {() => (
-              <AuthenticatedLayout>
-                <Labels />
-              </AuthenticatedLayout>
-            )}
-          </Route>
-          <Route path="/reports">
-            {() => (
-              <AuthenticatedLayout>
-                <Reports />
               </AuthenticatedLayout>
             )}
           </Route>
@@ -218,6 +204,20 @@ function Router() {
             {() => (
               <AuthenticatedLayout>
                 <Workflow />
+              </AuthenticatedLayout>
+            )}
+          </Route>
+          <Route path="/assigned-devices">
+            {() => (
+              <AuthenticatedLayout>
+                <AssignedDevices />
+              </AuthenticatedLayout>
+            )}
+          </Route>
+          <Route path="/labels">
+            {() => (
+              <AuthenticatedLayout>
+                <Labels />
               </AuthenticatedLayout>
             )}
           </Route>

@@ -139,6 +139,40 @@ export default function Maintenance() {
     }
   });
 
+  // Create maintenance mutation
+  const createMaintenanceMutation = useMutation({
+    mutationFn: async (data: MaintenanceFormData) => {
+      return await apiRequest('POST', '/api/maintenance', {
+        assetId: data.assetId,
+        type: data.type,
+        priority: data.priority,
+        status: 'pending',
+        description: data.description,
+        technician: data.technician,
+        scheduledDate: data.scheduledDate || undefined,
+        estimatedCost: data.estimatedCost ? parseFloat(data.estimatedCost) : undefined,
+        notes: data.notes || undefined,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/maintenance"] });
+      toast({
+        title: "Successo",
+        description: "Intervento programmato con successo",
+      });
+      setShowMaintenanceDialog(false);
+      form.reset();
+    },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : "Impossibile creare l'intervento";
+      toast({
+        title: "Errore",
+        description: message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Filtri
   const filteredRecords = useMemo(() => {
     return maintenanceRecords.filter((record) => {
@@ -210,12 +244,7 @@ export default function Maintenance() {
   };
 
   const onSubmit = (data: MaintenanceFormData) => {
-    toast({
-      title: "Intervento programmato",
-      description: "L'intervento di manutenzione è stato aggiunto con successo."
-    });
-    setShowMaintenanceDialog(false);
-    form.reset();
+    createMaintenanceMutation.mutate(data);
   };
 
   const generateMaintenancePDF = (record: MaintenanceRecord) => {
@@ -805,7 +834,7 @@ export default function Maintenance() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
-                  <TableHead className="font-medium w-[180px]">Asset e Dipendente</TableHead>
+                  <TableHead className="font-medium w-[180px]">Asset e Collaboratore</TableHead>
                   <TableHead className="font-medium w-[150px]">Tipo Intervento</TableHead>
                   <TableHead className="font-medium w-[120px]">Priorità</TableHead>
                   <TableHead className="font-medium w-[120px]">Stato</TableHead>
@@ -980,7 +1009,7 @@ export default function Maintenance() {
                   </p>
                 </div>
                 <div>
-                  <h4 className="font-medium text-sm text-muted-foreground">Dipendente</h4>
+                  <h4 className="font-medium text-sm text-muted-foreground">Collaboratore</h4>
                   <p className="font-medium">
                     {viewingRecord.asset?.employee?.name || 'Non assegnato'}
                   </p>

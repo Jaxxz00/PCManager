@@ -14,6 +14,7 @@ export async function apiRequest(
 ): Promise<Response> {
   const sessionId = localStorage.getItem('sessionId');
   const headers: Record<string, string> = {};
+  headers["Accept"] = "application/json";
   
   if (data) {
     headers["Content-Type"] = "application/json";

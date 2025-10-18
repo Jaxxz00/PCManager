@@ -44,7 +44,7 @@ export function GlobalSearchDialog({ isOpen, onClose, initialSearchTerm = "" }: 
     ));
   }, [pcs, searchTerm]);
 
-  // Filtra Dipendenti - ottimizzato con useMemo
+  // Filtra Collaboratori - ottimizzato con useMemo
   const filteredEmployees = useMemo(() => {
     if (!searchTerm.trim()) return [];
     const searchLower = searchTerm.toLowerCase();
@@ -81,30 +81,30 @@ export function GlobalSearchDialog({ isOpen, onClose, initialSearchTerm = "" }: 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] p-0">
+      <DialogContent className="max-w-lg max-h-[72vh] p-0">
         <div className="flex flex-col">
           {/* Header con search */}
-          <div className="p-4 border-b">
+          <div className="p-1 border-b">
             <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-2.5 top-2 h-3 w-3 text-muted-foreground" />
               <Input
-                placeholder="Cerca PC, dipendenti, tutto..."
+                placeholder="Cerca PC, collaboratori, tutto..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 text-base"
+                className="pl-8 h-8 text-xs"
                 autoFocus
               />
               <button
                 onClick={onClose}
-                className="absolute right-3 top-3 h-4 w-4 text-muted-foreground"
+                className="absolute right-2.5 top-2 h-3 w-3 text-muted-foreground"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3 w-3" />
               </button>
             </div>
           </div>
 
           {/* Risultati */}
-          <div className="overflow-y-auto max-h-96 p-4 space-y-4">
+          <div className="overflow-y-auto max-h-72 p-1 space-y-1">
             {(pcsLoading || employeesLoading) && searchTerm.trim() ? (
               <div className="text-center py-8 text-muted-foreground">
                 <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
@@ -119,14 +119,14 @@ export function GlobalSearchDialog({ isOpen, onClose, initialSearchTerm = "" }: 
               <div className="text-center py-8 text-muted-foreground">
                 <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>Digita per iniziare la ricerca</p>
-                <p className="text-sm mt-2">Cerca PC, dipendenti, componenti...</p>
+                <p className="text-sm mt-2">Cerca PC, collaboratori, componenti...</p>
               </div>
             ) : (
               <>
                 {/* Sezione PC */}
                 {filteredPcs.length > 0 && (
                   <div>
-                    <h3 className="flex items-center gap-2 font-semibold text-sm text-muted-foreground mb-3">
+                    <h3 className="flex items-center gap-2 font-semibold text-[11px] text-muted-foreground mb-2.5">
                       <Monitor className="h-4 w-4" />
                       PC ({filteredPcs.length})
                     </h3>
@@ -135,14 +135,14 @@ export function GlobalSearchDialog({ isOpen, onClose, initialSearchTerm = "" }: 
                         <div
                           key={pc.id}
                           onClick={() => handlePcClick(pc.id)}
-                          className="p-3 rounded-lg border cursor-pointer"
+                          className="p-1 rounded-lg border cursor-pointer"
                         >
                           <div className="flex items-center justify-between">
                             <div>
                               <p className="font-medium">{pc.pcId}</p>
-                              <p className="text-sm text-muted-foreground">{pc.brand} {pc.model}</p>
+                              <p className="text-xs text-muted-foreground">{pc.brand} {pc.model}</p>
                               {pc.employee && (
-                                <p className="text-xs text-blue-600">Assegnato a: {pc.employee.name}</p>
+                                <p className="text-xs"><span className="text-blue-600 font-semibold">{pc.employee.name}</span></p>
                               )}
                             </div>
                             <div className="flex items-center gap-2">
@@ -160,19 +160,19 @@ export function GlobalSearchDialog({ isOpen, onClose, initialSearchTerm = "" }: 
                   </div>
                 )}
 
-                {/* Sezione Dipendenti */}
+                {/* Sezione Collaboratori */}
                 {filteredEmployees.length > 0 && (
                   <div>
                     <h3 className="flex items-center gap-2 font-semibold text-sm text-muted-foreground mb-3">
                       <User className="h-4 w-4" />
-                      Dipendenti ({filteredEmployees.length})
+                      Collaboratori ({filteredEmployees.length})
                     </h3>
                     <div className="space-y-2">
                       {filteredEmployees.slice(0, 5).map((employee) => (
                         <div
                           key={employee.id}
                           onClick={() => handleEmployeeClick(employee.id)}
-                          className="p-3 rounded-lg border cursor-pointer"
+                          className="p-1 rounded-lg border cursor-pointer"
                         >
                           <div>
                             <p className="font-medium">{employee.name}</p>
@@ -190,7 +190,7 @@ export function GlobalSearchDialog({ isOpen, onClose, initialSearchTerm = "" }: 
                       ))}
                       {filteredEmployees.length > 5 && (
                         <p className="text-xs text-muted-foreground text-center py-2">
-                          +{filteredEmployees.length - 5} altri dipendenti...
+                          +{filteredEmployees.length - 5} altri collaboratori...
                         </p>
                       )}
                     </div>

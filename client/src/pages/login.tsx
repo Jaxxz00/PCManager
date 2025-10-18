@@ -14,7 +14,7 @@ import { apiRequest } from "@/lib/queryClient";
 
 // Schema di validazione per il login
 const loginSchema = z.object({
-  username: z.string().min(1, "Username richiesto"),
+  email: z.string().email("Email non valida"),
   password: z.string().min(1, "Password richiesta"),
   twoFactorCode: z.string().optional(),
 });
@@ -24,7 +24,7 @@ type LoginData = z.infer<typeof loginSchema>;
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [requires2FA, setRequires2FA] = useState(false);
-  const [credentials, setCredentials] = useState<{ username: string; password: string } | null>(null);
+  const [credentials, setCredentials] = useState<{ email: string; password: string } | null>(null);
   const [usingBackupCode, setUsingBackupCode] = useState(false);
   const { toast } = useToast();
 
@@ -38,7 +38,7 @@ export default function Login() {
         : loginSchema
     ),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
       twoFactorCode: "",
     },
@@ -77,13 +77,13 @@ export default function Login() {
       if (error.message === "2FA_REQUIRED") {
         setRequires2FA(true);
         setCredentials({
-          username: form.getValues("username"),
+          email: form.getValues("email"),
           password: form.getValues("password"),
         });
         
         // Reset del form per il codice 2FA
         form.reset({
-          username: form.getValues("username"),
+          email: form.getValues("email"),
           password: form.getValues("password"),
           twoFactorCode: "",
         });
@@ -147,24 +147,24 @@ export default function Login() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {!requires2FA ? (
                 <>
-                  {/* Username */}
+                  {/* Email */}
                   <FormField
                     control={form.control}
-                    name="username"
+                    name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-slate-700 font-medium">Username</FormLabel>
+                        <FormLabel className="text-slate-700 font-medium">Email</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
                             <Input
                               {...field}
-                              type="text"
-                              autoComplete="username"
+                              type="email"
+                              autoComplete="email"
                               autoFocus
                               className="pl-10 h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
-                              placeholder="Inserisci il tuo username"
-                              data-testid="input-username"
+                              placeholder="Inserisci la tua email"
+                              data-testid="input-email"
                             />
                           </div>
                         </FormControl>
@@ -298,7 +298,7 @@ export default function Login() {
                     setRequires2FA(false);
                     setCredentials(null);
                     setUsingBackupCode(false);
-                    form.reset({ username: "", password: "", twoFactorCode: "" });
+                    form.reset({ email: "", password: "", twoFactorCode: "" });
                   }}
                   className="w-full text-center text-sm text-slate-600 underline"
                   data-testid="button-back-to-login"

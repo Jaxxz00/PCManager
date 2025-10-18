@@ -5,7 +5,7 @@ import path from "path";
 export default defineConfig({
   plugins: [
     react(),
-    // Replit plugins rimossi per deploy su server personale
+    // Plugins per deploy su server personale
   ],
   resolve: {
     alias: {

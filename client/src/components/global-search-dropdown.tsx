@@ -106,7 +106,7 @@ export function GlobalSearchDropdown({ isOpen, onClose, searchTerm, onSearchChan
     });
   }, [maintenanceRecords, searchTerm]);
 
-  // Filtra Dipendenti - ottimizzato con useMemo (rimosso position non esistente)
+  // Filtra Collaboratori - ottimizzato con useMemo (rimosso position non esistente)
   const filteredEmployees = useMemo(() => {
     if (!searchTerm.trim()) return [];
     const searchLower = searchTerm.toLowerCase();
@@ -273,12 +273,12 @@ export function GlobalSearchDropdown({ isOpen, onClose, searchTerm, onSearchChan
                 </div>
               )}
 
-              {/* Sezione Dipendenti */}
+              {/* Sezione Collaboratori */}
               {filteredEmployees.length > 0 && (
                 <div className="mb-4">
                   <h3 className="flex items-center gap-2 font-semibold text-sm text-muted-foreground mb-3 border-b pb-2">
                     <User className="h-4 w-4" />
-                    Dipendenti ({filteredEmployees.length})
+                    Collaboratori ({filteredEmployees.length})
                   </h3>
                   <div className="space-y-2">
                     {filteredEmployees.slice(0, 4).map((employee) => (
@@ -305,7 +305,7 @@ export function GlobalSearchDropdown({ isOpen, onClose, searchTerm, onSearchChan
                     ))}
                     {filteredEmployees.length > 4 && (
                       <p className="text-xs text-muted-foreground text-center py-2 bg-gray-50 rounded">
-                        +{filteredEmployees.length - 4} altri dipendenti... (vai ai dipendenti)
+                        +{filteredEmployees.length - 4} altri collaboratori... (vai ai collaboratori)
                       </p>
                     )}
                   </div>

@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useLocation } from "wouter";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -21,6 +22,7 @@ import type { Employee, Asset } from "@shared/schema";
 type EmployeeFormData = z.infer<typeof insertEmployeeSchema>;
 
 export default function Employees() {
+  const [, setLocation] = useLocation();
   const [showEmployeeForm, setShowEmployeeForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
@@ -55,14 +57,14 @@ export default function Employees() {
       queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
       queryClient.invalidateQueries({ queryKey: ["/api/assets"] });  // <-- AGGIUNGI QUESTA
       toast({
-        title: "Dipendente aggiunto",
-        description: "Il nuovo dipendente è stato registrato nel sistema.",
+        title: "Collaboratore aggiunto",
+        description: "Il nuovo collaboratore è stato registrato nel sistema.",
       });
       form.reset();
       setShowEmployeeForm(false);
     },
     onError: (error: unknown) => {
-      const message = error instanceof Error ? error.message : "Impossibile aggiungere il dipendente.";
+      const message = error instanceof Error ? error.message : "Impossibile aggiungere il collaboratore.";
       toast({
         title: "Errore",
         description: message,
@@ -79,12 +81,12 @@ export default function Employees() {
       queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
       queryClient.invalidateQueries({ queryKey: ["/api/assets"] });  // <-- AGGIUNGI QUESTA
       toast({
-        title: "Dipendente eliminato",
-        description: "Il dipendente è stato rimosso dal sistema.",
+        title: "Collaboratore eliminato",
+        description: "Il collaboratore è stato rimosso dal sistema.",
       });
     },
     onError: (error: any) => {
-      const message = error?.message || "Impossibile eliminare il dipendente.";
+      const message = error?.message || "Impossibile eliminare il collaboratore.";
       toast({
         title: "Errore",
         description: message,
@@ -126,13 +128,13 @@ export default function Employees() {
     if (assignedAssets > 0) {
       toast({
         title: "Impossibile eliminare",
-        description: `Il dipendente ha ${assignedAssets} asset assegnati. Rimuovere prima le assegnazioni.`,
+        description: `Il collaboratore ha ${assignedAssets} asset assegnati. Rimuovere prima le assegnazioni.`,
         variant: "destructive",
       });
       return;
     }
 
-    if (window.confirm("Sei sicuro di voler eliminare questo dipendente?")) {
+    if (window.confirm("Sei sicuro di voler eliminare questo collaboratore?")) {
       deleteEmployeeMutation.mutate(id);
     }
   };
@@ -142,19 +144,19 @@ export default function Employees() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Dipendenti</h1>
-          <p className="text-muted-foreground">Gestione dipendenti aziendali - {employees.length} totali</p>
+          <h1 className="text-3xl font-bold text-foreground">Collaboratori</h1>
+          <p className="text-muted-foreground">Gestione collaboratori aziendali - {employees.length} totali</p>
         </div>
         <Dialog open={showEmployeeForm} onOpenChange={setShowEmployeeForm}>
           <DialogTrigger asChild>
             <Button className="bg-blue-600 text-white">
               <Plus className="mr-2 h-4 w-4" />
-              Aggiungi Dipendente
+              Aggiungi Collaboratore
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Aggiungi Nuovo Dipendente</DialogTitle>
+              <DialogTitle>Aggiungi Nuovo Collaboratore</DialogTitle>
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -163,9 +165,9 @@ export default function Employees() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nome Completo</FormLabel>
+                      <FormLabel>Nome e Cognome</FormLabel>
                       <FormControl>
-                        <Input placeholder="Mario Rossi" {...field} />
+                        <Input placeholder="Inserisci nome e cognome" className="placeholder:text-gray-400" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -178,7 +180,7 @@ export default function Employees() {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="mario.rossi@company.com" {...field} />
+                        <Input type="email" placeholder="Inserisci la mail" className="placeholder:text-gray-400" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -191,7 +193,7 @@ export default function Employees() {
                     <FormItem>
                       <FormLabel>Dipartimento</FormLabel>
                       <FormControl>
-                        <Input placeholder="IT, Marketing, Sales..." {...field} />
+                        <Input placeholder="IT, Marketing, Sales..." className="placeholder:text-gray-400" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -204,7 +206,26 @@ export default function Employees() {
                     <FormItem>
                       <FormLabel>Azienda</FormLabel>
                       <FormControl>
-                        <Input placeholder="Maori Group, Cliente..." {...field} />
+                        <select
+                          {...field}
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        >
+                          <option value="ALL AROUND S.R.L.">ALL AROUND S.R.L.</option>
+                          <option value="BEYOND US S.R.L.">BEYOND US S.R.L.</option>
+                          <option value="CALLX4 S.R.L.">CALLX4 S.R.L.</option>
+                          <option value="DITIFET S.R.L.">DITIFET S.R.L.</option>
+                          <option value="FILIPPELLI SERGIO S.R.L.">FILIPPELLI SERGIO S.R.L.</option>
+                          <option value="HAMMER AND DRILL S.R.L.">HAMMER AND DRILL S.R.L.</option>
+                          <option value="MAORI ESCO S.R.L.">MAORI ESCO S.R.L.</option>
+                          <option value="PANIER S.R.L.">PANIER S.R.L.</option>
+                          <option value="RED BRICK S.R.L.">RED BRICK S.R.L.</option>
+                          <option value="SEKSTANT S.R.L.">SEKSTANT S.R.L.</option>
+                          <option value="SKIPPER S.R.L.">SKIPPER S.R.L.</option>
+                          <option value="SPEAK OVER DI MARCO FILIPPELLI S.R.L.">SPEAK OVER DI MARCO FILIPPELLI S.R.L.</option>
+                          <option value="SPEAK OVER S.R.L.">SPEAK OVER S.R.L.</option>
+                          <option value="TF S.R.L.">TF S.R.L.</option>
+                          <option value="WE ON IT S.R.L.">WE ON IT S.R.L.</option>
+                        </select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -236,7 +257,7 @@ export default function Employees() {
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
         <Input
-          placeholder="Cerca dipendenti..."
+          placeholder="Cerca collaboratori..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10"
@@ -247,7 +268,7 @@ export default function Employees() {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg font-medium">
-            Dipendenti ({filteredEmployees.length})
+            Collaboratori ({filteredEmployees.length})
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -277,7 +298,7 @@ export default function Employees() {
                   ))
                 ) : filteredEmployees.length > 0 ? (
                   filteredEmployees.map((employee: Employee) => (
-                    <TableRow key={employee.id} className="table-row-hover">
+                    <TableRow key={employee.id} className="table-row-hover cursor-pointer" onClick={() => { sessionStorage.setItem('selectedEmployeeId', employee.id); setLocation(`/assigned-devices?employeeId=${employee.id}`); }}>
                       <TableCell>
                         <div className="flex items-center space-x-3">
                           <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
@@ -315,7 +336,7 @@ export default function Employees() {
                               onClick={() => {
                                 toast({
                                   title: "Funzione in sviluppo",
-                                  description: "La modifica dipendente sarà disponibile prossimamente.",
+                                  description: "La modifica collaboratore sarà disponibile prossimamente.",
                                 });
                               }}
                             >
@@ -337,7 +358,7 @@ export default function Employees() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                      {searchTerm ? "Nessun dipendente corrisponde alla ricerca" : "Nessun dipendente trovato"}
+                      {searchTerm ? "Nessun collaboratore corrisponde alla ricerca" : "Nessun collaboratore trovato"}
                     </TableCell>
                   </TableRow>
                 )}
