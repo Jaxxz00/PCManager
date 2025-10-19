@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
@@ -51,9 +52,18 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Always use JsonStorage for development
-  const { JsonStorage } = await import("./jsonStorage");
-  const storage = new JsonStorage();
+  // Use database storage if DATABASE_URL is provided, otherwise fallback to JsonStorage
+  let storage;
+  
+  if (process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '') {
+    console.log("Using database storage with MariaDB");
+    const { DatabaseStorage } = await import("./databaseStorage");
+    storage = new DatabaseStorage();
+  } else {
+    console.log("Using in-memory JsonStorage for development");
+    const { JsonStorage } = await import("./jsonStorage");
+    storage = new JsonStorage();
+  }
   
   // Initialize with test data on first run - DISABLED
   // if (storage.initializeWithTestData) {

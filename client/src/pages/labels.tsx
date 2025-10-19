@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Asset, Pc } from "@shared/schema";
+import { HPEliteBookLabel, printStyles } from "@/components/HPEliteBookLabel";
+import ReactDOMServer from 'react-dom/server';
 
 // Icone per tipo di asset
 const assetIcons = {
@@ -98,89 +100,23 @@ export default function Labels() {
   };
 
   const generateLabelHTML = (item: any) => {
-    const Icon = assetIcons[item.assetType as keyof typeof assetIcons] || Box;
+    // Usa il componente React per generare l'HTML
+    const labelComponent = HPEliteBookLabel({
+      assetId: item.assetCode,
+      model: `${item.brand || ''} ${item.model || ''}`.trim(),
+      serialNumber: item.serialNumber || ''
+    });
     
     return `
       <!DOCTYPE html>
       <html>
       <head>
         <style>
-          @page { 
-            size: 4in 2in; 
-            margin: 0.1in; 
-          }
-          body { 
-            font-family: Arial, sans-serif; 
-            margin: 0; 
-            padding: 8px; 
-            font-size: 10px;
-          }
-          .label { 
-            width: 100%; 
-            height: 100%; 
-            border: 1px solid #ccc; 
-            border-radius: 4px; 
-            padding: 6px; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: space-between;
-          }
-          .asset-id { 
-            font-weight: bold; 
-            font-size: 12px; 
-            margin-bottom: 2px; 
-          }
-          .info-line { 
-            margin: 1px 0; 
-            font-size: 9px; 
-          }
-          .service-desk { 
-            display: flex; 
-            align-items: center; 
-            margin-top: 4px; 
-          }
-          .service-desk-icon { 
-            width: 12px; 
-            height: 8px; 
-            margin-right: 4px; 
-            background: black; 
-            position: relative; 
-          }
-          .service-desk-icon::after { 
-            content: ''; 
-            position: absolute; 
-            right: -2px; 
-            top: 2px; 
-            width: 2px; 
-            height: 4px; 
-            background: black; 
-          }
-          .barcode { 
-            margin-top: 4px; 
-            height: 20px; 
-            background: repeating-linear-gradient(
-              90deg,
-              #000 0px,
-              #000 1px,
-              transparent 1px,
-              transparent 2px
-            );
-            background-size: 2px 20px;
-          }
+          ${printStyles}
         </style>
       </head>
       <body>
-        <div class="label">
-          <div class="asset-id">Asset: ${item.assetCode}</div>
-          <div class="info-line">Model: ${item.brand || ''} ${item.model || ''}</div>
-          <div class="info-line">S/N: ${item.serialNumber || ''}</div>
-          <div class="service-desk">
-            <span>SD</span>
-            <div class="service-desk-icon"></div>
-            <span>: ${serviceDeskUrl}</span>
-          </div>
-          <div class="barcode"></div>
-        </div>
+        ${ReactDOMServer.renderToString(labelComponent)}
       </body>
       </html>
     `;
@@ -236,68 +172,7 @@ export default function Labels() {
       <html>
       <head>
         <style>
-          @page { 
-            size: 4in 2in; 
-            margin: 0.1in; 
-          }
-          body { 
-            font-family: Arial, sans-serif; 
-            margin: 0; 
-            padding: 8px; 
-            font-size: 10px;
-          }
-          .label { 
-            width: 100%; 
-            height: 100%; 
-            border: 1px solid #ccc; 
-            border-radius: 4px; 
-            padding: 6px; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: space-between;
-          }
-          .asset-id { 
-            font-weight: bold; 
-            font-size: 12px; 
-            margin-bottom: 2px; 
-          }
-          .info-line { 
-            margin: 1px 0; 
-            font-size: 9px; 
-          }
-          .service-desk { 
-            display: flex; 
-            align-items: center; 
-            margin-top: 4px; 
-          }
-          .service-desk-icon { 
-            width: 12px; 
-            height: 8px; 
-            margin-right: 4px; 
-            background: black; 
-            position: relative; 
-          }
-          .service-desk-icon::after { 
-            content: ''; 
-            position: absolute; 
-            right: -2px; 
-            top: 2px; 
-            width: 2px; 
-            height: 4px; 
-            background: black; 
-          }
-          .barcode { 
-            margin-top: 4px; 
-            height: 20px; 
-            background: repeating-linear-gradient(
-              90deg,
-              #000 0px,
-              #000 1px,
-              transparent 1px,
-              transparent 2px
-            );
-            background-size: 2px 20px;
-          }
+          ${printStyles}
         </style>
       </head>
       <body>
