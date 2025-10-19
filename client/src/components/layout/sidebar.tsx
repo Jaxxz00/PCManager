@@ -10,14 +10,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const navigation = [
-  { name: "Dashboard", href: "/", icon: BarChart3 },
-  { name: "Inventario Asset", href: "/inventory", icon: Monitor },
-  { name: "Collaboratori", href: "/employees", icon: Users },
-  { name: "Assegnazione", href: "/workflow", icon: GitBranch },
-  { name: "Documenti", href: "/documents", icon: Shield },
-  { name: "Manutenzione", href: "/maintenance", icon: Wrench },
-];
 
 const settings = [
   { name: "Impostazioni", href: "/settings", icon: Settings },
@@ -29,6 +21,16 @@ export default function Sidebar() {
   const isActive = (href: string) => {
     return location === href || (href !== "/" && location.startsWith(href));
   };
+
+  // Navigation statica
+  const navigation = [
+    { name: "Dashboard", href: "/", icon: BarChart3 },
+    { name: "Inventario Asset", href: "/inventory", icon: Monitor },
+    { name: "Collaboratori", href: "/employees", icon: Users },
+    { name: "Assegnazione", href: "/workflow", icon: GitBranch },
+    { name: "Documenti", href: "/documents", icon: Shield },
+    { name: "Manutenzione", href: "/maintenance", icon: Wrench },
+  ];
 
   return (
     <aside className="w-64 bg-white border-r border-gray-200 h-screen flex flex-col">

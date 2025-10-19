@@ -3,6 +3,34 @@ import { mysqlTable, varchar, int, date, timestamp, boolean, json, index, text }
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Tipi di asset supportati
+export const ASSET_TYPES = {
+  COMPUTER: 'computer',
+  SMARTPHONE: 'smartphone',
+  TABLET: 'tablet',
+  SIM: 'sim',
+  MONITOR: 'monitor',
+  KEYBOARD: 'keyboard',
+  MOUSE: 'mouse',
+  OTHER: 'altro'
+} as const;
+
+// Stati degli asset
+export const ASSET_STATUS = {
+  ACTIVE: 'active',
+  ASSIGNED: 'assegnato',
+  AVAILABLE: 'disponibile',
+  MAINTENANCE: 'manutenzione',
+  RETIRED: 'retired'
+} as const;
+
+// Ruoli utente
+export const USER_ROLES = {
+  ADMIN: 'admin',
+  USER: 'user',
+  MANAGER: 'manager'
+} as const;
+
 export const employees = mysqlTable("employees", {
   id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
   name: varchar("name", { length: 255 }).notNull(),
@@ -28,7 +56,7 @@ export const pcs = mysqlTable("pcs", {
   serialNumber: varchar("serial_number", { length: 100 }).notNull().unique(),
   purchaseDate: date("purchase_date").notNull(),
   warrantyExpiry: date("warranty_expiry").notNull(),
-  status: varchar("status", { length: 20 }).notNull().default("active"), // active, maintenance, retired
+  status: varchar("status", { length: 20 }).notNull().default(ASSET_STATUS.ACTIVE),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -43,7 +71,7 @@ export const pcs = mysqlTable("pcs", {
 export const assets = mysqlTable("assets", {
   id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
   assetCode: varchar("asset_code", { length: 50 }).notNull().unique(), // PC-001, PHONE-001, SIM-001, KB-001, MON-001, OTHER-001
-  assetType: varchar("asset_type", { length: 20 }).notNull(), // pc, smartphone, sim, tastiera, monitor, altro
+  assetType: varchar("asset_type", { length: 20 }).notNull(), // computer, smartphone, sim, keyboard, monitor, altro
   employeeId: varchar("employee_id", { length: 36 }).references(() => employees.id),
   brand: varchar("brand", { length: 100 }), // Non obbligatorio per SIM
   model: varchar("model", { length: 100 }), // Non obbligatorio per SIM
@@ -71,7 +99,7 @@ export const users = mysqlTable("users", {
   passwordHash: text("password_hash").notNull(),
   firstName: varchar("first_name", { length: 100 }).notNull(),
   lastName: varchar("last_name", { length: 100 }).notNull(),
-  role: varchar("role", { length: 20 }).notNull().default("admin"), // admin, user
+  role: varchar("role", { length: 20 }).notNull().default(USER_ROLES.ADMIN),
   isActive: boolean("is_active").notNull().default(true),
   lastLogin: timestamp("last_login"),
   // 2FA fields

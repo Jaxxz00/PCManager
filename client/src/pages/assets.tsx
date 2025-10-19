@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,8 +17,8 @@ import type { Asset } from "@shared/schema";
 
 // Asset types con icone
 const assetTypes = [
-  { value: "altro", label: "Altro", icon: Box },
   { value: "computer", label: "Computer", icon: Keyboard },
+  { value: "altro", label: "Altro", icon: Box },
   { value: "monitor", label: "Monitor", icon: Monitor },
   { value: "sim", label: "SIM", icon: CreditCard },
   { value: "smartphone", label: "Smartphone", icon: Smartphone },
@@ -47,19 +47,22 @@ const assetFormSchema = z.object({
 type AssetFormData = z.infer<typeof assetFormSchema>;
 
 export default function Assets() {
-  const [selectedType, setSelectedType] = useState<string>("smartphone");
+  const [selectedType, setSelectedType] = useState<string>("computer");
   const [showAssetDialog, setShowAssetDialog] = useState(false);
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch assets
+  // Fetch all assets including PCs
   const { data: assets = [], isLoading } = useQuery<Asset[]>({
-    queryKey: ["/api/assets"],
+    queryKey: ["/api/assets/all-including-pcs"],
   });
 
-  // Filter assets by type
-  const filteredAssets = assets.filter((asset) => asset.assetType === selectedType);
+  // Filter assets by type - ottimizzato con useMemo
+  const filteredAssets = useMemo(() => 
+    assets.filter((asset) => asset.assetType === selectedType),
+    [assets, selectedType]
+  );
 
   // Create asset mutation
   const createAssetMutation = useMutation({
@@ -67,8 +70,8 @@ export default function Assets() {
       return await apiRequest("POST", "/api/assets", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/assets"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/employees"] }); // <-- AGGIUNGI QUESTA
+      queryClient.invalidateQueries({ queryKey: ["/api/assets/all-including-pcs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
       toast({
         title: "Successo",
         description: "Asset creato con successo",
@@ -86,14 +89,19 @@ export default function Assets() {
     },
   });
 
+  // Callback ottimizzato per la creazione
+  const handleCreateAsset = useCallback((data: AssetFormData) => {
+    createAssetMutation.mutate(data);
+  }, [createAssetMutation]);
+
   // Update asset mutation
   const updateAssetMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<AssetFormData> }) => {
       return await apiRequest("PATCH", `/api/assets/${id}`, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/assets"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/employees"] }); // <-- AGGIUNGI
+      queryClient.invalidateQueries({ queryKey: ["/api/assets/all-including-pcs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
       toast({
         title: "Successo",
         description: "Asset aggiornato con successo",
@@ -112,14 +120,19 @@ export default function Assets() {
     },
   });
 
+  // Callback ottimizzato per l'aggiornamento
+  const handleUpdateAsset = useCallback((id: string, data: Partial<AssetFormData>) => {
+    updateAssetMutation.mutate({ id, data });
+  }, [updateAssetMutation]);
+
   // Delete asset mutation
   const deleteAssetMutation = useMutation({
     mutationFn: async (id: string) => {
       return await apiRequest("DELETE", `/api/assets/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/assets"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/employees"] }); // <-- AGGIUNGI
+      queryClient.invalidateQueries({ queryKey: ["/api/assets/all-including-pcs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
       toast({
         title: "Successo",
         description: "Asset eliminato con successo",
@@ -135,6 +148,13 @@ export default function Assets() {
     },
   });
 
+  // Callback ottimizzato per l'eliminazione
+  const handleDeleteAsset = useCallback((id: string) => {
+    if (window.confirm("Sei sicuro di voler eliminare questo asset?")) {
+      deleteAssetMutation.mutate(id);
+    }
+  }, [deleteAssetMutation]);
+
   const form = useForm<AssetFormData>({
     resolver: zodResolver(assetFormSchema),
     defaultValues: {
@@ -147,17 +167,20 @@ export default function Assets() {
       status: "disponibile",
       notes: "",
     },
+    mode: "onChange", // Validazione in tempo reale
   });
 
-  const onSubmit = (data: AssetFormData) => {
+  // Callback ottimizzato per il submit
+  const handleSubmit = useCallback((data: AssetFormData) => {
     if (editingAsset) {
-      updateAssetMutation.mutate({ id: editingAsset.id, data });
+      handleUpdateAsset(editingAsset.id, data);
     } else {
-      createAssetMutation.mutate(data);
+      handleCreateAsset(data);
     }
-  };
+  }, [editingAsset, handleUpdateAsset, handleCreateAsset]);
 
-  const handleEdit = (asset: Asset) => {
+  // Callback ottimizzato per l'edit
+  const handleEdit = useCallback((asset: Asset) => {
     setEditingAsset(asset);
     form.reset({
       assetType: asset.assetType,
@@ -170,15 +193,13 @@ export default function Assets() {
       notes: asset.notes || "",
     });
     setShowAssetDialog(true);
-  };
+  }, [form]);
 
-  const handleDelete = (id: string) => {
-    if (confirm("Sei sicuro di voler eliminare questo asset?")) {
-      deleteAssetMutation.mutate(id);
-    }
-  };
+  // Usa il callback ottimizzato per delete
+  const handleDelete = handleDeleteAsset;
 
-  const handleAddNew = () => {
+  // Callback ottimizzato per aggiungere nuovo asset
+  const handleAddNew = useCallback(() => {
     setEditingAsset(null);
     form.reset({
       assetCode: "",
@@ -192,15 +213,15 @@ export default function Assets() {
       notes: "",
     });
     setShowAssetDialog(true);
-  };
+  }, [form, selectedType]);
 
   return (
     <div className="min-h-screen bg-slate-100">
       <div className="bg-white border-b px-8 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Altri Asset</h1>
-            <p className="text-sm text-gray-600 mt-1">Gestione smartphone, SIM, computer, tablet, monitor e altri dispositivi</p>
+            <h1 className="text-2xl font-semibold text-gray-900">Asset</h1>
+            <p className="text-sm text-gray-600 mt-1">Gestione computer, smartphone, SIM, tablet, monitor e altri dispositivi</p>
           </div>
           <Dialog open={showAssetDialog} onOpenChange={setShowAssetDialog}>
             <DialogTrigger asChild>
@@ -214,7 +235,7 @@ export default function Assets() {
                 <DialogTitle>{editingAsset ? "Modifica Asset" : "Nuovo Asset"}</DialogTitle>
               </DialogHeader>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     {/* Codice Asset rimosso: verrà generato automaticamente */}
                     <FormField

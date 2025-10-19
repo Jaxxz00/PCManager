@@ -1,10 +1,12 @@
-import { type Employee, type InsertEmployee, type Pc, type InsertPc, type PcWithEmployee, type User, type InsertUser, type Asset, type InsertAsset } from "@shared/schema";
+import { type Employee, type InsertEmployee, type Pc, type InsertPc, type PcWithEmployee, type User, type InsertUser, type Asset, type InsertAsset, users, sessions, employees, pcs, assets, maintenance } from "@shared/schema";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
 import { getDb, hasDb } from "./db";
+import { eq } from "drizzle-orm";
 
 export class DatabaseStorage {
   private db: any;
+  private connectionPromise: Promise<any> | null = null;
 
   constructor() {
     // Database will be initialized lazily when first used
@@ -12,31 +14,62 @@ export class DatabaseStorage {
 
   private async getDb() {
     if (!this.db) {
-      this.db = await getDb();
+      if (!this.connectionPromise) {
+        this.connectionPromise = getDb();
+      }
+      this.db = await this.connectionPromise;
     }
     return this.db;
+  }
+
+  // Metodo per chiudere la connessione
+  async close() {
+    if (this.db) {
+      try {
+        await this.db.end();
+        this.db = null;
+        this.connectionPromise = null;
+      } catch (error) {
+        console.error('Error closing database connection:', error);
+      }
+    }
+  }
+
+  // Metodo helper per gestione errori
+  private handleError(operation: string, error: any, defaultValue: any = undefined) {
+    console.error(`Error ${operation}:`, error);
+    return defaultValue;
+  }
+
+  // Metodo per eseguire transazioni
+  private async executeTransaction<T>(operation: () => Promise<T>): Promise<T> {
+    try {
+      const db = await this.getDb();
+      return await db.transaction(operation);
+    } catch (error) {
+      console.error('Transaction error:', error);
+      throw error;
+    }
   }
 
   // Employee methods
   async getEmployee(id: string): Promise<Employee | undefined> {
     try {
       const db = await this.getDb();
-      const result = await db.select().from('employees').where({ id }).limit(1);
-      return result[0] || undefined;
+      const result = await db.select().from(employees).where(eq(employees.id, id)).limit(1);
+      return (result as any)[0] || undefined;
     } catch (error) {
-      console.error('Error getting employee:', error);
-      return undefined;
+      return this.handleError('getting employee', error);
     }
   }
 
   async getEmployees(): Promise<Employee[]> {
     try {
       const db = await this.getDb();
-      const result = await db.select().from('employees');
-      return result || [];
+      const result = await db.select().from(employees);
+      return (result as any) || [];
     } catch (error) {
-      console.error('Error getting employees:', error);
-      return [];
+      return this.handleError('getting employees', error, []);
     }
   }
 
@@ -51,18 +84,18 @@ export class DatabaseStorage {
     
     try {
       const db = await this.getDb();
-      await db.insert('employees').values(employee);
+      await db.insert(employees).values(employee as any);
       return employee;
     } catch (error) {
       console.error('Error creating employee:', error);
-      throw error;
+      throw new Error(`Failed to create employee: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   async updateEmployee(id: string, updateData: Partial<InsertEmployee>): Promise<Employee | undefined> {
     try {
       const db = await this.getDb();
-      await db.update('employees').set(updateData).where({ id });
+      await db.update(employees).set(updateData as any).where(eq(employees.id, id));
       return this.getEmployee(id);
     } catch (error) {
       console.error('Error updating employee:', error);
@@ -73,7 +106,7 @@ export class DatabaseStorage {
   async deleteEmployee(id: string): Promise<boolean> {
     try {
       const db = await this.getDb();
-      await db.delete('employees').where({ id });
+      await db.delete(employees).where(eq(employees.id, id));
       return true;
     } catch (error) {
       console.error('Error deleting employee:', error);
@@ -85,8 +118,8 @@ export class DatabaseStorage {
     // Implementation for removing employee from history
     try {
       const db = await this.getDb();
-      await db.update('pcs').set({ employeeId: null }).where({ employeeId });
-      await db.update('assets').set({ employeeId: null }).where({ employeeId });
+      await db.update(pcs).set({ employeeId: null }).where(eq(pcs.employeeId, employeeId));
+      await db.update(assets).set({ employeeId: null }).where(eq(assets.employeeId, employeeId));
     } catch (error) {
       console.error('Error removing employee from history:', error);
     }
@@ -95,8 +128,9 @@ export class DatabaseStorage {
   // PC methods
   async getPc(id: string): Promise<Pc | undefined> {
     try {
-      const result = await this.db.select().from('pcs').where({ id }).limit(1);
-      return result[0] || undefined;
+      const db = await this.getDb();
+      const result = await db.select().from(pcs).where(eq(pcs.id, id)).limit(1);
+      return (result as any)[0] || undefined;
     } catch (error) {
       console.error('Error getting PC:', error);
       return undefined;
@@ -105,7 +139,8 @@ export class DatabaseStorage {
 
   async getPcs(): Promise<PcWithEmployee[]> {
     try {
-      const result = await this.db
+      const db = await this.getDb();
+      const result = await db
         .select({
           id: 'pcs.id',
           pcId: 'pcs.pcId',
@@ -144,8 +179,9 @@ export class DatabaseStorage {
 
   async getPcByPcId(pcId: string): Promise<Pc | undefined> {
     try {
-      const result = await this.db.select().from('pcs').where({ pcId }).limit(1);
-      return result[0] || undefined;
+      const db = await this.getDb();
+      const result = await db.select().from(pcs).where(eq(pcs.pcId, pcId)).limit(1);
+      return (result as any)[0] || undefined;
     } catch (error) {
       console.error('Error getting PC by PC ID:', error);
       return undefined;
@@ -166,7 +202,8 @@ export class DatabaseStorage {
     };
     
     try {
-      await this.db.insert('pcs').values(pc);
+      const db = await this.getDb();
+      await db.insert(pcs).values(pc as any);
       return pc;
     } catch (error) {
       console.error('Error creating PC:', error);
@@ -176,7 +213,8 @@ export class DatabaseStorage {
 
   async updatePc(id: string, updateData: Partial<InsertPc>): Promise<Pc | undefined> {
     try {
-      await this.db.update('pcs').set({ ...updateData, updatedAt: new Date() }).where({ id });
+      const db = await this.getDb();
+      await db.update(pcs).set({ ...updateData, updatedAt: new Date() } as any).where(eq(pcs.id, id));
       return this.getPc(id);
     } catch (error) {
       console.error('Error updating PC:', error);
@@ -186,7 +224,8 @@ export class DatabaseStorage {
 
   async deletePc(id: string): Promise<boolean> {
     try {
-      await this.db.delete('pcs').where({ id });
+      const db = await this.getDb();
+      await db.delete(pcs).where(eq(pcs.id, id));
       return true;
     } catch (error) {
       console.error('Error deleting PC:', error);
@@ -197,8 +236,9 @@ export class DatabaseStorage {
   // Asset methods
   async getAsset(id: string): Promise<Asset | undefined> {
     try {
-      const result = await this.db.select().from('assets').where({ id }).limit(1);
-      return result[0] || undefined;
+      const db = await this.getDb();
+      const result = await db.select().from(assets).where(eq(assets.id, id)).limit(1);
+      return (result as any)[0] || undefined;
     } catch (error) {
       console.error('Error getting asset:', error);
       return undefined;
@@ -207,22 +247,60 @@ export class DatabaseStorage {
 
   async getAssets(type?: string): Promise<Asset[]> {
     try {
-      let query = this.db.select().from('assets');
+      const db = await this.getDb();
+      let query = db.select().from(assets);
       if (type) {
-        query = query.where({ assetType: type });
+        query = query.where(eq(assets.assetType, type));
       }
       const result = await query;
-      return result || [];
+      return (result as any) || [];
     } catch (error) {
       console.error('Error getting assets:', error);
       return [];
     }
   }
 
+  // Metodo per ottenere tutti gli asset inclusi i PC
+  async getAllAssetsIncludingPCs(): Promise<any[]> {
+    try {
+      const db = await this.getDb();
+      
+      // Ottieni tutti gli asset non-PC
+      const nonPcAssets = await db.select().from(assets);
+      
+      // Ottieni tutti i PC e convertili in formato asset
+      const pcsData = await db.select().from(pcs);
+      const pcAssets = pcsData.map((pc: any) => ({
+        id: pc.id,
+        assetCode: pc.pcId,
+        assetType: 'computer',
+        name: `${pc.brand} ${pc.model}`,
+        brand: pc.brand,
+        model: pc.model,
+        serialNumber: pc.serialNumber,
+        status: pc.status,
+        employeeId: pc.employeeId,
+        purchaseDate: pc.purchaseDate,
+        warrantyExpiry: pc.warrantyExpiry,
+        notes: pc.notes,
+        createdAt: pc.createdAt,
+        updatedAt: pc.updatedAt,
+        isPc: true // Flag per identificare che è un PC
+      }));
+      
+      // Combina asset e PC
+      return [...(nonPcAssets as any), ...pcAssets];
+    } catch (error) {
+      console.error('Error getting all assets including PCs:', error);
+      return [];
+    }
+  }
+
   async getAssetByCode(assetCode: string): Promise<Asset | undefined> {
     try {
-      const result = await this.db.select().from('assets').where({ assetCode }).limit(1);
-      return result[0] || undefined;
+      const db = await this.getDb();
+      const result = await db.select().from(assets).where(eq(assets.assetCode, assetCode)).limit(1);
+      return (result as any)[0] || undefined;
     } catch (error) {
       console.error('Error getting asset by code:', error);
       return undefined;
@@ -250,7 +328,8 @@ export class DatabaseStorage {
     };
     
     try {
-      await this.db.insert('assets').values(asset);
+      const db = await this.getDb();
+      await db.insert(assets).values(asset as any);
       return asset;
     } catch (error) {
       console.error('Error creating asset:', error);
@@ -260,7 +339,8 @@ export class DatabaseStorage {
 
   async updateAsset(id: string, updateData: Partial<InsertAsset>): Promise<Asset | undefined> {
     try {
-      await this.db.update('assets').set({ ...updateData, updatedAt: new Date() }).where({ id });
+      const db = await this.getDb();
+      await db.update(assets).set({ ...updateData, updatedAt: new Date() } as any).where(eq(assets.id, id));
       return this.getAsset(id);
     } catch (error) {
       console.error('Error updating asset:', error);
@@ -270,7 +350,8 @@ export class DatabaseStorage {
 
   async deleteAsset(id: string): Promise<boolean> {
     try {
-      await this.db.delete('assets').where({ id });
+      const db = await this.getDb();
+      await db.delete(assets).where(eq(assets.id, id));
       return true;
     } catch (error) {
       console.error('Error deleting asset:', error);
@@ -292,7 +373,8 @@ export class DatabaseStorage {
     const prefix = prefixMap[assetType] || 'ASSET';
     
     try {
-      const result = await this.db.select().from('assets').where({ assetType });
+      const db = await this.getDb();
+      const result = await db.select().from(assets).where(eq(assets.assetType, assetType));
       const nextValue = result.length + 1;
       const paddedNumber = String(nextValue).padStart(3, '0');
       return `${prefix}-${paddedNumber}`;
@@ -305,8 +387,9 @@ export class DatabaseStorage {
   // User methods
   async getUser(id: string): Promise<User | undefined> {
     try {
-      const result = await this.db.select().from('users').where({ id }).limit(1);
-      return result[0] || undefined;
+      const db = await this.getDb();
+      const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+      return (result as any)[0] || undefined;
     } catch (error) {
       console.error('Error getting user:', error);
       return undefined;
@@ -315,7 +398,8 @@ export class DatabaseStorage {
 
   async getUserByUsername(username: string): Promise<User | undefined> {
     try {
-      const result = await this.db.select().from('users').where({ username }).limit(1);
+      const db = await this.getDb();
+      const result = await db.select().from('users').where({ username }).limit(1);
       return result[0] || undefined;
     } catch (error) {
       console.error('Error getting user by username:', error);
@@ -325,8 +409,9 @@ export class DatabaseStorage {
 
   async getUserByEmail(email: string): Promise<User | undefined> {
     try {
-      const result = await this.db.select().from('users').where({ email }).limit(1);
-      return result[0] || undefined;
+      const db = await this.getDb();
+      const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+      return (result as any)[0] || undefined;
     } catch (error) {
       console.error('Error getting user by email:', error);
       return undefined;
@@ -335,8 +420,9 @@ export class DatabaseStorage {
 
   async getAllUsers(): Promise<User[]> {
     try {
-      const result = await this.db.select().from('users');
-      return result || [];
+      const db = await this.getDb();
+      const result = await db.select().from(users);
+      return (result as any) || [];
     } catch (error) {
       console.error('Error getting all users:', error);
       return [];
@@ -363,8 +449,9 @@ export class DatabaseStorage {
     };
     
     try {
-      await this.db.insert('users').values(user);
-      return user;
+      const db = await this.getDb();
+      await db.insert(users).values(user as any);
+      return user as any;
     } catch (error) {
       console.error('Error creating user:', error);
       throw error;
@@ -373,7 +460,8 @@ export class DatabaseStorage {
 
   async updateUser(id: string, updateData: Partial<InsertUser>): Promise<User | undefined> {
     try {
-      await this.db.update('users').set({ ...updateData, updatedAt: new Date() }).where({ id });
+      const db = await this.getDb();
+      await db.update(users).set({ ...(updateData as any), updatedAt: new Date() }).where(eq(users.id, id));
       return this.getUser(id);
     } catch (error) {
       console.error('Error updating user:', error);
@@ -383,7 +471,8 @@ export class DatabaseStorage {
 
   async deleteUser(id: string): Promise<boolean> {
     try {
-      await this.db.delete('users').where({ id });
+      const db = await this.getDb();
+      await db.delete(users).where(eq(users.id, id));
       return true;
     } catch (error) {
       console.error('Error deleting user:', error);
@@ -393,7 +482,8 @@ export class DatabaseStorage {
 
   async updateLastLogin(id: string): Promise<void> {
     try {
-      await this.db.update('users').set({ lastLogin: new Date() }).where({ id });
+      const db = await this.getDb();
+      await db.update(users).set({ lastLogin: new Date() }).where(eq(users.id, id));
     } catch (error) {
       console.error('Error updating last login:', error);
     }
@@ -422,7 +512,8 @@ export class DatabaseStorage {
     expiresAt.setDate(expiresAt.getDate() + 7);
     
     try {
-      await this.db.insert('sessions').values({ id: sessionId, userId, expiresAt });
+      const db = await this.getDb();
+      await db.insert(sessions).values({ id: sessionId, userId, expiresAt } as any);
       return sessionId;
     } catch (error) {
       console.error('Error creating session:', error);
@@ -432,15 +523,18 @@ export class DatabaseStorage {
 
   async validateSession(sessionId: string): Promise<User | null> {
     try {
-      const session = await this.db.select().from('sessions').where({ id: sessionId }).limit(1);
-      if (!session[0]) return null;
+      const db = await this.getDb();
+      const sessionRows = await db.select().from(sessions).where(eq(sessions.id, sessionId)).limit(1);
+      const session = (sessionRows as any)[0];
+      if (!session) return null;
       
-      if (new Date(session[0].expiresAt) < new Date()) {
+      if (new Date(session.expiresAt) < new Date()) {
         await this.deleteSession(sessionId);
         return null;
       }
       
-      return this.getUser(session[0].userId);
+      const user = await this.getUser(session.userId);
+      return user || null;
     } catch (error) {
       console.error('Error validating session:', error);
       return null;
@@ -449,7 +543,8 @@ export class DatabaseStorage {
 
   async deleteSession(sessionId: string): Promise<boolean> {
     try {
-      await this.db.delete('sessions').where({ id: sessionId });
+      const db = await this.getDb();
+      await db.delete(sessions).where(eq(sessions.id, sessionId));
       return true;
     } catch (error) {
       console.error('Error deleting session:', error);
@@ -460,15 +555,16 @@ export class DatabaseStorage {
   // Dashboard stats
   async getDashboardStats() {
     try {
-      const allPcs = await this.db.select().from('pcs');
-      const allAssets = await this.db.select().from('assets');
-      const allEmployees = await this.db.select().from('employees');
-      const allMaintenance = await this.db.select().from('maintenance');
+      const db = await this.getDb();
+      const allPcs = await db.select().from(pcs);
+      const allAssets = await db.select().from(assets);
+      const allEmployees = await db.select().from(employees);
+      const allMaintenance = await db.select().from(maintenance);
       
       // Conteggi totali corretti
       const totalPCs = allPcs.length;
-      const totalAssets = allAssets.length;
-      const totalDevices = totalPCs + totalAssets;
+      const totalNonPcAssets = allAssets.length;
+      const totalDevices = totalPCs + totalNonPcAssets; // PC inclusi negli asset totali
       
       // Conteggi status corretti
       const activePCs = allPcs.filter((p: any) => p.status === 'active' || p.status === 'assegnato').length;
@@ -737,8 +833,9 @@ export class DatabaseStorage {
 
   async getAllMaintenance(): Promise<any[]> {
     try {
-      const result = await this.db.select().from('maintenance');
-      return result || [];
+      const db = await this.getDb();
+      const result = await db.select().from(maintenance);
+      return (result as any) || [];
     } catch (error) {
       console.error('Error getting maintenance:', error);
       return [];
@@ -750,7 +847,8 @@ export class DatabaseStorage {
     const newMaintenance = { id, ...maintenance, createdAt: new Date() };
     
     try {
-      await this.db.insert('maintenance').values(newMaintenance);
+      const db = await this.getDb();
+      await db.insert(maintenance).values(newMaintenance as any);
       return newMaintenance;
     } catch (error) {
       console.error('Error creating maintenance:', error);
@@ -760,7 +858,8 @@ export class DatabaseStorage {
 
   async updateMaintenance(id: string, maintenance: any): Promise<any> {
     try {
-      await this.db.update('maintenance').set(maintenance).where({ id });
+      const db = await this.getDb();
+      await db.update(maintenance).set(maintenance as any).where(eq(maintenance.id, id));
       return this.getMaintenance(id);
     } catch (error) {
       console.error('Error updating maintenance:', error);
@@ -770,7 +869,8 @@ export class DatabaseStorage {
 
   async deleteMaintenance(id: string): Promise<boolean> {
     try {
-      await this.db.delete('maintenance').where({ id });
+      const db = await this.getDb();
+      await db.delete(maintenance).where(eq(maintenance.id, id));
       return true;
     } catch (error) {
       console.error('Error deleting maintenance:', error);

@@ -16,5 +16,9 @@
       "ui": "@/components/ui",
       "lib": "@/lib",
       "hooks": "@/hooks"
+    },
+    "typescript": {
+      "strict": true,
+      "noImplicitAny": true
     }
 }

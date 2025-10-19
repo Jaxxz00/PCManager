@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, memo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search, Monitor, User, X, Wrench } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -31,12 +31,13 @@ interface GlobalSearchDropdownProps {
   onSearchChange: (value: string) => void;
 }
 
-export function GlobalSearchDropdown({ isOpen, onClose, searchTerm, onSearchChange }: GlobalSearchDropdownProps) {
+// Componente ottimizzato con memo per evitare re-render inutili
+export const GlobalSearchDropdown = memo(function GlobalSearchDropdown({ isOpen, onClose, searchTerm, onSearchChange }: GlobalSearchDropdownProps) {
   const [, setLocation] = useLocation();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const { data: assets = [], isLoading: assetsLoading, isError: assetsError } = useQuery<Asset[]>({
-    queryKey: ["/api/assets"],
+    queryKey: ["/api/assets/all-including-pcs"],
     enabled: isOpen,
   });
 
@@ -326,4 +327,4 @@ export function GlobalSearchDropdown({ isOpen, onClose, searchTerm, onSearchChan
       </div>
     </div>
   );
-}
+});

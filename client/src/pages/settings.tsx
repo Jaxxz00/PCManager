@@ -263,9 +263,31 @@ function UserManagement() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                          {user.role === 'admin' ? 'Admin' : 'User'}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                            {user.role === 'admin' ? 'Admin' : 'User'}
+                          </Badge>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              const newRole = user.role === 'admin' ? 'user' : 'admin';
+                              if (confirm(`Cambiare il ruolo di ${user.username} da ${user.role} a ${newRole}?`)) {
+                                apiRequest("PATCH", `/api/users/${user.id}`, { role: newRole })
+                                  .then(() => {
+                                    toast({ title: "Ruolo aggiornato", description: `Ruolo cambiato a ${newRole}` });
+                                    queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+                                  })
+                                  .catch((e: any) => {
+                                    toast({ title: "Errore", description: e?.message || "Impossibile aggiornare il ruolo", variant: "destructive" });
+                                  });
+                              }
+                            }}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            <Shield className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Badge variant={user.isActive ? 'default' : 'outline'} 

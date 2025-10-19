@@ -96,9 +96,22 @@ export default function Login() {
         return;
       }
 
+      // UX: messaggio chiaro per credenziali errate e pulizia campo password
+      let cleanedMsg = error.message || "Errore durante l'accesso";
+      // Se torna un JSON come stringa, estrai solo il messaggio
+      try {
+        const maybeObj = JSON.parse(cleanedMsg);
+        if (maybeObj && typeof maybeObj === 'object') {
+          cleanedMsg = maybeObj.error || maybeObj.message || cleanedMsg;
+        }
+      } catch {}
+      const message = /invalid|credenzial/i.test(cleanedMsg)
+        ? "Email o password errati"
+        : cleanedMsg;
+      form.setValue("password", "");
       toast({
-        title: "Errore di accesso",
-        description: error.message || "Credenziali non valide",
+        title: "Attenzione!",
+        description: message,
         variant: "destructive",
       });
     },

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -35,7 +35,7 @@ export default function Employees() {
   });
 
   const { data: assets = [] } = useQuery<Asset[]>({
-    queryKey: ["/api/assets"],
+    queryKey: ["/api/assets/all-including-pcs"],
   });
 
   const form = useForm<EmployeeFormData>({
@@ -46,6 +46,7 @@ export default function Employees() {
       department: "",
       company: "Maori Group",
     },
+    mode: "onChange", // Validazione in tempo reale
   });
 
   const createEmployeeMutation = useMutation({
@@ -55,7 +56,7 @@ export default function Employees() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/assets"] });  // <-- AGGIUNGI QUESTA
+      queryClient.invalidateQueries({ queryKey: ["/api/assets/all-including-pcs"] });
       toast({
         title: "Collaboratore aggiunto",
         description: "Il nuovo collaboratore è stato registrato nel sistema.",
@@ -73,13 +74,18 @@ export default function Employees() {
     },
   });
 
+  // Callback ottimizzato per la creazione
+  const handleCreateEmployee = useCallback((data: EmployeeFormData) => {
+    createEmployeeMutation.mutate(data);
+  }, [createEmployeeMutation]);
+
   const deleteEmployeeMutation = useMutation({
     mutationFn: async (id: string) => {
       await apiRequest("DELETE", `/api/employees/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/assets"] });  // <-- AGGIUNGI QUESTA
+      queryClient.invalidateQueries({ queryKey: ["/api/assets/all-including-pcs"] });
       toast({
         title: "Collaboratore eliminato",
         description: "Il collaboratore è stato rimosso dal sistema.",
@@ -94,6 +100,8 @@ export default function Employees() {
       });
     },
   });
+
+  // Callback ottimizzato per l'eliminazione sarà definito dopo
 
   const filteredEmployees = useMemo(() => {
     if (!debouncedSearch.trim()) {
@@ -119,11 +127,8 @@ export default function Employees() {
     return assets.filter((asset) => asset.employeeId === employeeId).length;
   };
 
-  const onSubmit = (data: EmployeeFormData) => {
-    createEmployeeMutation.mutate(data);
-  };
 
-  const handleDeleteEmployee = (id: string) => {
+  const handleDeleteEmployee = useCallback((id: string) => {
     const assignedAssets = getEmployeeAssetCount(id);
     if (assignedAssets > 0) {
       toast({
@@ -137,7 +142,7 @@ export default function Employees() {
     if (window.confirm("Sei sicuro di voler eliminare questo collaboratore?")) {
       deleteEmployeeMutation.mutate(id);
     }
-  };
+  }, [deleteEmployeeMutation, toast]);
 
   return (
     <div className="space-y-6">
@@ -159,7 +164,7 @@ export default function Employees() {
               <DialogTitle>Aggiungi Nuovo Collaboratore</DialogTitle>
             </DialogHeader>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form onSubmit={form.handleSubmit(handleCreateEmployee)} className="space-y-4">
                 <FormField
                   control={form.control}
                   name="name"
@@ -235,14 +240,17 @@ export default function Employees() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => setShowEmployeeForm(false)}
+                    onClick={() => {
+                      setShowEmployeeForm(false);
+                      form.reset();
+                    }}
                   >
                     Annulla
                   </Button>
                   <Button
                     type="submit"
-                    disabled={createEmployeeMutation.isPending}
-                    className="bg-blue-600 text-white"
+                    disabled={createEmployeeMutation.isPending || !form.formState.isValid}
+                    className="bg-blue-600 text-white disabled:opacity-50"
                   >
                     {createEmployeeMutation.isPending ? "Salvataggio..." : "Salva"}
                   </Button>

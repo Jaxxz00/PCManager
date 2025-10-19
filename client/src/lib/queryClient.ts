@@ -1,9 +1,37 @@
-import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { QueryClient, type QueryFunction } from "@tanstack/react-query";
+
+// Cache per sessionId per evitare letture ripetute da localStorage
+let cachedSessionId: string | null = null;
+let lastSessionCheck = 0;
+const SESSION_CACHE_DURATION = 1000; // 1 secondo
+
+function getCachedSessionId(): string | null {
+  const now = Date.now();
+  if (now - lastSessionCheck > SESSION_CACHE_DURATION) {
+    cachedSessionId = localStorage.getItem('sessionId');
+    lastSessionCheck = now;
+  }
+  return cachedSessionId;
+}
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    // Read body exactly once to avoid "body stream already read" errors
+    const raw = await res.text();
+    const fallback = res.statusText || 'Errore di richiesta';
+    
+    if (!raw) {
+      throw new Error(fallback);
+    }
+    
+    try {
+      const body = JSON.parse(raw);
+      const message = body?.error || body?.message || fallback;
+      throw new Error(message);
+    } catch {
+      // Not JSON, return raw text
+      throw new Error(raw);
+    }
   }
 }
 
@@ -12,9 +40,10 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const sessionId = localStorage.getItem('sessionId');
-  const headers: Record<string, string> = {};
-  headers["Accept"] = "application/json";
+  const sessionId = getCachedSessionId();
+  const headers: Record<string, string> = {
+    "Accept": "application/json",
+  };
   
   if (data) {
     headers["Content-Type"] = "application/json";
@@ -36,12 +65,13 @@ export async function apiRequest(
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
+
 export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const sessionId = localStorage.getItem('sessionId');
+    const sessionId = getCachedSessionId();
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
@@ -69,8 +99,15 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
+      staleTime: 5 * 60 * 1000, // 5 minuti invece di Infinity per aggiornamenti più frequenti
+      retry: (failureCount, error: any) => {
+        // Non riprovare per errori 401, 403, 404
+        if (error?.message?.includes('401') || error?.message?.includes('403') || error?.message?.includes('404')) {
+          return false;
+        }
+        return failureCount < 2; // Massimo 2 tentativi
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Backoff esponenziale
     },
     mutations: {
       retry: false,

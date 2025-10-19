@@ -43,6 +43,26 @@ const AuthContext = createContext<{
 
 export const useAuth = () => useContext(AuthContext);
 
+// Componente per proteggere le route solo per admin
+function AdminOnly({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  
+  if (user?.role !== 'admin') {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-foreground mb-2">Accesso Negato</h1>
+          <p className="text-muted-foreground">
+            Questa sezione è riservata agli amministratori.
+          </p>
+        </div>
+      </div>
+    );
+  }
+  
+  return <>{children}</>;
+}
+
 function AuthProvider({ children }: { children: React.ReactNode }) {
   const [sessionId, setSessionId] = useState<string | null>(
     localStorage.getItem('sessionId') || sessionStorage.getItem('sessionId')

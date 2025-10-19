@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Monitor, User, Wrench, AlertTriangle, Smartphone, Tablet, CreditCard } from "lucide-react";
+import { memo } from "react";
 
 interface DashboardStats {
  totalPCs: number;
@@ -19,7 +20,8 @@ interface DashboardStats {
  };
 }
 
-export default function StatsCards() {
+// Componente ottimizzato con memo per evitare re-render inutili
+const StatsCards = memo(function StatsCards() {
  const { data: stats, isLoading, error } = useQuery<DashboardStats>({
   queryKey: ["/api/dashboard/stats"],
  });
@@ -185,4 +187,6 @@ export default function StatsCards() {
    </div>
   </div>
  );
-}
+});
+
+export default StatsCards;

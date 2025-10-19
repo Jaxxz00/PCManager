@@ -2,10 +2,16 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
-    react(),
-    // Plugins per deploy su server personale
+    react({
+      // Ottimizzazioni per produzione
+      babel: {
+        plugins: mode === 'production' ? [
+          ['transform-remove-console', { exclude: ['error', 'warn'] }]
+        ] : []
+      }
+    }),
   ],
   resolve: {
     alias: {
@@ -17,21 +23,31 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    minify: mode === 'production' ? 'esbuild' : false,
+    sourcemap: mode === 'development',
     rollupOptions: {
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'wouter'],
           'tanstack-vendor': ['@tanstack/react-query'],
           'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
+          'lucide-vendor': ['lucide-react'],
         },
       },
     },
     chunkSizeWarningLimit: 1000,
+    target: 'esnext',
   },
   server: {
     fs: {
       strict: true,
       deny: ["**/.*"],
     },
+    hmr: {
+      overlay: mode === 'development'
+    }
   },
-});
+  optimizeDeps: {
+    include: ['react', 'react-dom', '@tanstack/react-query', 'wouter']
+  }
+}));

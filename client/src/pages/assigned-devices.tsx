@@ -3,22 +3,37 @@ import { useLocation, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import type { Pc, Asset, Employee } from "@shared/schema";
+import type { Asset, Employee } from "@shared/schema";
 
-type PcWithEmp = Pc & { employee?: Pick<Employee, 'id' | 'name' | 'email'> | null };
+// Helper function per ottenere il nome dell'employee
+const getEmployeeName = (employee: Employee): string => {
+  return employee.name || 'Nome non disponibile';
+};
 
 export default function AssignedDevices() {
   const [location] = useLocation();
   const search = typeof window !== 'undefined' ? window.location.search : (location.includes('?') ? location.slice(location.indexOf('?')) : '');
   const params = new URLSearchParams(search);
   const selectedEmployeeId = params.get('employeeId') || (typeof window !== 'undefined' ? sessionStorage.getItem('selectedEmployeeId') : null);
-  const { data: pcs = [] } = useQuery<PcWithEmp[]>({ queryKey: ["/api/pcs"] });
-  const { data: assets = [] } = useQuery<Asset[]>({ queryKey: ["/api/assets"] });
-  const { data: employees = [] } = useQuery<Employee[]>({ queryKey: ["/api/employees"] });
+  
+  const { data: allAssets = [], isLoading: assetsLoading } = useQuery<Asset[]>({ 
+    queryKey: ["/api/assets/all-including-pcs"] 
+  });
+  const { data: employees = [], isLoading: employeesLoading } = useQuery<Employee[]>({ 
+    queryKey: ["/api/employees"] 
+  });
 
   const employeeMap = new Map(employees.map(e => [e.id, e]));
-  const assignedPcs = pcs.filter((pc) => pc.employeeId && (!selectedEmployeeId || pc.employeeId === selectedEmployeeId));
-  const assignedAssets = assets.filter((a) => a.employeeId && (!selectedEmployeeId || a.employeeId === selectedEmployeeId));
+  
+  // Filtra solo asset assegnati
+  const assignedAssets = allAssets.filter((asset) => 
+    asset.employeeId && (!selectedEmployeeId || asset.employeeId === selectedEmployeeId)
+  );
+  
+  // Separare Computer e altri asset
+  const assignedComputers = assignedAssets.filter(asset => asset.assetType === 'computer');
+  const assignedOtherAssets = assignedAssets.filter(asset => asset.assetType !== 'computer');
+  
   const currentEmployee = selectedEmployeeId ? employeeMap.get(selectedEmployeeId) : undefined;
 
   return (
@@ -27,9 +42,11 @@ export default function AssignedDevices() {
         <div>
           <h1 className="text-3xl font-bold text-foreground">Dispositivi Assegnati</h1>
           {currentEmployee ? (
-            <p className="text-muted-foreground">Per: <span className="font-semibold">{(currentEmployee as any).name || (currentEmployee as any).firstName?.concat(' ', (currentEmployee as any).lastName || '')}</span> • {(currentEmployee as any).email}</p>
+            <p className="text-muted-foreground">
+              Per: <span className="font-semibold">{getEmployeeName(currentEmployee)}</span> • {currentEmployee.email}
+            </p>
           ) : (
-            <p className="text-muted-foreground">PC e asset associati ai collaboratori</p>
+            <p className="text-muted-foreground">Computer e asset associati ai collaboratori</p>
           )}
         </div>
         <Link href="/employees" className="text-sm text-blue-600">← Torna ai Collaboratori</Link>
@@ -39,87 +56,105 @@ export default function AssignedDevices() {
         <div className="text-sm text-red-600">Collaboratore non trovato.</div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>PC Assegnati <Badge variant="secondary" className="ml-2">{assignedPcs.length}</Badge></CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>PC ID</TableHead>
-                    <TableHead>Modello</TableHead>
-                    <TableHead>Serial</TableHead>
-                    <TableHead>Collaboratore</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {assignedPcs.length === 0 ? (
+      {assetsLoading || employeesLoading ? (
+        <div className="text-center py-8">
+          <div className="text-muted-foreground">Caricamento dispositivi...</div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Computer Assegnati <Badge variant="secondary" className="ml-2">{assignedComputers.length}</Badge></CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center text-muted-foreground">Nessun PC assegnato</TableCell>
+                      <TableHead>Codice</TableHead>
+                      <TableHead>Modello</TableHead>
+                      <TableHead>Serial</TableHead>
+                      <TableHead>Collaboratore</TableHead>
                     </TableRow>
-                  ) : assignedPcs.map((pc) => {
-                    const emp = pc.employee || (pc.employeeId ? employeeMap.get(pc.employeeId) : undefined) || null;
-                    return (
-                      <TableRow key={pc.id}>
-                        <TableCell className="font-medium">{pc.pcId}</TableCell>
-                        <TableCell>{pc.brand} {pc.model}</TableCell>
-                        <TableCell>{pc.serialNumber}</TableCell>
-                        <TableCell>{emp ? (<>
-                          <div className="font-medium">{(emp as any).name || (emp as any).firstName?.concat(' ', (emp as any).lastName || '')}</div>
-                          <div className="text-xs text-muted-foreground">{(emp as any).email}</div>
-                        </>) : <span className="text-xs text-muted-foreground">-</span>}</TableCell>
+                  </TableHeader>
+                  <TableBody>
+                    {assignedComputers.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center text-muted-foreground">Nessun computer assegnato</TableCell>
                       </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+                    ) : assignedComputers.map((computer) => {
+                      const employee = computer.employeeId ? employeeMap.get(computer.employeeId) : undefined;
+                      return (
+                        <TableRow key={computer.id}>
+                          <TableCell className="font-medium">{computer.assetCode}</TableCell>
+                          <TableCell>{computer.brand} {computer.model}</TableCell>
+                          <TableCell>{computer.serialNumber}</TableCell>
+                          <TableCell>
+                            {employee ? (
+                              <>
+                                <div className="font-medium">{getEmployeeName(employee)}</div>
+                                <div className="text-xs text-muted-foreground">{employee.email}</div>
+                              </>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Asset Assegnati <Badge variant="secondary" className="ml-2">{assignedAssets.length}</Badge></CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Codice</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Modello</TableHead>
-                    <TableHead>Collaboratore</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {assignedAssets.length === 0 ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Altri Asset Assegnati <Badge variant="secondary" className="ml-2">{assignedOtherAssets.length}</Badge></CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center text-muted-foreground">Nessun asset assegnato</TableCell>
+                      <TableHead>Codice</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Modello</TableHead>
+                      <TableHead>Collaboratore</TableHead>
                     </TableRow>
-                  ) : assignedAssets.map((a) => {
-                    const emp = a.employeeId ? employeeMap.get(a.employeeId) : undefined;
-                    return (
-                      <TableRow key={a.id}>
-                        <TableCell className="font-medium">{a.assetCode}</TableCell>
-                        <TableCell><Badge variant="outline">{a.assetType}</Badge></TableCell>
-                        <TableCell>{a.brand} {a.model}</TableCell>
-                        <TableCell>{emp ? (<>
-                          <div className="font-medium">{(emp as any).name || (emp as any).firstName?.concat(' ', (emp as any).lastName || '')}</div>
-                          <div className="text-xs text-muted-foreground">{(emp as any).email}</div>
-                        </>) : <span className="text-xs text-muted-foreground">-</span>}</TableCell>
+                  </TableHeader>
+                  <TableBody>
+                    {assignedOtherAssets.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center text-muted-foreground">Nessun asset assegnato</TableCell>
                       </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                    ) : assignedOtherAssets.map((asset) => {
+                      const employee = asset.employeeId ? employeeMap.get(asset.employeeId) : undefined;
+                      return (
+                        <TableRow key={asset.id}>
+                          <TableCell className="font-medium">{asset.assetCode}</TableCell>
+                          <TableCell><Badge variant="outline">{asset.assetType}</Badge></TableCell>
+                          <TableCell>{asset.brand} {asset.model}</TableCell>
+                          <TableCell>
+                            {employee ? (
+                              <>
+                                <div className="font-medium">{getEmployeeName(employee)}</div>
+                                <div className="text-xs text-muted-foreground">{employee.email}</div>
+                              </>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

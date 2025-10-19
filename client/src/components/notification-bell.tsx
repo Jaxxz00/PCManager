@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo, useCallback, useMemo } from "react";
 import { Bell, AlertTriangle, Wrench, Calendar, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +18,8 @@ interface Notification {
   date: Date;
 }
 
-export default function NotificationBell() {
+// Componente ottimizzato con memo per evitare re-render inutili
+const NotificationBell = memo(function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
   const [dismissedNotifications, setDismissedNotifications] = useState<string[]>([]);
 
@@ -42,12 +43,8 @@ export default function NotificationBell() {
     localStorage.setItem('dismissed-notifications', JSON.stringify(newDismissed));
   };
 
-  const { data: pcs = [] } = useQuery<PcWithEmployee[]>({
-    queryKey: ["/api/pcs"],
-  });
-
   const { data: assets = [] } = useQuery<Asset[]>({
-    queryKey: ["/api/assets"],
+    queryKey: ["/api/assets/all-including-pcs"],
   });
 
   const generateNotifications = (): Notification[] => {
@@ -55,70 +52,19 @@ export default function NotificationBell() {
     const now = new Date();
     const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-    // Processa notifiche PC
-    pcs.forEach(pc => {
-      // Notifiche garanzia in scadenza
-      if (pc.warrantyExpiry) {
-        const warrantyDate = new Date(pc.warrantyExpiry);
-        if (warrantyDate <= thirtyDaysFromNow && warrantyDate > now) {
-          const notificationId = `warranty-pc-${pc.id}-${warrantyDate.toISOString().split('T')[0]}`;
-          notifications.push({
-            id: notificationId,
-            type: 'warranty',
-            title: 'Garanzia in Scadenza',
-            message: `La garanzia del PC ${pc.pcId} scade il ${warrantyDate.toLocaleDateString('it-IT')}`,
-            itemId: pc.pcId,
-            priority: warrantyDate <= new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) ? 'high' : 'medium',
-            date: warrantyDate
-          });
-        }
-      }
-
-      // Notifiche manutenzione PC
-      if (pc.status === 'maintenance') {
-        const notificationId = `maintenance-pc-${pc.id}`;
-        notifications.push({
-          id: notificationId,
-          type: 'maintenance',
-          title: 'PC in Manutenzione',
-          message: `Il PC ${pc.pcId} è attualmente in manutenzione`,
-          itemId: pc.pcId,
-          priority: 'medium',
-          date: pc.updatedAt ? new Date(pc.updatedAt) : new Date()
-        });
-      }
-
-      // Notifiche PC non assegnati (solo se il PC è stato creato da più di 1 giorno)
-      if (!pc.employeeId && pc.createdAt) {
-        const createdDate = new Date(pc.createdAt);
-        const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        if (createdDate < oneDayAgo) {
-          const notificationId = `unassigned-pc-${pc.id}`;
-          notifications.push({
-            id: notificationId,
-            type: 'assignment',
-            title: 'PC Non Assegnato',
-            message: `Il PC ${pc.pcId} non è assegnato a nessun collaboratore`,
-            itemId: pc.pcId,
-            priority: 'low',
-            date: createdDate
-          });
-        }
-      }
-    });
-
-    // Processa notifiche Asset
+    // Processa notifiche per tutti gli asset (inclusi i PC)
     assets.forEach(asset => {
       // Notifiche garanzia in scadenza
       if (asset.warrantyExpiry) {
         const warrantyDate = new Date(asset.warrantyExpiry);
         if (warrantyDate <= thirtyDaysFromNow && warrantyDate > now) {
-          const notificationId = `warranty-asset-${asset.id}-${warrantyDate.toISOString().split('T')[0]}`;
+          const notificationId = `warranty-${asset.assetType}-${asset.id}-${warrantyDate.toISOString().split('T')[0]}`;
+          const assetName = asset.assetType === 'computer' ? `Computer ${asset.assetCode}` : `${asset.assetType} ${asset.assetCode}`;
           notifications.push({
             id: notificationId,
             type: 'warranty',
             title: 'Garanzia in Scadenza',
-            message: `La garanzia dell'asset ${asset.assetCode} scade il ${warrantyDate.toLocaleDateString('it-IT')}`,
+            message: `La garanzia del ${assetName} scade il ${warrantyDate.toLocaleDateString('it-IT')}`,
             itemId: asset.assetCode,
             priority: warrantyDate <= new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) ? 'high' : 'medium',
             date: warrantyDate
@@ -126,31 +72,33 @@ export default function NotificationBell() {
         }
       }
 
-      // Notifiche manutenzione Asset (controlla sia 'maintenance' che 'manutenzione')
-      if (asset.status === 'maintenance' || asset.status === 'manutenzione') {
-        const notificationId = `maintenance-asset-${asset.id}`;
+      // Notifiche manutenzione asset
+      if (asset.status === 'maintenance') {
+        const notificationId = `maintenance-${asset.assetType}-${asset.id}`;
+          const assetName = asset.assetType === 'computer' ? `Computer ${asset.assetCode}` : `${asset.assetType} ${asset.assetCode}`;
         notifications.push({
           id: notificationId,
           type: 'maintenance',
           title: 'Asset in Manutenzione',
-          message: `L'asset ${asset.assetCode} (${asset.assetType}) è attualmente in manutenzione`,
+          message: `Il ${assetName} è attualmente in manutenzione`,
           itemId: asset.assetCode,
           priority: 'medium',
           date: asset.updatedAt ? new Date(asset.updatedAt) : new Date()
         });
       }
 
-      // Notifiche Asset non assegnati (solo se l'asset è stato creato da più di 1 giorno)
+      // Notifiche asset non assegnati (solo se l'asset è stato creato da più di 1 giorno)
       if (!asset.employeeId && asset.createdAt) {
         const createdDate = new Date(asset.createdAt);
         const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
         if (createdDate < oneDayAgo) {
-          const notificationId = `unassigned-asset-${asset.id}`;
+          const notificationId = `unassigned-${asset.assetType}-${asset.id}`;
+          const assetName = asset.assetType === 'computer' ? `Computer ${asset.assetCode}` : `${asset.assetType} ${asset.assetCode}`;
           notifications.push({
             id: notificationId,
             type: 'assignment',
             title: 'Asset Non Assegnato',
-            message: `L'asset ${asset.assetCode} (${asset.assetType}) non è assegnato a nessun collaboratore`,
+            message: `Il ${assetName} non è assegnato a nessun collaboratore`,
             itemId: asset.assetCode,
             priority: 'low',
             date: createdDate
@@ -158,6 +106,7 @@ export default function NotificationBell() {
         }
       }
     });
+
 
     return notifications.filter(n => !dismissedNotifications.includes(n.id));
   };
@@ -274,4 +223,6 @@ export default function NotificationBell() {
       </PopoverContent>
     </Popover>
   );
-}
+});
+
+export default NotificationBell;

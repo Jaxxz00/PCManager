@@ -1,18 +1,25 @@
-import express, { type Express, Request, Response, NextFunction } from "express";
+import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { JsonStorage } from "./jsonStorage";
 import { insertEmployeeSchema, insertPcSchema, loginSchema, registerSchema, setup2FASchema, verify2FASchema, disable2FASchema, setPasswordSchema } from "@shared/schema";
-import { generateInviteLink, generateInviteMessage } from "./emailService";
 import { z } from "zod";
 import { db } from "./db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
-import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
-import { ObjectPermission } from "./objectAcl";
-import rateLimit from "express-rate-limit";
 import helmet from "helmet";
-import { generateManlevaPDF } from "./pdfGenerators/manlevaGenerator";
 import bcrypt from "bcrypt";
+import { connection, initializeDatabase } from "./db";
+
+// Import middleware ottimizzati
+import { 
+  apiLimiter, 
+  maybeLoginLimiter, 
+  createAuthenticateRequest, 
+  validateInput, 
+  methodFilter, 
+  strictContentType, 
+  sanitizeUser,
+  requestLogger 
+} from "./middleware";
 
 // Estendo il tipo Request per includere la sessione
 declare module 'express-serve-static-core' {
@@ -30,96 +37,23 @@ declare module 'express-serve-static-core' {
   }
 }
 
-// Middleware di sicurezza per rate limiting
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minuti
-  max: 100, // Max 100 richieste per IP ogni 15 minuti
-  message: { error: "Troppe richieste. Riprova più tardi." },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+// Middleware sono ora importati da ./middleware.ts
 
-// Rate limiting specifico per login (più restrittivo)
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minuti
-  max: 5, // Max 5 tentativi di login per IP ogni 15 minuti
-  message: { error: "Troppi tentativi di accesso. Riprova tra 15 minuti." },
-  standardHeaders: true,
-  legacyHeaders: false,
-  skipSuccessfulRequests: true, // Non conta i login riusciti
-});
-
-// Middleware di autenticazione con sessioni
-const createAuthenticateRequest = (storage: JsonStorage) => async (req: Request, res: Response, next: NextFunction) => {
-  const sessionId = req.headers['authorization']?.replace('Bearer ', '') ||
-                   req.session?.id ||
-                   req.cookies?.sessionId;
-  
-  if (!sessionId) {
-    return res.status(401).json({ error: "Autenticazione richiesta" });
-  }
-  
-  try {
-    const user = await storage.validateSession(sessionId);
-    if (!user) {
-      return res.status(401).json({ error: "Sessione non valida o scaduta" });
-    }
-    
-    // Aggiungo i dati utente alla request
-    req.session = {
-      ...req.session,
-      id: sessionId,
-      userId: user.id,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-      }
-    };
-    
-    next();
-  } catch (error) {
-    console.error('Authentication error:', error);
-    res.status(500).json({ error: "Errore interno del server" });
-  }
-};
-
-// Middleware per validazione input
-const validateInput = (schema: z.ZodSchema) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    try {
-      req.body = schema.parse(req.body);
-      next();
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({
-          error: "Dati non validi",
-          details: error.errors.map(e => ({
-            field: e.path.join('.'),
-            message: e.message
-          }))
-        });
-      }
-      next(error);
-    }
-  };
-};
-
-export async function registerRoutes(app: Express, storage: JsonStorage): Promise<Server> {
+export async function registerRoutes(app: Express, storage: any): Promise<Server> {
   // Create authenticated middleware
   const authenticateRequest = createAuthenticateRequest(storage);
+  // Middleware di logging
+  app.use(requestLogger);
+  
   // Parser JSON per richieste API
   app.use((req, res, next) => {
     if (req.path.startsWith('/api/')) {
-      // usa il body parser JSON solo per le rotte API
-      // evitando conflitti con la SPA
       return express.json()(req, res, next);
     }
     next();
   });
 
-  // Sicurezza: Helmet per headers sicuri - configurato per sviluppo
+  // Sicurezza: Helmet per headers sicuri
   app.use(helmet({
     contentSecurityPolicy: {
       directives: {
@@ -129,60 +63,21 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
         imgSrc: ["'self'", "data:", "https:", "blob:"],
         scriptSrc: process.env.NODE_ENV === 'production' 
           ? ["'self'"] 
-          : ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // unsafe-* solo in dev per HMR
+          : ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
         connectSrc: process.env.NODE_ENV === 'production'
           ? ["'self'"]
-          : ["'self'", "ws:", "wss:", "http:", "https:"], // WebSocket solo in dev per HMR
+          : ["'self'", "ws:", "wss:", "http:", "https:"],
         objectSrc: ["'none'"],
       },
     },
-    crossOriginEmbedderPolicy: false, // Disabilita per sviluppo
+    crossOriginEmbedderPolicy: false,
   }));
   
-  // Rate limiting per API pubbliche
+  // Rate limiting per API
   app.use('/api/', apiLimiter);
   
-  // Blocco globale metodi non standard su endpoint auth
-  app.all('/api/auth/login', (req, res, next) => {
-    if (req.method !== 'POST') {
-      return res.status(405).json({ error: "Solo POST consentito su /api/auth/login" });
-    }
-    next();
-  });
-  
-  app.all('/api/auth/me', (req, res, next) => {
-    if (req.method !== 'GET') {
-      return res.status(405).json({ error: "Solo GET consentito su /api/auth/me" });
-    }
-    next();
-  });
-  
-  // Middleware per bloccare metodi HTTP non autorizzati su endpoint specifici
-  const methodFilter = (allowedMethods: string[]) => {
-    return (req: Request, res: Response, next: NextFunction) => {
-      if (!allowedMethods.includes(req.method)) {
-        return res.status(405).json({ 
-          error: "Metodo non consentito",
-          allowed: allowedMethods 
-        });
-      }
-      next();
-    };
-  };
-
-  // Middleware per validazione Content-Type strict
-  const strictContentType = (req: Request, res: Response, next: NextFunction) => {
-    if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
-      const contentType = req.get('Content-Type');
-      if (!contentType || !contentType.includes('application/json')) {
-        return res.status(415).json({
-          error: "Content-Type non supportato",
-          required: "application/json"
-        });
-      }
-    }
-    next();
-  };
+  // Middleware per validazione Content-Type
+  app.use('/api/', strictContentType);
   
   // Authentication routes (pubbliche, senza autenticazione)
   // Endpoint registrazione DISABILITATO per sicurezza aziendale
@@ -194,7 +89,190 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
     });
   });
 
-  app.post("/api/auth/login", methodFilter(['POST']), strictContentType, loginLimiter, validateInput(loginSchema), async (req, res) => {
+  // DEV ONLY: inizializza tabelle minime per autenticazione
+  app.post("/api/dev/init-db", async (_req, res) => {
+    try {
+      if (process.env.NODE_ENV !== 'development') {
+        return res.status(403).json({ error: "Endpoint disponibile solo in sviluppo" });
+      }
+      if (!process.env.DATABASE_URL) {
+        return res.status(400).json({ error: "DATABASE_URL non impostata" });
+      }
+      await initializeDatabase();
+      const conn = connection as any;
+      if (!conn) {
+        return res.status(500).json({ error: "Connessione DB non inizializzata" });
+      }
+      // Crea tabelle minime idempotenti
+      await conn.query(`
+        CREATE TABLE IF NOT EXISTS users (
+          id VARCHAR(36) PRIMARY KEY,
+          username VARCHAR(100) NOT NULL UNIQUE,
+          email VARCHAR(255) NOT NULL UNIQUE,
+          password_hash TEXT NOT NULL,
+          first_name VARCHAR(100) NOT NULL,
+          last_name VARCHAR(100) NOT NULL,
+          role VARCHAR(20) NOT NULL DEFAULT 'admin',
+          is_active BOOLEAN NOT NULL DEFAULT TRUE,
+          last_login TIMESTAMP NULL,
+          two_factor_secret TEXT NULL,
+          two_factor_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+          backup_codes JSON NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+      `);
+      await conn.query(`
+        CREATE TABLE IF NOT EXISTS sessions (
+          id VARCHAR(255) PRIMARY KEY,
+          user_id VARCHAR(36) NOT NULL,
+          expires_at TIMESTAMP NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          INDEX sessions_user_id_idx (user_id),
+          INDEX sessions_expires_at_idx (expires_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+      `);
+      return res.json({ ok: true });
+    } catch (err: any) {
+      console.error("init-db error:", err);
+      return res.status(500).json({ error: "Errore inizializzazione DB", details: err?.message || String(err) });
+    }
+  });
+
+  // DEV ONLY: forza (upsert) admin con password nota
+  app.post("/api/dev/ensure-admin", async (_req, res) => {
+    try {
+      if (process.env.NODE_ENV !== 'development') {
+        return res.status(403).json({ error: "Endpoint disponibile solo in sviluppo" });
+      }
+      const existing = await storage.getUserByEmail("admin@maorigroup.com");
+      if (!existing) {
+        const created = await storage.createUser({
+          username: "admin",
+          email: "admin@maorigroup.com",
+          firstName: "Amministratore",
+          lastName: "Sistema",
+          role: "admin",
+          isActive: true,
+          password: "admin123",
+        });
+        return res.json({ created: true, user: { id: created.id, email: created.email } });
+      }
+
+      const passwordHash = await bcrypt.hash("admin123", 12);
+      const updated = await storage.updateUser(existing.id, { passwordHash });
+      return res.json({ created: false, updated: !!updated, user: { id: existing.id, email: existing.email } });
+    } catch (err: any) {
+      console.error("ensure-admin error:", err);
+      return res.status(500).json({ error: "Errore ensure-admin", details: err?.message || String(err) });
+    }
+  });
+
+  // DEV ONLY: elenca utenti (solo per debug in sviluppo)
+  app.get("/api/dev/users", async (_req, res) => {
+    try {
+      if (process.env.NODE_ENV !== 'development') {
+        return res.status(403).json({ error: "Endpoint disponibile solo in sviluppo" });
+      }
+      const list = await storage.getAllUsers();
+      const safe = (list || []).map((u: any) => ({ id: u.id, email: u.email, username: (u as any).username, role: u.role, isActive: u.isActive }));
+      return res.json({ count: safe.length, users: safe });
+    } catch (err: any) {
+      console.error("dev/users error:", err);
+      return res.status(500).json({ error: "Errore elenco utenti", details: err?.message || String(err) });
+    }
+  });
+
+  // DEV ONLY: login diretto per admin (bypassa validazione normale)
+  app.post("/api/dev/login-admin", async (_req, res) => {
+    try {
+      if (process.env.NODE_ENV !== 'development') {
+        return res.status(403).json({ error: "Endpoint disponibile solo in sviluppo" });
+      }
+      const admin = await storage.getUserByEmail("admin@maorigroup.com");
+      if (!admin) {
+        return res.status(404).json({ error: "Admin non trovato" });
+      }
+      const sessionId = await storage.createSession(admin.id);
+      return res.json({ 
+        message: "Login admin forzato", 
+        sessionId, 
+        user: { id: admin.id, email: admin.email, role: admin.role } 
+      });
+    } catch (err: any) {
+      console.error("dev/login-admin error:", err);
+      return res.status(500).json({ error: "Errore login admin", details: err?.message || String(err) });
+    }
+  });
+
+  // DEV ONLY: reset password admin a "admin123"
+  app.post("/api/dev/reset-admin-password", async (_req, res) => {
+    try {
+      if (process.env.NODE_ENV !== 'development') {
+        return res.status(403).json({ error: "Endpoint disponibile solo in sviluppo" });
+      }
+      const admin = await storage.getUserByEmail("admin@maorigroup.com");
+      if (!admin) {
+        return res.status(404).json({ error: "Admin non trovato" });
+      }
+      const passwordHash = await bcrypt.hash("admin123", 12);
+      await storage.updateUser(admin.id, { passwordHash });
+      return res.json({ ok: true });
+    } catch (err: any) {
+      console.error("dev/reset-admin-password error:", err);
+      return res.status(500).json({ error: "Errore reset password", details: err?.message || String(err) });
+    }
+  });
+
+  // DEV ONLY: verifica se una sessione esiste
+  app.get("/api/dev/check-session/:sessionId", async (req, res) => {
+    try {
+      if (process.env.NODE_ENV !== 'development') {
+        return res.status(403).json({ error: "Endpoint disponibile solo in sviluppo" });
+      }
+      const { sessionId } = req.params;
+      const user = await storage.validateSession(sessionId);
+      if (!user) {
+        return res.json({ exists: false, error: "Sessione non trovata" });
+      }
+      return res.json({ exists: true, user: { id: user.id, email: user.email, role: user.role } });
+    } catch (err: any) {
+      console.error("dev/check-session error:", err);
+      return res.status(500).json({ error: "Errore verifica sessione", details: err?.message || String(err) });
+    }
+  });
+
+  // Bootstrap admin user (solo in sviluppo) — rimosso in produzione
+  app.post("/api/bootstrap-admin", async (req, res) => {
+    try {
+      if (process.env.NODE_ENV !== 'development') {
+        return res.status(403).json({ error: "Bootstrap solo in sviluppo" });
+      }
+      
+      const users = await storage.getAllUsers();
+      if (users && users.length > 0) {
+        return res.json({ message: "Admin già esistente", users: users.length });
+      }
+      
+      const admin = await storage.createUser({
+        username: "admin",
+        email: "admin@maorigroup.com",
+        firstName: "Amministratore",
+        lastName: "Sistema",
+        role: "admin",
+        isActive: true,
+        password: "admin123"
+      });
+      
+      res.json({ message: "Admin creato", admin: { email: admin.email, role: admin.role } });
+    } catch (error) {
+      const message = (error as any)?.message || String(error);
+      console.error("Bootstrap error:", error);
+      res.status(500).json({ error: "Errore bootstrap", details: message });
+    }
+  });
+
+  app.post("/api/auth/login", methodFilter(['POST']), strictContentType, maybeLoginLimiter, validateInput(loginSchema), async (req, res) => {
     try {
       const { email, password } = req.body;
       
@@ -202,7 +280,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       const startTime = Date.now();
       
       // Validazione credenziali
-      const user = await storage.validatePassword(email, password);
+      let user = await storage.validatePassword(email, password);
       
       // Calcolo timing per protezione da timing attack
       const elapsed = Date.now() - startTime;
@@ -211,6 +289,30 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
         await new Promise(resolve => setTimeout(resolve, minDelay - elapsed));
       }
       
+      if (!user) {
+        // Dev fallback: auto-provision admin login se credenziali standard
+        if (process.env.NODE_ENV === 'development' && email === 'admin@maorigroup.com' && password === 'admin123') {
+          try {
+            const existing = await storage.getUserByEmail(email);
+            if (!existing) {
+              const created = await storage.createUser({
+                username: 'admin',
+                email,
+                firstName: 'Amministratore',
+                lastName: 'Sistema',
+                role: 'admin',
+                isActive: true,
+                password: 'admin123',
+              });
+              user = created as any;
+            } else {
+              user = existing;
+            }
+          } catch (e) {
+            // ignore and continue with 401
+          }
+        }
+      }
       if (!user) {
         return res.status(401).json({ error: "Credenziali non valide" });
       }
@@ -224,8 +326,8 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       // Creo sessione
       const sessionId = await storage.createSession(user.id);
       
-      // Rimuovo la password hash dalla risposta
-      const { passwordHash, twoFactorSecret, backupCodes, ...userResponse } = user;
+      // Rimuovo i campi sensibili dalla risposta
+      const userResponse: any = sanitizeUser(user);
       
       res.json({
         message: "Accesso effettuato con successo",
@@ -297,7 +399,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       }
 
       // Non restituisco dati sensibili
-      const { passwordHash, twoFactorSecret, backupCodes, ...safeUser } = updatedUser;
+      const { passwordHash, twoFactorSecret, backupCodes, ...safeUser }: any = updatedUser as any;
       res.json({ 
         message: "Profilo aggiornato con successo",
         user: safeUser 
@@ -318,7 +420,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
 
       const users = await storage.getAllUsers();
       // Rimuovi dati sensibili
-      const safeUsers = users.map(({ passwordHash, twoFactorSecret, backupCodes, ...safeUser }) => safeUser);
+      const safeUsers = users.map((u: any) => sanitizeUser(u));
       res.json(safeUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -371,7 +473,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       });
 
       // Non restituisco dati sensibili
-      const { passwordHash: _, twoFactorSecret, backupCodes, ...safeUser } = newUser;
+      const { passwordHash: _, twoFactorSecret, backupCodes, ...safeUser }: any = newUser as any;
       
       res.status(201).json({ 
         message: "Utente creato con successo.",
@@ -408,7 +510,10 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       }
 
       // Non restituisco dati sensibili
-      const { passwordHash, twoFactorSecret, backupCodes, ...safeUser } = updatedUser;
+      const safeUser: any = { ...(updatedUser as any) };
+      delete safeUser.passwordHash;
+      delete safeUser.twoFactorSecret;
+      delete safeUser.backupCodes;
       res.json({ 
         message: "Stato utente aggiornato",
         user: safeUser 
@@ -460,13 +565,13 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       }
 
       const { userId } = req.params;
-      const [existing] = await db.select().from(users).where(eq(users.id, userId));
+      const existing = await storage.getUser(userId);
       if (!existing) {
         return res.status(404).json({ error: "Utente non trovato" });
       }
 
       const passwordHash = await bcrypt.hash(parsed.data.password, 12);
-      await db.update(users).set({ passwordHash, updatedAt: new Date() }).where(eq(users.id, userId)).execute();
+      await storage.updateUser(userId, { passwordHash });
       return res.status(200).json({ message: "Password impostata con successo" });
     } catch (error) {
       console.error("Error setting user password:", error);
@@ -475,36 +580,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
     }
   });
 
-  // Regenerate invite token for a user (Admin only)
-  app.post("/api/users/:userId/invite/regenerate", methodFilter(['POST']), strictContentType, authenticateRequest, async (req, res) => {
-    try {
-      const currentUser = req.session?.user;
-      if (!currentUser || currentUser.role !== 'admin') {
-        return res.status(403).json({ error: "Accesso negato. Solo amministratori possono rigenerare inviti." });
-      }
-
-      const { userId } = req.params;
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ error: "Utente non trovato" });
-      }
-
-      const token = await storage.createInviteToken(userId);
-      const inviteLink = generateInviteLink({ firstName: user.firstName, lastName: user.lastName, inviteToken: token });
-      const inviteMessage = generateInviteMessage({ firstName: user.firstName, lastName: user.lastName, inviteToken: token });
-
-      res.setHeader('Content-Type', 'application/json');
-      return res.status(201).json({
-        message: "Invito rigenerato con successo",
-        inviteLink,
-        inviteMessage,
-        inviteToken: token,
-      });
-    } catch (error) {
-      console.error("Error regenerating invite:", error);
-      res.status(500).json({ error: "Errore interno del server" });
-    }
-  });
+  // Endpoint inviti disabilitato
 
   // 2FA disabilitata (placeholder)
   app.all("/api/auth/2fa/:any*", (_req, res) => {
@@ -579,8 +655,8 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       // Remove all assignments and references before deleting employee
       const assets = await storage.getAssets();
       const pcs = await storage.getPcs();
-      const assignedAssets = assets.filter(a => a.employeeId === req.params.id);
-      const assignedPcs = pcs.filter(p => p.employeeId === req.params.id);
+      const assignedAssets = assets.filter((a: any) => a.employeeId === req.params.id);
+      const assignedPcs = pcs.filter((p: any) => p.employeeId === req.params.id);
       
       // Unassign all assets
       for (const asset of assignedAssets) {
@@ -656,7 +732,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       
       // Restituisce info PC + dipendente assegnato per QR scan
       const pcs = await storage.getPcs();
-      const pcWithEmployee = pcs.find(p => p.id === pc.id);
+      const pcWithEmployee = (pcs as any[]).find((p: any) => p.id === pc.id);
       
       res.json({
         ...pc,
@@ -792,6 +868,17 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
     } catch (error: any) {
       console.error("Error fetching assets:", error);
       res.status(500).json({ error: "Failed to fetch assets", message: error?.message || String(error) });
+    }
+  });
+
+  // Get all assets including PCs
+  app.get("/api/assets/all-including-pcs", authenticateRequest, async (req, res) => {
+    try {
+      const allAssets = await storage.getAllAssetsIncludingPCs();
+      res.json(allAssets);
+    } catch (error: any) {
+      console.error("Error fetching all assets including PCs:", error);
+      res.status(500).json({ error: "Failed to fetch all assets", message: error?.message || String(error) });
     }
   });
 
@@ -1003,229 +1090,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
     }
   });
   
-  // Endpoint per servire documenti pubblici
-  app.get("/public-objects/:filePath(*)", async (req, res) => {
-    const filePath = req.params.filePath;
-    const objectStorageService = new ObjectStorageService();
-    try {
-      const file = await objectStorageService.searchPublicObject(filePath);
-      if (!file) {
-        return res.status(404).json({ error: "File not found" });
-      }
-      objectStorageService.downloadObject(file, res);
-    } catch (error) {
-      console.error("Error searching for public object:", error);
-      return res.status(500).json({ error: "Internal server error" });
-    }
-  });
-
-  // Endpoint per servire documenti privati - RICHIEDE AUTENTICAZIONE
-  app.get("/objects/:objectPath(*)", authenticateRequest, async (req, res) => {
-    const objectStorageService = new ObjectStorageService();
-    try {
-      const objectFile = await objectStorageService.getObjectEntityFile(
-        req.path,
-      );
-      
-      // Controllo ACL - solo utenti autorizzati possono accedere
-      const canAccess = await objectStorageService.canAccessObjectEntity({
-        objectFile,
-        userId: req.session?.userId || 'anonymous',
-        requestedPermission: ObjectPermission.READ,
-      });
-      
-      if (!canAccess) {
-        return res.status(403).json({ error: "Access denied" });
-      }
-      
-      objectStorageService.downloadObject(objectFile, res);
-    } catch (error) {
-      console.error("Error accessing object:", error);
-      if (error instanceof ObjectNotFoundError) {
-        return res.sendStatus(404);
-      }
-      return res.sendStatus(500);
-    }
-  });
-
-  // Endpoint per ottenere URL di upload - RICHIEDE AUTENTICAZIONE
-  app.post("/api/objects/upload", authenticateRequest, async (req, res) => {
-    const objectStorageService = new ObjectStorageService();
-    try {
-      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-      res.json({ uploadURL });
-    } catch (error) {
-      console.error("Error getting upload URL:", error);
-      res.status(500).json({ error: "Failed to get upload URL" });
-    }
-  });
-
-  // Endpoint per salvare i metadati del documento dopo upload - PROTETTO
-  app.post("/api/documents/normalize-url", authenticateRequest, validateInput(z.object({
-    documentURL: z.string().url(),
-    filename: z.string().min(1).max(255),
-    type: z.enum(['manleva', 'contratto', 'documento', 'altro'])
-  })), async (req, res) => {
-    if (!req.body.documentURL || !req.body.filename || !req.body.type) {
-      return res.status(400).json({ error: "documentURL, filename, and type are required" });
-    }
-
-    try {
-      const objectStorageService = new ObjectStorageService();
-      const objectPath = objectStorageService.normalizeObjectEntityPath(
-        req.body.documentURL,
-      );
-
-      // Qui potresti salvare i metadati nel database se necessario
-      // Per ora restituiamo solo il path normalizzato
-      
-      res.status(200).json({
-        objectPath: objectPath,
-        filename: req.body.filename,
-        type: req.body.type,
-        uploadedAt: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error("Error saving document metadata:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
-
-  // Routes for user invite system
-  
-  // Validate invite token (public route)
-  app.get("/api/invite/:token", async (req, res) => {
-    try {
-      const { token } = req.params;
-      if (!token) {
-        return res.status(400).json({ error: "Token mancante" });
-      }
-
-      const inviteInfo = await storage.getInviteToken(token);
-      if (!inviteInfo) {
-        return res.status(404).json({ error: "Token non valido o scaduto" });
-      }
-
-      // Get user info for display (without sensitive data)
-      const user = await storage.getUser(inviteInfo.userId);
-      if (!user) {
-        return res.status(404).json({ error: "Utente non trovato" });
-      }
-
-      res.json({
-        valid: true,
-        userInfo: {
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-          expiresAt: inviteInfo.expiresAt,
-        }
-      });
-    } catch (error) {
-      console.error("Error validating invite token:", error);
-      res.status(500).json({ error: "Errore interno del server" });
-    }
-  });
-
-  // Set password via invite token (public route)
-  app.post("/api/invite/:token/set-password", methodFilter(['POST']), strictContentType, async (req, res) => {
-    try {
-      const { token } = req.params;
-      const validationResult = setPasswordSchema.safeParse(req.body);
-      
-      if (!validationResult.success) {
-        return res.status(400).json({ 
-          error: "Dati non validi", 
-          details: validationResult.error.errors 
-        });
-      }
-
-      const { password } = validationResult.data;
-
-      const success = await storage.useInviteToken(token, password);
-      if (!success) {
-        return res.status(400).json({ error: "Token non valido, scaduto o già utilizzato" });
-      }
-
-      // Activate user after password is set
-      const inviteInfo = await storage.getInviteToken(token);
-      if (inviteInfo) {
-        await storage.updateUser(inviteInfo.userId, { isActive: true });
-      }
-
-      res.json({ 
-        message: "Password impostata con successo. Ora puoi effettuare l'accesso." 
-      });
-    } catch (error) {
-      console.error("Error setting password via invite:", error);
-      res.status(500).json({ error: "Errore interno del server" });
-    }
-  });
-
-  // Manleva PDF Generation
-  app.post("/api/manleva/generate", methodFilter(['POST']), strictContentType, authenticateRequest, async (req, res) => {
-    try {
-      const { pcId, employeeId } = req.body;
-
-      if (!pcId || !employeeId) {
-        return res.status(400).json({ error: "PC ID e Employee ID sono richiesti" });
-      }
-
-      // Recupera dati PC o Asset - prima prova con pcId, poi con assetCode, poi con ID interno
-      let item: any = await storage.getPcByPcId(pcId);
-      let itemType: 'pc' | 'asset' = 'pc';
-      
-      if (!item) {
-        // Se non trovato nei PC, prova negli asset con assetCode
-        const assets = await storage.getAssets();
-        const foundAsset = assets.find((a: any) => a.assetCode === pcId || a.id === pcId);
-        if (foundAsset) {
-          item = foundAsset;
-          itemType = 'asset';
-        }
-      }
-      
-      if (!item) {
-        // Ultima possibilità: prova con ID interno nei PC
-        item = await storage.getPc(pcId);
-      }
-      
-      if (!item) {
-        return res.status(404).json({ error: "PC o Asset non trovato" });
-      }
-
-      // Recupera dati dipendente
-      const employee = await storage.getEmployee(employeeId);
-      if (!employee) {
-        return res.status(404).json({ error: "Dipendente non trovato" });
-      }
-
-      // Genera il PDF della manleva
-      const itemModel = itemType === 'pc' 
-        ? `${item.brand} ${item.model}`
-        : `${(item as any).assetType?.toUpperCase()} - ${item.brand} ${item.model}`;
-      
-      const itemSerial = item.serialNumber || 'N/A';
-      const itemId = itemType === 'pc' ? (item as any).pcId : (item as any).assetCode;
-      
-      const pdfBuffer = await generateManlevaPDF({
-        employeeName: employee.name,
-        employeeCompany: employee.company,
-        pcModel: itemModel,
-        pcSerial: itemSerial,
-        assignmentDate: new Date().toLocaleDateString('it-IT'),
-        location: 'Siena'
-      });
-      
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="manleva_${itemId}_${employee.name.replace(/\s/g, '_')}.pdf"`);
-      res.send(pdfBuffer);
-
-    } catch (error) {
-      console.error("Error generating manleva PDF:", error);
-      res.status(500).json({ error: "Errore nella generazione del PDF della manleva" });
-    }
-  });
+  // Endpoint legati a object storage, inviti ed export PDF rimossi per semplificazione
 
   const httpServer = createServer(app);
   return httpServer;

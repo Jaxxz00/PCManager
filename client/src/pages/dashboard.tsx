@@ -5,58 +5,80 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import type { Asset, Employee } from "@shared/schema";
 import { 
   AlertTriangle, 
   CheckCircle, 
-  Clock,
   Monitor,
   Users,
   Wrench,
-  FileText,
   ArrowRight,
   Activity,
   TrendingUp,
-  Calendar,
   Plus
 } from "lucide-react";
+
+// Helper functions per calcoli ottimizzati
+const isWarrantyExpiring = (warrantyExpiry: string | null): boolean => {
+  if (!warrantyExpiry) return false;
+  const today = new Date();
+  const warrantyDate = new Date(warrantyExpiry);
+  const diffTime = warrantyDate.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays <= 30 && diffDays >= 0;
+};
+
+const isRecentlyAdded = (createdAt: string | null): boolean => {
+  if (!createdAt) return false;
+  const today = new Date();
+  const assetDate = new Date(createdAt);
+  const diffTime = today.getTime() - assetDate.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays <= 7;
+};
 
 export default function Dashboard() {
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
   
   const { data: assets = [], isLoading: assetsLoading } = useQuery<Asset[]>({
-    queryKey: ["/api/assets"],
+    queryKey: ["/api/assets/all-including-pcs"],
   });
 
   const { data: employees = [], isLoading: employeesLoading } = useQuery<Employee[]>({
     queryKey: ["/api/employees"],
   });
 
-  // Calcoli in tempo reale
-  const activeAssets = assets.filter((asset) => asset.status === 'active' || asset.status === 'assegnato').length;
-  const maintenanceAssets = assets.filter((asset) => asset.status === 'manutenzione').length;
-  const unassignedAssets = assets.filter((asset) => !asset.employeeId && asset.status === 'disponibile').length;
-  
-  // Asset con garanzia in scadenza (prossimi 30 giorni)
-  const warrantyExpiring = assets.filter((asset) => {
-    if (!asset.warrantyExpiry) return false;
-    const today = new Date();
-    const warrantyDate = new Date(asset.warrantyExpiry);
-    const diffTime = warrantyDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 30 && diffDays >= 0;
-  });
+  // Calcoli ottimizzati con useMemo per evitare ricalcoli
+  const dashboardStats = useMemo(() => {
+    const activeAssets = assets.filter((asset) => 
+      asset.status === 'active' || asset.status === 'assegnato'
+    ).length;
+    
+    const maintenanceAssets = assets.filter((asset) => 
+      asset.status === 'manutenzione'
+    ).length;
+    
+    const unassignedAssets = assets.filter((asset) => 
+      !asset.employeeId && asset.status === 'disponibile'
+    ).length;
+    
+    const warrantyExpiring = assets.filter((asset) => 
+      isWarrantyExpiring(asset.warrantyExpiry?.toISOString() || null)
+    );
+    
+    const recentAssets = assets.filter((asset) => 
+      isRecentlyAdded(asset.createdAt?.toISOString() || null)
+    );
 
-  // Asset aggiunti di recente (ultimi 7 giorni)
-  const recentAssets = assets.filter((asset) => {
-    if (!asset.createdAt) return false;
-    const today = new Date();
-    const assetDate = new Date(asset.createdAt);
-    const diffTime = today.getTime() - assetDate.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 7;
-  });
+    return {
+      activeAssets,
+      maintenanceAssets,
+      unassignedAssets,
+      warrantyExpiring,
+      recentAssets,
+    };
+  }, [assets]);
 
   return (
     <div className="space-y-6">
@@ -114,12 +136,12 @@ export default function Dashboard() {
                   <AlertTriangle className="h-4 w-4 text-orange-500" />
                   Garanzie in Scadenza
                 </div>
-                <Badge variant="secondary">{warrantyExpiring.length}</Badge>
+                <Badge variant="secondary">{dashboardStats.warrantyExpiring.length}</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {warrantyExpiring.length > 0 ? (
-                warrantyExpiring.slice(0, 3).map((asset, index) => {
+              {dashboardStats.warrantyExpiring.length > 0 ? (
+                dashboardStats.warrantyExpiring.slice(0, 3).map((asset, index) => {
                   const daysLeft = Math.ceil((new Date(asset.warrantyExpiry!).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
                   return (
                     <div key={index} className="flex items-center justify-between p-2 bg-orange-50 rounded-md">
@@ -136,9 +158,9 @@ export default function Dashboard() {
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-4">Nessuna garanzia in scadenza</p>
               )}
-              {warrantyExpiring.length > 3 && (
+              {dashboardStats.warrantyExpiring.length > 3 && (
                 <Button variant="outline" size="sm" className="w-full mt-2">
-                  Vedi tutte ({warrantyExpiring.length}) <ArrowRight className="h-3 w-3 ml-1" />
+                  Vedi tutte ({dashboardStats.warrantyExpiring.length}) <ArrowRight className="h-3 w-3 ml-1" />
                 </Button>
               )}
             </CardContent>
@@ -152,14 +174,14 @@ export default function Dashboard() {
                   <Monitor className="h-4 w-4 text-blue-500" />
                   Asset Non Assegnati
                 </div>
-                <Badge variant="secondary">{unassignedAssets}</Badge>
+                <Badge variant="secondary">{dashboardStats.unassignedAssets}</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {unassignedAssets > 0 ? (
+              {dashboardStats.unassignedAssets > 0 ? (
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">
-                    {unassignedAssets} asset disponibili per l'assegnazione
+                    {dashboardStats.unassignedAssets} asset disponibili per l'assegnazione
                   </p>
                   <Link href="/inventory">
                     <Button variant="outline" size="sm" className="w-full">
@@ -184,9 +206,9 @@ export default function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {recentAssets.length > 0 ? (
+              {dashboardStats.recentAssets.length > 0 ? (
                 <div className="space-y-3">
-                  {recentAssets.slice(0, 4).map((asset, index) => (
+                  {dashboardStats.recentAssets.slice(0, 4).map((asset, index) => (
                     <div key={index} className="flex items-center justify-between p-2 bg-green-50 rounded-md">
                       <div>
                         <p className="font-medium text-sm">{asset.assetCode}</p>
@@ -197,7 +219,7 @@ export default function Dashboard() {
                       </Badge>
                     </div>
                   ))}
-                  {recentAssets.length > 4 && (
+                  {dashboardStats.recentAssets.length > 4 && (
                     <Button variant="outline" size="sm" className="w-full">
                       Vedi tutti <ArrowRight className="h-3 w-3 ml-1" />
                     </Button>
@@ -217,14 +239,14 @@ export default function Dashboard() {
                   <Wrench className="h-4 w-4 text-yellow-500" />
                   Asset in Manutenzione
                 </div>
-                <Badge variant="secondary">{maintenanceAssets}</Badge>
+                <Badge variant="secondary">{dashboardStats.maintenanceAssets}</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {maintenanceAssets > 0 ? (
+              {dashboardStats.maintenanceAssets > 0 ? (
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">
-                    {maintenanceAssets} asset richiedono attenzione
+                    {dashboardStats.maintenanceAssets} asset richiedono attenzione
                   </p>
                   <Link href="/maintenance">
                     <Button variant="outline" size="sm" className="w-full">
@@ -263,7 +285,7 @@ export default function Dashboard() {
                 <div className="text-center p-3 bg-orange-50 rounded-lg">
                   <CheckCircle className="h-6 w-6 text-orange-600 mx-auto mb-1" />
                   <p className="text-xs text-muted-foreground">Attivi</p>
-                  <p className="text-lg font-bold text-orange-600">{activeAssets}</p>
+                  <p className="text-lg font-bold text-orange-600">{dashboardStats.activeAssets}</p>
                 </div>
               </div>
             </CardContent>

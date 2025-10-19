@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,238 @@ import {
   User
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import HPEliteBookLabel from "@/components/HPEliteBookLabel";
+
+// Stili per la stampa (importati dal componente HPEliteBookLabel)
+const printStyles = `
+  @media print {
+    @page {
+      size: 70mm 30mm;
+      margin: 0;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    .no-print {
+      display: none !important;
+    }
+  }
+`;
+
+// Funzione per recuperare i dati del PC
+const fetchPCData = async (id: string) => {
+  const response = await apiRequest("GET", `/api/assets/${id}`);
+  const data = await response.json();
+  return data;
+};
+
+// Componente per stampare le etichette
+function PrintLabel({ pcId }: { pcId: string }) {
+  const [pcData, setPcData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPCData(pcId).then(data => {
+      setPcData(data);
+      setLoading(false);
+    }).catch((error) => {
+      console.error('Errore nel caricamento dati PC:', error);
+      setLoading(false);
+    });
+  }, [pcId]);
+
+  const handlePrint = () => {
+    if (!pcData) return;
+    
+    // Crea una nuova finestra per la stampa
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Etichetta - ${pcData.assetCode}</title>
+          <style>
+            @media print {
+              @page { size: 70mm 30mm; margin: 0; }
+              body { margin: 0; padding: 0; }
+            }
+            body { 
+              margin: 0; 
+              padding: 0; 
+              font-family: Arial, sans-serif;
+            }
+          </style>
+        </head>
+        <body>
+          <div id="label"></div>
+          <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.12.1/dist/JsBarcode.all.min.js"></script>
+          <script>
+            setTimeout(() => {
+              const label = document.getElementById('label');
+              label.innerHTML = \`
+                <div style="
+                  width: 70mm;
+                  height: 30mm;
+                  background-color: #e8e8e8;
+                  padding: 3mm;
+                  font-family: Arial, sans-serif;
+                  border: 1px solid #ccc;
+                  border-radius: 6px;
+                  display: flex;
+                  flex-direction: column;
+                  position: relative;
+                  box-sizing: border-box;
+                ">
+                  <div style="
+                    display: flex;
+                    justify-content: flex-end;
+                    align-items: center;
+                    margin-bottom: 2mm;
+                  ">
+                    <div style="
+                      font-size: 13px;
+                      font-weight: bold;
+                      line-height: 1.2;
+                    ">
+                      Asset: ${pcData.assetCode}
+                    </div>
+                  </div>
+                  
+                  <div style="
+                    display: flex;
+                    gap: 4mm;
+                    flex: 1;
+                    align-items: center;
+                  ">
+                    <div style="
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      min-width: 30mm;
+                    ">
+                      <svg id="barcode"></svg>
+                    </div>
+                    
+                    <div style="
+                      flex: 1;
+                      display: flex;
+                      flex-direction: column;
+                      justify-content: center;
+                      gap: 1.5mm;
+                    ">
+                      <div style="
+                        font-size: 9px;
+                        line-height: 1.1;
+                        font-weight: 500;
+                      ">
+                        Model: ${pcData.model}
+                      </div>
+                      
+                      <div style="
+                        font-size: 9px;
+                        line-height: 1.1;
+                      ">
+                        S/N: ${pcData.serialNumber}
+                      </div>
+                      
+                      <div style="
+                        font-size: 7px;
+                        line-height: 1.1;
+                        display: flex;
+                        align-items: center;
+                        gap: 3px;
+                      ">
+                        <div style="
+                          font-size: 8px;
+                          font-weight: bold;
+                          display: flex;
+                          align-items: center;
+                          gap: 2px;
+                        ">
+                          <span>SD</span>
+                          <div style="
+                            width: 10px;
+                            height: 12px;
+                            border: 1.2px solid black;
+                            border-radius: 1.5px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 5px;
+                            font-weight: bold;
+                            background-color: white;
+                          ">
+                            <div style="
+                              display: flex;
+                              flex-direction: column;
+                              line-height: 0.5;
+                              letter-spacing: -0.3px;
+                            ">
+                              <span>×</span>
+                              <span>×</span>
+                            </div>
+                          </div>
+                        </div>
+                        <span>Ticket@maorigroup.it</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              \`;
+              
+              // Genera il barcode
+              if (window.JsBarcode) {
+                JsBarcode('#barcode', '${pcData.assetCode}', {
+                  format: 'CODE128',
+                  width: 1.2,
+                  height: 50,
+                  displayValue: false,
+                  margin: 0
+                });
+              }
+              
+              // Stampa automaticamente
+              setTimeout(() => {
+                window.print();
+              }, 500);
+            }, 1000);
+          </script>
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+  };
+
+  if (loading) return <div className="p-4 text-center">Caricamento dati asset...</div>;
+  if (!pcData) return <div className="p-4 text-center text-red-600">Errore nel caricamento dei dati</div>;
+
+  return (
+    <div className="space-y-4">
+      {/* Informazioni asset */}
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <h4 className="font-semibold mb-2">Asset Selezionato</h4>
+        <div className="text-sm space-y-1">
+          <div><strong>Codice:</strong> {pcData.assetCode}</div>
+          <div><strong>Modello:</strong> {pcData.model}</div>
+          <div><strong>Seriale:</strong> {pcData.serialNumber}</div>
+        </div>
+      </div>
+      
+      {/* Pulsante stampa */}
+      <div className="text-center">
+        <button 
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium" 
+          onClick={handlePrint}
+        >
+          🖨️ Stampa Etichetta
+        </button>
+      </div>
+    </div>
+  );
+}
 
 interface AssignmentStep {
   id: string;
@@ -47,22 +279,19 @@ export default function Workflow() {
   const [isGeneratingManleva, setIsGeneratingManleva] = useState(false);
   const [manlevaGenerated, setManlevaGenerated] = useState(false);
 
-  const { data: pcs = [], isLoading: pcsLoading } = useQuery<any[]>({
-    queryKey: ["/api/pcs"],
-  });
-
-  const { data: assets = [], isLoading: assetsLoading } = useQuery<any[]>({
-    queryKey: ["/api/assets"],
+  const { data: allAssets = [], isLoading: assetsLoading } = useQuery<any[]>({
+    queryKey: ["/api/assets/all-including-pcs"],
   });
 
   const { data: employees = [], isLoading: employeesLoading } = useQuery<any[]>({
     queryKey: ["/api/employees"],
   });
 
-  // Combina PC e Assets non assegnati
-  const availablePcs = pcs.filter((pc: any) => !pc.employeeId && pc.status === 'active');
-  const availableAssets = assets.filter((asset: any) => !asset.employeeId && asset.status === 'disponibile');
-  const allAvailableItems = [...availablePcs, ...availableAssets];
+  // Filtra asset non assegnati (sia computer che altri asset)
+  const allAvailableItems = allAssets.filter((asset: any) => 
+    !asset.employeeId && 
+    (asset.status === 'active' || asset.status === 'disponibile')
+  );
 
   const generateManlevaPDF = async (pcId: string, employeeId: string) => {
     try {
@@ -330,45 +559,70 @@ export default function Workflow() {
                   <p className="text-muted-foreground">Nessun asset disponibile per l'assegnazione</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {allAvailableItems.map((item: any) => {
-                    const isPC = !!item.pcId;
-                    const displayId = isPC ? item.pcId : item.assetCode;
-                    const displayType = isPC ? 'PC' : item.assetType?.toUpperCase();
-                    
-                    return (
-                      <div
-                        key={item.id}
-                        className={`p-4 border rounded-lg cursor-pointer transition-all ${
-                          workflowData.selectedPc?.id === item.id
-                            ? "border-blue-500 bg-blue-50"
-                            : "border-gray-200"
-                        }`}
-                        onClick={() => handlePcSelect(item)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="font-semibold">{displayId}</h3>
-                            <div className="text-sm text-muted-foreground flex items-center gap-2">
-                              <Badge variant="outline">{displayType}</Badge>
-                              <span>{item.brand} {item.model}</span>
+                <div className="space-y-4">
+                  {/* Header con classificazione semplice */}
+                  <div className="flex items-center justify-center p-4 bg-gray-50 rounded-lg">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-blue-600">{allAvailableItems.length}</div>
+                      <div className="text-sm text-muted-foreground">Asset Disponibili per Assegnazione</div>
+                    </div>
+                  </div>
+
+                  {/* Griglia asset migliorata */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {allAvailableItems.map((item: any) => {
+                      const isComputer = item.assetType === 'computer';
+                      const displayId = item.assetCode;
+                      const displayType = isComputer ? 'Computer' : (item.assetType?.charAt(0).toUpperCase() + item.assetType?.slice(1) || 'Asset');
+                      const isSelected = workflowData.selectedPc?.id === item.id;
+                      
+                      return (
+                        <div
+                          key={item.id}
+                          className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                            isSelected
+                              ? "border-blue-500 bg-blue-50"
+                              : "border-gray-200 hover:border-gray-300"
+                          }`}
+                          onClick={() => handlePcSelect(item)}
+                        >
+                          {/* Indicatore di selezione */}
+                          {isSelected && (
+                            <div className="flex justify-end mb-2">
+                              <CheckCircle className="h-5 w-5 text-blue-500" />
                             </div>
-                            {isPC && item.ram && item.storage && (
-                              <p className="text-xs text-muted-foreground">
-                                RAM: {item.ram}GB - Storage: {item.storage}
-                              </p>
-                            )}
-                            {!isPC && item.serialNumber && (
-                              <p className="text-xs text-muted-foreground">SN: {item.serialNumber}</p>
-                            )}
+                          )}
+
+                          {/* Contenuto principale */}
+                          <div className="text-center">
+                            <h3 className="font-bold text-lg">{displayId}</h3>
+                            <div className="text-sm text-gray-600 mb-2">{item.brand} {item.model}</div>
+                            
+                            {/* Solo classificazione */}
+                            <Badge 
+                              variant={isComputer ? "default" : "secondary"}
+                              className={`${isComputer ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}
+                            >
+                              {displayType}
+                            </Badge>
                           </div>
-                          <Badge variant={item.status === 'active' || item.status === 'disponibile' ? 'default' : 'secondary'}>
-                            {item.status}
-                          </Badge>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
+
+                  {/* Pulsante continua se asset selezionato */}
+                  {workflowData.selectedPc && (
+                    <div className="mt-6 flex justify-center">
+                      <Button 
+                        onClick={() => setWorkflowData(prev => ({ ...prev, step: prev.step + 1 }))}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg"
+                      >
+                        <ArrowRight className="h-5 w-5 mr-2" />
+                        Continua con {workflowData.selectedPc.assetCode}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -479,28 +733,23 @@ export default function Workflow() {
             <CardContent className="space-y-4">
               <div className="p-4 bg-gray-50 rounded-lg text-center">
                 <Printer className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                <p className="font-medium">Etichetta PC {workflowData.selectedPc?.pcId}</p>
+                <p className="font-medium">Etichetta {workflowData.selectedPc?.assetCode}</p>
                 <p className="text-sm text-muted-foreground">
                   Assegnato a: {workflowData.selectedEmployee?.name}
                 </p>
               </div>
+              
+              {/* Componente PrintLabel integrato */}
+              {workflowData.selectedPc && (
+                <PrintLabel pcId={workflowData.selectedPc.id} />
+              )}
+              
               <Button 
-                onClick={() => {
-                  // Genera etichetta per il PC selezionato
-                  const labelHTML = generateLabelHTML(workflowData.selectedPc);
-                  const printWindow = window.open('', '_blank');
-                  if (printWindow) {
-                    printWindow.document.write(labelHTML);
-                    printWindow.document.close();
-                    printWindow.focus();
-                    printWindow.print();
-                    printWindow.close();
-                  }
-                }}
+                onClick={() => setWorkflowData(prev => ({ ...prev, step: prev.step + 1 }))}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white"
               >
-                <Printer className="h-4 w-4 mr-2" />
-                Stampa Etichetta
+                <ArrowRight className="h-4 w-4 mr-2" />
+                Continua al Documento Manleva
               </Button>
             </CardContent>
           </Card>

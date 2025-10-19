@@ -4,19 +4,26 @@ import path from "path";
 import { createServer as createViteServer, createLogger } from "vite";
 import { type Server } from "http";
 import viteConfig from "../vite.config";
-import { nanoid } from "nanoid";
 
 const viteLogger = createLogger();
 
+// Logger ottimizzato con colori
 export function log(message: string, source = "express") {
-  const formattedTime = new Date().toLocaleTimeString("en-US", {
+  const timestamp = new Date().toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
     second: "2-digit",
     hour12: true,
   });
 
-  console.log(`${formattedTime} [${source}] ${message}`);
+  const colors = {
+    express: '\x1b[36m', // Cyan
+    vite: '\x1b[33m',    // Yellow
+    reset: '\x1b[0m'
+  };
+
+  const color = source === 'vite' ? colors.vite : colors.express;
+  console.log(`${color}${timestamp} [${source}]${colors.reset} ${message}`);
 }
 
 export async function setupVite(app: Express, server: Server) {
@@ -28,12 +35,13 @@ export async function setupVite(app: Express, server: Server) {
 
   const vite = await createViteServer({
     ...viteConfig,
-    configFile: false,
+    configFile: path.resolve(import.meta.dirname, "..", "vite.config.ts"),
     customLogger: {
       ...viteLogger,
       error: (msg, options) => {
         viteLogger.error(msg, options);
-        process.exit(1);
+        // Non exit in development, solo log
+        console.error('Vite Error:', msg);
       },
     },
     server: serverOptions,
@@ -41,7 +49,14 @@ export async function setupVite(app: Express, server: Server) {
   });
 
   app.use(vite.middlewares);
+  
+  // Catch-all handler ottimizzato
   app.use("*", async (req, res, next) => {
+    // Skip API routes
+    if (req.path.startsWith('/api/')) {
+      return next();
+    }
+    
     const url = req.originalUrl;
 
     try {
@@ -52,12 +67,9 @@ export async function setupVite(app: Express, server: Server) {
         "index.html",
       );
 
-      // always reload the index.html file from disk incase it changes
-      let template = await fs.promises.readFile(clientTemplate, "utf-8");
-      template = template.replace(
-        `src="/src/main.tsx"`,
-        `src="/src/main.tsx?v=${nanoid()}"`,
-      );
+      // Cache template per performance
+      const template = await fs.promises.readFile(clientTemplate, "utf-8");
+      
       const page = await vite.transformIndexHtml(url, template);
       res.status(200).set({ "Content-Type": "text/html" }).end(page);
     } catch (e) {
@@ -76,10 +88,26 @@ export function serveStatic(app: Express) {
     );
   }
 
-  app.use(express.static(distPath));
+  // Configurazione static ottimizzata
+  app.use(express.static(distPath, {
+    maxAge: process.env.NODE_ENV === 'production' ? '1y' : '0',
+    etag: true,
+    lastModified: true,
+    setHeaders: (res, path) => {
+      // Cache headers per asset statici
+      if (path.endsWith('.js') || path.endsWith('.css')) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000');
+      }
+    }
+  }));
 
-  // fall through to index.html if the file doesn't exist
-  app.use("*", (_req, res) => {
+  // SPA fallback ottimizzato
+  app.use("*", (req, res) => {
+    // Skip API routes
+    if (req.path.startsWith('/api/')) {
+      return res.status(404).json({ message: 'API endpoint not found' });
+    }
+    
     res.sendFile(path.resolve(distPath, "index.html"));
   });
 }
