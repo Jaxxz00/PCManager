@@ -4,9 +4,9 @@ Crea un file `.env` nella root del progetto con queste variabili:
 
 ```env
 # Database Configuration
-# PostgreSQL connection string (Neon, Supabase, o qualsiasi provider PostgreSQL)
-# Se non specificato, verrà utilizzata la memoria in-memory (solo per sviluppo locale)
-DATABASE_URL=postgresql://user:password@host:5432/database
+# MySQL/MariaDB connection string
+# Se non specificato, verrà utilizzato JSON storage (solo per sviluppo locale)
+DATABASE_URL=mysql://user:password@host:3306/database
 
 # Server Configuration
 PORT=5000

@@ -10,12 +10,14 @@ interface JsonData {
   assets: Asset[];
   users: User[];
   sessions: Array<{ id: string; userId: string; expiresAt: string }>;
+  inviteTokens?: Array<{ token: string; userId: string; expiresAt: string; used: boolean }>;
   maintenance: any[];
 }
 
 export class JsonStorage {
   private dataPath: string;
   private data: JsonData;
+  private cleanupInterval: NodeJS.Timeout | null = null;
 
   constructor() {
     this.dataPath = path.join(process.cwd(), 'data.json');
@@ -25,19 +27,51 @@ export class JsonStorage {
       assets: [],
       users: [],
       sessions: [],
+      inviteTokens: [],
       maintenance: []
     };
     this.loadData();
+    this.startCleanupScheduler();
   }
 
   private async loadData() {
     try {
       const fileContent = await fs.readFile(this.dataPath, 'utf-8');
       this.data = JSON.parse(fileContent);
+
+      // Ensure inviteTokens exists
+      if (!this.data.inviteTokens) {
+        this.data.inviteTokens = [];
+      }
+
+      // Run cleanup on startup
+      await this.cleanupExpiredSessions();
+      await this.cleanupExpiredInviteTokens();
     } catch (error) {
       // File doesn't exist or is corrupted, start with empty data
       console.log('No existing data file found, starting with empty database');
       await this.saveData();
+    }
+  }
+
+  /**
+   * Start periodic cleanup scheduler (runs every hour)
+   */
+  private startCleanupScheduler() {
+    // Run cleanup every hour
+    this.cleanupInterval = setInterval(async () => {
+      await this.cleanupExpiredSessions();
+      await this.cleanupExpiredInviteTokens();
+    }, 60 * 60 * 1000); // 1 hour
+  }
+
+  /**
+   * Stop cleanup scheduler (for graceful shutdown)
+   */
+  public stopCleanupScheduler() {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
     }
   }
 
@@ -348,6 +382,53 @@ export class JsonStorage {
     this.data.sessions.splice(index, 1);
     await this.saveData();
     return true;
+  }
+
+  /**
+   * Cleanup expired sessions to prevent memory leak
+   * Returns the number of sessions removed
+   */
+  async cleanupExpiredSessions(): Promise<number> {
+    const now = new Date();
+    const before = this.data.sessions.length;
+
+    this.data.sessions = this.data.sessions.filter(
+      s => new Date(s.expiresAt) > now
+    );
+
+    const removed = before - this.data.sessions.length;
+    if (removed > 0) {
+      await this.saveData();
+      console.log(`[Storage] Cleaned up ${removed} expired session(s)`);
+    }
+
+    return removed;
+  }
+
+  /**
+   * Cleanup expired invite tokens to prevent memory leak
+   * Returns the number of tokens removed
+   */
+  async cleanupExpiredInviteTokens(): Promise<number> {
+    if (!this.data.inviteTokens) {
+      this.data.inviteTokens = [];
+      return 0;
+    }
+
+    const now = new Date();
+    const before = this.data.inviteTokens.length;
+
+    this.data.inviteTokens = this.data.inviteTokens.filter(
+      token => new Date(token.expiresAt) > now
+    );
+
+    const removed = before - this.data.inviteTokens.length;
+    if (removed > 0) {
+      await this.saveData();
+      console.log(`[Storage] Cleaned up ${removed} expired invite token(s)`);
+    }
+
+    return removed;
   }
 
   // Dashboard stats

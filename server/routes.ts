@@ -4,7 +4,7 @@ import { JsonStorage } from "./jsonStorage";
 import { insertEmployeeSchema, insertPcSchema, loginSchema, registerSchema, setup2FASchema, verify2FASchema, disable2FASchema, setPasswordSchema } from "@shared/schema";
 import { generateInviteLink, generateInviteMessage } from "./emailService";
 import { z } from "zod";
-import { db } from "./db";
+import { getDb } from "./db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
@@ -47,6 +47,24 @@ const loginLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: true, // Non conta i login riusciti
+});
+
+// Rate limiting per endpoint QR pubblico (protezione anti-enumerazione)
+const qrScanLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minuti
+  max: 20, // Max 20 scansioni QR per IP ogni 5 minuti
+  message: { error: "Troppe scansioni QR. Riprova tra qualche minuto." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limiting per endpoint inviti pubblici (protezione brute-force token)
+const inviteLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minuti
+  max: 10, // Max 10 richieste per IP ogni 15 minuti
+  message: { error: "Troppe richieste. Riprova tra 15 minuti." },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 // Middleware di autenticazione con sessioni
@@ -183,7 +201,27 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
     }
     next();
   };
-  
+
+  // Health check endpoint (per monitoring esterno)
+  app.get("/health", (req, res) => {
+    res.status(200).json({
+      status: "ok",
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV || "development"
+    });
+  });
+
+  app.get("/api/health", (req, res) => {
+    res.status(200).json({
+      status: "ok",
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      storage: storage ? "connected" : "disconnected",
+      environment: process.env.NODE_ENV || "development"
+    });
+  });
+
   // Authentication routes (pubbliche, senza autenticazione)
   // Endpoint registrazione DISABILITATO per sicurezza aziendale
   app.post("/api/auth/register", methodFilter(['POST']), (req, res) => {
@@ -460,13 +498,14 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       }
 
       const { userId } = req.params;
-      const [existing] = await db.select().from(users).where(eq(users.id, userId));
+      const database = getDb();
+      const [existing] = await database.select().from(users).where(eq(users.id, userId));
       if (!existing) {
         return res.status(404).json({ error: "Utente non trovato" });
       }
 
       const passwordHash = await bcrypt.hash(parsed.data.password, 12);
-      await db.update(users).set({ passwordHash, updatedAt: new Date() }).where(eq(users.id, userId)).execute();
+      await database.update(users).set({ passwordHash, updatedAt: new Date() }).where(eq(users.id, userId)).execute();
       return res.status(200).json({ message: "Password impostata con successo" });
     } catch (error) {
       console.error("Error setting user password:", error);
@@ -574,7 +613,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
     }
   });
 
-  app.delete("/api/employees/:id", authenticateRequest, async (req, res) => {
+  app.delete("/api/employees/:id", methodFilter(['DELETE']), authenticateRequest, async (req, res) => {
     try {
       // Remove all assignments and references before deleting employee
       const assets = await storage.getAssets();
@@ -635,7 +674,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
   });
 
   // Endpoint per ricerca PC tramite QR scan - PUBBLICO per utilizzo mobile
-  app.get("/api/pcs/qr/:pcId", async (req, res) => {
+  app.get("/api/pcs/qr/:pcId", qrScanLimiter, async (req, res) => {
     try {
       // Validazione strict del pcId per prevenire path traversal
       const pcId = req.params.pcId;
@@ -714,7 +753,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
     }
   });
 
-  app.delete("/api/pcs/:id", authenticateRequest, async (req, res) => {
+  app.delete("/api/pcs/:id", methodFilter(['DELETE']), authenticateRequest, async (req, res) => {
     try {
       const deleted = await storage.deletePc(req.params.id);
       if (!deleted) {
@@ -1094,7 +1133,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
   // Routes for user invite system
   
   // Validate invite token (public route)
-  app.get("/api/invite/:token", async (req, res) => {
+  app.get("/api/invite/:token", inviteLimiter, async (req, res) => {
     try {
       const { token } = req.params;
       if (!token) {
@@ -1128,7 +1167,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
   });
 
   // Set password via invite token (public route)
-  app.post("/api/invite/:token/set-password", methodFilter(['POST']), strictContentType, async (req, res) => {
+  app.post("/api/invite/:token/set-password", inviteLimiter, methodFilter(['POST']), strictContentType, async (req, res) => {
     try {
       const { token } = req.params;
       const validationResult = setPasswordSchema.safeParse(req.body);
