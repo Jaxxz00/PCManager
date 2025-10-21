@@ -20,7 +20,7 @@ Sistema completo per la gestione di computer, dipendenti, asset IT e documentazi
 ### Backend
 - **Node.js** + **Express** - API REST
 - **TypeScript** - Type safety
-- **PostgreSQL** - Database relazionale
+- **MySQL/MariaDB** - Database relazionale
 - **Drizzle ORM** - Query builder type-safe
 - **bcrypt** - Hashing password
 - **Helmet** - Security headers
@@ -37,8 +37,8 @@ Sistema completo per la gestione di computer, dipendenti, asset IT e documentazi
 
 ## 📋 Prerequisiti
 
-- **Node.js** 18+ 
-- **PostgreSQL** 14+
+- **Node.js** 18+
+- **MySQL** 8.0+ o **MariaDB** 10.6+
 - **npm** o **pnpm**
 
 ## 🔧 Installazione Locale
@@ -54,17 +54,17 @@ cd PCManager
 npm install
 ```
 
-### 3. Configura database PostgreSQL
-Crea un database PostgreSQL e ottieni la connection string:
+### 3. Configura database MySQL/MariaDB
+Crea un database MySQL/MariaDB e ottieni la connection string:
 ```
-postgresql://username:password@localhost:5432/pcmanager
+mysql://username:password@localhost:3306/pcmanager
 ```
 
 ### 4. Configura variabili d'ambiente
 Crea un file `.env` nella root del progetto:
 ```env
 # Database
-DATABASE_URL=postgresql://username:password@localhost:5432/pcmanager
+DATABASE_URL=mysql://username:password@localhost:3306/pcmanager
 
 # Server
 NODE_ENV=development
@@ -133,24 +133,25 @@ services:
       - "5000:5000"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://pcmanager:password@db:5432/pcmanager
+      - DATABASE_URL=mysql://pcmanager:password@db:3306/pcmanager
       - SESSION_SECRET=${SESSION_SECRET}
     depends_on:
       - db
     restart: unless-stopped
 
   db:
-    image: postgres:14-alpine
+    image: mariadb:10.11
     environment:
-      - POSTGRES_USER=pcmanager
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=pcmanager
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=pcmanager
+      - MYSQL_USER=pcmanager
+      - MYSQL_PASSWORD=password
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mysql_data:/var/lib/mysql
     restart: unless-stopped
 
 volumes:
-  postgres_data:
+  mysql_data:
 ```
 
 ### 3. Deploy su server
@@ -175,21 +176,27 @@ docker-compose logs -f
 ```bash
 # Ubuntu/Debian
 sudo apt update
-sudo apt install -y nodejs npm postgresql nginx
+sudo apt install -y nodejs npm mysql-server nginx
+# Oppure per MariaDB:
+# sudo apt install -y nodejs npm mariadb-server nginx
 
 # Verifica versioni
 node --version  # Deve essere 18+
 npm --version
 ```
 
-### 2. Configura PostgreSQL
+### 2. Configura MySQL/MariaDB
 ```bash
+# Configura MySQL sicuro
+sudo mysql_secure_installation
+
 # Crea database e utente
-sudo -u postgres psql
-CREATE DATABASE pcmanager;
-CREATE USER pcmanager WITH ENCRYPTED PASSWORD 'your-secure-password';
-GRANT ALL PRIVILEGES ON DATABASE pcmanager TO pcmanager;
-\q
+sudo mysql
+CREATE DATABASE pcmanager CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'pcmanager'@'localhost' IDENTIFIED BY 'your-secure-password';
+GRANT ALL PRIVILEGES ON pcmanager.* TO 'pcmanager'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;
 ```
 
 ### 3. Clone e setup applicazione
@@ -294,14 +301,14 @@ pm2 restart pcmanager
 ## 🐛 Troubleshooting
 
 ### Il server non si avvia
-- Verifica che PostgreSQL sia attivo: `sudo systemctl status postgresql`
+- Verifica che MySQL/MariaDB sia attivo: `sudo systemctl status mysql` (o `mariadb`)
 - Controlla i log: `pm2 logs pcmanager`
 - Verifica DATABASE_URL nel file .env
 
 ### Errore connessione database
-- Verifica credenziali PostgreSQL
-- Controlla che il database esista: `psql -U pcmanager -d pcmanager`
-- Verifica firewall non blocchi porta 5432
+- Verifica credenziali MySQL/MariaDB
+- Controlla che il database esista: `mysql -u pcmanager -p pcmanager`
+- Verifica firewall non blocchi porta 3306
 
 ### Porta 5000 già in uso
 - Cambia PORT nel file .env
