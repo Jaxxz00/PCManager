@@ -49,6 +49,15 @@ const loginLimiter = rateLimit({
   skipSuccessfulRequests: true, // Non conta i login riusciti
 });
 
+// Rate limiting per endpoint QR pubblico (protezione anti-enumerazione)
+const qrScanLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minuti
+  max: 20, // Max 20 scansioni QR per IP ogni 5 minuti
+  message: { error: "Troppe scansioni QR. Riprova tra qualche minuto." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Middleware di autenticazione con sessioni
 const createAuthenticateRequest = (storage: JsonStorage) => async (req: Request, res: Response, next: NextFunction) => {
   const sessionId = req.headers['authorization']?.replace('Bearer ', '') ||
@@ -635,7 +644,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
   });
 
   // Endpoint per ricerca PC tramite QR scan - PUBBLICO per utilizzo mobile
-  app.get("/api/pcs/qr/:pcId", async (req, res) => {
+  app.get("/api/pcs/qr/:pcId", qrScanLimiter, async (req, res) => {
     try {
       // Validazione strict del pcId per prevenire path traversal
       const pcId = req.params.pcId;
