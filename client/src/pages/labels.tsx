@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,20 +6,23 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Printer, 
-  Search, 
-  Download, 
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Printer,
+  Search,
+  Download,
   QrCode,
   Monitor,
   Smartphone,
   Tablet,
   Keyboard,
   CreditCard,
-  Box
+  Box,
+  Eye
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Asset, Pc } from "@shared/schema";
+import { HPEliteBookLabel } from "@/components/HPEliteBookLabel";
 
 // Icone per tipo di asset
 const assetIcons = {
@@ -35,6 +38,8 @@ export default function Labels() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedAssets, setSelectedAssets] = useState<string[]>([]);
   const [serviceDeskUrl, setServiceDeskUrl] = useState("http://alstom.service-now.com");
+  const [showPreview, setShowPreview] = useState(false);
+  const printRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   // Fetch assets e PCs
@@ -97,93 +102,16 @@ export default function Labels() {
     }
   };
 
-  const generateLabelHTML = (item: any) => {
-    const Icon = assetIcons[item.assetType as keyof typeof assetIcons] || Box;
-    
-    return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <style>
-          @page { 
-            size: 4in 2in; 
-            margin: 0.1in; 
-          }
-          body { 
-            font-family: Arial, sans-serif; 
-            margin: 0; 
-            padding: 8px; 
-            font-size: 10px;
-          }
-          .label { 
-            width: 100%; 
-            height: 100%; 
-            border: 1px solid #ccc; 
-            border-radius: 4px; 
-            padding: 6px; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: space-between;
-          }
-          .asset-id { 
-            font-weight: bold; 
-            font-size: 12px; 
-            margin-bottom: 2px; 
-          }
-          .info-line { 
-            margin: 1px 0; 
-            font-size: 9px; 
-          }
-          .service-desk { 
-            display: flex; 
-            align-items: center; 
-            margin-top: 4px; 
-          }
-          .service-desk-icon { 
-            width: 12px; 
-            height: 8px; 
-            margin-right: 4px; 
-            background: black; 
-            position: relative; 
-          }
-          .service-desk-icon::after { 
-            content: ''; 
-            position: absolute; 
-            right: -2px; 
-            top: 2px; 
-            width: 2px; 
-            height: 4px; 
-            background: black; 
-          }
-          .barcode { 
-            margin-top: 4px; 
-            height: 20px; 
-            background: repeating-linear-gradient(
-              90deg,
-              #000 0px,
-              #000 1px,
-              transparent 1px,
-              transparent 2px
-            );
-            background-size: 2px 20px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="label">
-          <div class="asset-id">Asset: ${item.assetCode}</div>
-          <div class="info-line">Model: ${item.brand || ''} ${item.model || ''}</div>
-          <div class="info-line">S/N: ${item.serialNumber || ''}</div>
-          <div class="service-desk">
-            <span>SD</span>
-            <div class="service-desk-icon"></div>
-            <span>: ${serviceDeskUrl}</span>
-          </div>
-          <div class="barcode"></div>
-        </div>
-      </body>
-      </html>
-    `;
+  const openPreview = () => {
+    if (selectedAssets.length === 0) {
+      toast({
+        title: "Nessun asset selezionato",
+        description: "Seleziona almeno un asset per visualizzare le etichette.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setShowPreview(true);
   };
 
   const printLabels = () => {
@@ -196,130 +124,21 @@ export default function Labels() {
       return;
     }
 
-    const selectedItems = allItems.filter(item => selectedAssets.includes(item.id));
-    
-    // Crea una finestra di stampa per ogni etichetta
-    selectedItems.forEach((item, index) => {
-      setTimeout(() => {
-        const printWindow = window.open('', '_blank');
-        if (printWindow) {
-          printWindow.document.write(generateLabelHTML(item));
-          printWindow.document.close();
-          printWindow.focus();
-          printWindow.print();
-          printWindow.close();
-        }
-      }, index * 500); // Stampa ogni etichetta con un piccolo delay
-    });
+    // Apri preview e dopo un piccolo delay stampa
+    setShowPreview(true);
+    setTimeout(() => {
+      window.print();
+    }, 500);
 
     toast({
-      title: "Stampa avviata",
-      description: `${selectedAssets.length} etichette in corso di stampa.`,
+      title: "Anteprima stampa aperta",
+      description: `${selectedAssets.length} etichette pronte per la stampa.`,
     });
   };
 
-  const downloadLabels = () => {
-    if (selectedAssets.length === 0) {
-      toast({
-        title: "Nessun asset selezionato",
-        description: "Seleziona almeno un asset per scaricare le etichette.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const selectedItems = allItems.filter(item => selectedAssets.includes(item.id));
-    const htmlContent = selectedItems.map(item => generateLabelHTML(item)).join('<div style="page-break-after: always;"></div>');
-    
-    const fullHTML = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <style>
-          @page { 
-            size: 4in 2in; 
-            margin: 0.1in; 
-          }
-          body { 
-            font-family: Arial, sans-serif; 
-            margin: 0; 
-            padding: 8px; 
-            font-size: 10px;
-          }
-          .label { 
-            width: 100%; 
-            height: 100%; 
-            border: 1px solid #ccc; 
-            border-radius: 4px; 
-            padding: 6px; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: space-between;
-          }
-          .asset-id { 
-            font-weight: bold; 
-            font-size: 12px; 
-            margin-bottom: 2px; 
-          }
-          .info-line { 
-            margin: 1px 0; 
-            font-size: 9px; 
-          }
-          .service-desk { 
-            display: flex; 
-            align-items: center; 
-            margin-top: 4px; 
-          }
-          .service-desk-icon { 
-            width: 12px; 
-            height: 8px; 
-            margin-right: 4px; 
-            background: black; 
-            position: relative; 
-          }
-          .service-desk-icon::after { 
-            content: ''; 
-            position: absolute; 
-            right: -2px; 
-            top: 2px; 
-            width: 2px; 
-            height: 4px; 
-            background: black; 
-          }
-          .barcode { 
-            margin-top: 4px; 
-            height: 20px; 
-            background: repeating-linear-gradient(
-              90deg,
-              #000 0px,
-              #000 1px,
-              transparent 1px,
-              transparent 2px
-            );
-            background-size: 2px 20px;
-          }
-        </style>
-      </head>
-      <body>
-        ${htmlContent}
-      </body>
-      </html>
-    `;
-
-    const blob = new Blob([fullHTML], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `etichette_${new Date().toISOString().split('T')[0]}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    toast({
-      title: "Download avviato",
-      description: `${selectedAssets.length} etichette scaricate.`,
-    });
+  // Get selected items for rendering
+  const getSelectedItems = () => {
+    return allItems.filter(item => selectedAssets.includes(item.id));
   };
 
   const isLoading = assetsLoading || pcsLoading;
@@ -333,7 +152,15 @@ export default function Labels() {
           <p className="text-muted-foreground">Genera e stampa etichette per asset e PC</p>
         </div>
         <div className="flex gap-3">
-          <Button 
+          <Button
+            onClick={openPreview}
+            disabled={selectedAssets.length === 0}
+            variant="outline"
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            Anteprima ({selectedAssets.length})
+          </Button>
+          <Button
             onClick={printLabels}
             disabled={selectedAssets.length === 0}
             className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -341,16 +168,40 @@ export default function Labels() {
             <Printer className="h-4 w-4 mr-2" />
             Stampa Etichette ({selectedAssets.length})
           </Button>
-          <Button 
-            onClick={downloadLabels}
-            disabled={selectedAssets.length === 0}
-            variant="outline"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Scarica HTML
-          </Button>
         </div>
       </div>
+
+      {/* Dialog Anteprima Etichette */}
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Anteprima Etichette ({selectedAssets.length})</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 no-print">
+            <div className="flex justify-end gap-2 sticky top-0 bg-background z-10 pb-2">
+              <Button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Printer className="h-4 w-4 mr-2" />
+                Stampa
+              </Button>
+              <Button onClick={() => setShowPreview(false)} variant="outline">
+                Chiudi
+              </Button>
+            </div>
+          </div>
+          <div ref={printRef} className="space-y-4">
+            {getSelectedItems().map((item) => (
+              <div key={item.id} className="label-container flex justify-center">
+                <HPEliteBookLabel
+                  assetId={item.assetCode || ''}
+                  model={`${item.brand || ''} ${item.model || ''}`.trim()}
+                  serialNumber={item.serialNumber || ''}
+                  url={serviceDeskUrl}
+                />
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Configurazione Service Desk */}
       <Card>

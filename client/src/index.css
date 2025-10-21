@@ -671,3 +671,54 @@ li.destructive *,
   background-color: #dc2626 !important;
   color: white !important;
 }
+
+/* ========================================
+   PRINT STYLES FOR LABELS
+   ======================================== */
+@media print {
+  /* Hide everything except labels */
+  body * {
+    visibility: hidden;
+  }
+
+  .label-container,
+  .label-container * {
+    visibility: visible;
+  }
+
+  /* Page setup for labels */
+  @page {
+    size: 70mm 30mm;
+    margin: 0;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Hide navigation, headers, footers */
+  .no-print,
+  nav,
+  header,
+  footer,
+  button,
+  [role="dialog"] > div:first-child {
+    display: none !important;
+  }
+
+  /* Position labels for printing */
+  .label-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    page-break-after: always;
+    page-break-inside: avoid;
+  }
+
+  /* Ensure SVG barcodes print correctly */
+  svg {
+    width: auto !important;
+    height: auto !important;
+  }
+}
