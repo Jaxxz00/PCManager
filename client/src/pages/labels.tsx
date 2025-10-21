@@ -37,7 +37,7 @@ const assetIcons = {
 export default function Labels() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedAssets, setSelectedAssets] = useState<string[]>([]);
-  const [serviceDeskUrl, setServiceDeskUrl] = useState("http://alstom.service-now.com");
+  const [serviceDeskUrl, setServiceDeskUrl] = useState("Ticket@maorigroup.it");
   const [showPreview, setShowPreview] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -206,15 +206,15 @@ export default function Labels() {
       {/* Configurazione Service Desk */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Configurazione Service Desk</CardTitle>
+          <CardTitle className="text-lg">Configurazione Etichette</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4">
-            <label className="text-sm font-medium">URL Service Desk:</label>
+            <label className="text-sm font-medium">Contatto Service Desk:</label>
             <Input
               value={serviceDeskUrl}
               onChange={(e) => setServiceDeskUrl(e.target.value)}
-              placeholder="http://alstom.service-now.com"
+              placeholder="Ticket@maorigroup.it o URL"
               className="max-w-md"
             />
           </div>

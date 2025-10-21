@@ -5,10 +5,15 @@ interface LabelData {
   assetId: string;
   model: string;
   serialNumber: string;
-  url: string;
+  url?: string;
 }
 
-export const HPEliteBookLabel: React.FC<LabelData> = ({ assetId, model, serialNumber, url }) => {
+export const HPEliteBookLabel: React.FC<LabelData> = ({
+  assetId,
+  model,
+  serialNumber,
+  url = 'Ticket@maorigroup.it'
+}) => {
   const barcodeRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
@@ -147,8 +152,8 @@ export const HPEliteBookLabel: React.FC<LabelData> = ({ assetId, model, serialNu
   );
 };
 
-// CSS per la stampa
-export const labelPrintStyles = `
+// CSS per la stampa (aggiungi nel tuo file CSS globale o in un tag <style>)
+export const printStyles = `
   @media print {
     @page {
       size: 70mm 30mm;
@@ -161,9 +166,26 @@ export const labelPrintStyles = `
     .no-print {
       display: none !important;
     }
-    .label-container {
-      page-break-after: always;
-      page-break-inside: avoid;
-    }
   }
 `;
+
+// Esempio di utilizzo nel tuo progetto:
+/*
+import { HPEliteBookLabel } from './components/HPEliteBookLabel';
+
+function App() {
+  const pcData = {
+    assetId: 'LL221048954',
+    model: 'HP EliteBook 840 G8 Notebook PC',
+    serialNumber: '5CG2433UU0'
+    // url non necessario, usa il default 'Ticket@maorigroup.it'
+  };
+
+  return (
+    <div>
+      <HPEliteBookLabel {...pcData} />
+      <button onClick={() => window.print()}>Stampa</button>
+    </div>
+  );
+}
+*/
