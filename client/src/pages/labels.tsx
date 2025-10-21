@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Asset, Pc } from "@shared/schema";
-import { HPEliteBookLabel } from "@/components/HPEliteBookLabel";
+import { AssetLabel } from "@/components/AssetLabel";
 
 // Icone per tipo di asset
 const assetIcons = {
@@ -191,7 +191,7 @@ export default function Labels() {
           <div ref={printRef} className="space-y-4">
             {getSelectedItems().map((item) => (
               <div key={item.id} className="label-container flex justify-center">
-                <HPEliteBookLabel
+                <AssetLabel
                   assetId={item.assetCode || ''}
                   model={`${item.brand || ''} ${item.model || ''}`.trim()}
                   serialNumber={item.serialNumber || ''}

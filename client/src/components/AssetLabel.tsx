@@ -8,7 +8,7 @@ interface LabelData {
   url?: string;
 }
 
-export const HPEliteBookLabel: React.FC<LabelData> = ({
+export const AssetLabel: React.FC<LabelData> = ({
   assetId,
   model,
   serialNumber,
@@ -171,19 +171,19 @@ export const printStyles = `
 
 // Esempio di utilizzo nel tuo progetto:
 /*
-import { HPEliteBookLabel } from './components/HPEliteBookLabel';
+import { AssetLabel } from './components/AssetLabel';
 
 function App() {
   const pcData = {
-    assetId: 'LL221048954',
-    model: 'HP EliteBook 840 G8 Notebook PC',
+    assetId: 'PC-001',
+    model: 'Dell Latitude 5420',
     serialNumber: '5CG2433UU0'
     // url non necessario, usa il default 'Ticket@maorigroup.it'
   };
 
   return (
     <div>
-      <HPEliteBookLabel {...pcData} />
+      <AssetLabel {...pcData} />
       <button onClick={() => window.print()}>Stampa</button>
     </div>
   );
