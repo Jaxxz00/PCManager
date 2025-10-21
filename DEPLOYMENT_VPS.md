@@ -197,6 +197,44 @@ NODE_ENV=production npm start
 # Premi CTRL+C per fermare dopo il test
 ```
 
+### ⚠️ 2.8 - IMPORTANTE: Limitazioni Upload Documenti
+
+**NOTA CRITICA**: La funzionalità di upload documenti è attualmente configurata per **Replit Object Storage** e **NON funzionerà** su VPS standard.
+
+#### Cosa funziona:
+✅ Tutte le funzionalità principali:
+- Gestione dipendenti, PC, asset
+- Dashboard e statistiche
+- Generazione PDF manleva
+- Autenticazione e sessioni
+- Workflow assegnazione
+
+#### Cosa NON funziona:
+❌ Upload documenti tramite interfaccia web
+
+#### Soluzioni per Upload Documenti (opzionali):
+
+**Opzione 1: Google Cloud Storage (consigliato per produzione)**
+```bash
+# 1. Crea progetto su Google Cloud Platform
+# 2. Abilita Cloud Storage API
+# 3. Crea un bucket
+# 4. Scarica service account key JSON
+# 5. Aggiungi al .env:
+GOOGLE_CLOUD_PROJECT_ID=your-project-id
+GOOGLE_CLOUD_KEY_FILE=/path/to/service-account.json
+GOOGLE_CLOUD_BUCKET_NAME=your-bucket-name
+```
+
+**Opzione 2: Disabilitare Upload Documenti**
+L'app funziona perfettamente senza upload documenti. La sezione "Documenti" mostrerà solo documenti generati automaticamente (PDF manleve).
+
+**Opzione 3: Storage Locale (sviluppo futuro)**
+Richiede modifiche al codice - contattare per implementazione custom.
+
+#### Decisione Consigliata:
+Per deployment rapido VPS, **procedi senza upload documenti**. Tutte le altre funzionalità funzioneranno perfettamente. L'upload può essere aggiunto in seguito se necessario.
+
 ---
 
 ## 🔄 FASE 3: Setup PM2 (Process Manager)
