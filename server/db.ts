@@ -2,31 +2,56 @@ import { drizzle } from 'drizzle-orm/mysql2';
 import mysql from 'mysql2/promise';
 import * as schema from "@shared/schema";
 
-// Only initialize database connection if DATABASE_URL is provided
-let connection!: mysql.Connection;
-let db!: ReturnType<typeof drizzle>;
+// Database connection state
+let connection: mysql.Connection | undefined;
+let db: ReturnType<typeof drizzle> | undefined;
+let initPromise: Promise<void> | undefined;
 
-(async () => {
-  if (process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '') {
-    // MySQL connection
-    connection = await mysql.createConnection(process.env.DATABASE_URL);
-    db = drizzle(connection, { schema, mode: 'default' });
-  } else {
-    if (process.env.NODE_ENV !== 'production') {
-      console.log("No DATABASE_URL provided, using in-memory storage for development");
-    }
+/**
+ * Initialize database connection (idempotent)
+ * Returns a Promise that resolves when DB is ready or rejects on error
+ */
+async function initializeDatabase(): Promise<void> {
+  // Return existing promise if initialization is in progress
+  if (initPromise) {
+    return initPromise;
   }
-})();
+
+  // Return immediately if already initialized
+  if (connection && db) {
+    return Promise.resolve();
+  }
+
+  // Start new initialization
+  initPromise = (async () => {
+    if (process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '') {
+      try {
+        connection = await mysql.createConnection(process.env.DATABASE_URL);
+        db = drizzle(connection, { schema, mode: 'default' });
+        console.log('[DB] MySQL connection established');
+      } catch (error) {
+        console.error('[DB] Failed to connect to MySQL:', error);
+        throw error;
+      }
+    } else {
+      if (process.env.NODE_ENV !== 'production') {
+        console.log("[DB] No DATABASE_URL provided, using in-memory storage for development");
+      }
+    }
+  })();
+
+  return initPromise;
+}
 
 function hasDb(): boolean {
   return typeof connection !== 'undefined' && typeof db !== 'undefined';
 }
 
 function getDb(): ReturnType<typeof drizzle> {
-  if (!hasDb()) {
-    throw new Error('Database not initialized. Set DATABASE_URL to enable DatabaseStorage.');
+  if (!db) {
+    throw new Error('Database not initialized. Call initializeDatabase() first or set DATABASE_URL to enable DatabaseStorage.');
   }
   return db;
 }
 
-export { connection, db, hasDb, getDb };
+export { connection, db, hasDb, getDb, initializeDatabase };
