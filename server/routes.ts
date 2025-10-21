@@ -4,7 +4,7 @@ import { JsonStorage } from "./jsonStorage";
 import { insertEmployeeSchema, insertPcSchema, loginSchema, registerSchema, setup2FASchema, verify2FASchema, disable2FASchema, setPasswordSchema } from "@shared/schema";
 import { generateInviteLink, generateInviteMessage } from "./emailService";
 import { z } from "zod";
-import { db } from "./db";
+import { getDb } from "./db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
@@ -469,13 +469,14 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       }
 
       const { userId } = req.params;
-      const [existing] = await db.select().from(users).where(eq(users.id, userId));
+      const database = getDb();
+      const [existing] = await database.select().from(users).where(eq(users.id, userId));
       if (!existing) {
         return res.status(404).json({ error: "Utente non trovato" });
       }
 
       const passwordHash = await bcrypt.hash(parsed.data.password, 12);
-      await db.update(users).set({ passwordHash, updatedAt: new Date() }).where(eq(users.id, userId)).execute();
+      await database.update(users).set({ passwordHash, updatedAt: new Date() }).where(eq(users.id, userId)).execute();
       return res.status(200).json({ message: "Password impostata con successo" });
     } catch (error) {
       console.error("Error setting user password:", error);
