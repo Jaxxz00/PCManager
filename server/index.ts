@@ -170,6 +170,14 @@ app.use((req, res, next) => {
       console.error('Server Error:', err);
     }
 
+    // Log dell'errore per debugging
+    console.error(`[ERROR] ${status}: ${message}`, {
+      stack: err.stack,
+      path: _req.path,
+      method: _req.method
+    });
+
+    // Risposta al client
     res.status(status).json({ message });
   });
 

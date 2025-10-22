@@ -2,7 +2,7 @@ import express, { type Express, type Request, type Response, type NextFunction }
 import { createServer, type Server } from "http";
 import { insertEmployeeSchema, insertPcSchema, loginSchema, registerSchema, setup2FASchema, verify2FASchema, disable2FASchema, setPasswordSchema } from "@shared/schema";
 import { z } from "zod";
-import { db } from "./db";
+import { getDb } from "./db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import helmet from "helmet";
@@ -79,6 +79,40 @@ export async function registerRoutes(app: Express, storage: any): Promise<Server
   // Middleware per validazione Content-Type
   app.use('/api/', strictContentType);
   
+  // Blocco globale metodi non standard su endpoint auth
+  app.all('/api/auth/login', (req, res, next) => {
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: "Solo POST consentito su /api/auth/login" });
+    }
+    next();
+  });
+  
+  app.all('/api/auth/me', (req, res, next) => {
+    if (req.method !== 'GET') {
+      return res.status(405).json({ error: "Solo GET consentito su /api/auth/me" });
+    }
+    next();
+  });
+
+  // Health check endpoint (per monitoring esterno)
+  app.get("/health", (req, res) => {
+    res.status(200).json({
+      status: "ok",
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV || "development"
+    });
+  });
+
+  app.get("/api/health", (req, res) => {
+    res.status(200).json({
+      status: "ok",
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      storage: storage ? "connected" : "disconnected",
+      environment: process.env.NODE_ENV || "development"
+    });
+  });
   // Authentication routes (pubbliche, senza autenticazione)
   // Endpoint registrazione DISABILITATO per sicurezza aziendale
   app.post("/api/auth/register", methodFilter(['POST']), (req, res) => {
@@ -650,7 +684,7 @@ export async function registerRoutes(app: Express, storage: any): Promise<Server
     }
   });
 
-  app.delete("/api/employees/:id", authenticateRequest, async (req, res) => {
+  app.delete("/api/employees/:id", methodFilter(['DELETE']), authenticateRequest, async (req, res) => {
     try {
       // Remove all assignments and references before deleting employee
       const assets = await storage.getAssets();
@@ -711,7 +745,7 @@ export async function registerRoutes(app: Express, storage: any): Promise<Server
   });
 
   // Endpoint per ricerca PC tramite QR scan - PUBBLICO per utilizzo mobile
-  app.get("/api/pcs/qr/:pcId", async (req, res) => {
+  app.get("/api/pcs/qr/:pcId", qrScanLimiter, async (req, res) => {
     try {
       // Validazione strict del pcId per prevenire path traversal
       const pcId = req.params.pcId;
@@ -790,7 +824,7 @@ export async function registerRoutes(app: Express, storage: any): Promise<Server
     }
   });
 
-  app.delete("/api/pcs/:id", authenticateRequest, async (req, res) => {
+  app.delete("/api/pcs/:id", methodFilter(['DELETE']), authenticateRequest, async (req, res) => {
     try {
       const deleted = await storage.deletePc(req.params.id);
       if (!deleted) {
