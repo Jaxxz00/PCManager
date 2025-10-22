@@ -84,9 +84,20 @@ GOOGLE_CLOUD_BUCKET_NAME=your-bucket-name
 ```
 
 ### 5. Inizializza database
+
+#### Opzione A: Con MySQL/MariaDB (Produzione)
 ```bash
+# Sincronizza lo schema del database
 npm run db:push
+
+# Oppure applica le migrazioni SQL manualmente
+mysql -u username -p pcmanager < migrations/001_add_employee_address.sql
 ```
+
+#### Opzione B: Senza Database (Sviluppo)
+L'applicazione funziona anche senza MySQL, utilizzando `JsonStorage` (file `data.json`).
+
+**Nota**: Se `DATABASE_URL` non è configurato, l'app userà automaticamente storage su file. Perfetto per sviluppo locale!
 
 ### 6. Avvia in sviluppo
 ```bash
@@ -94,6 +105,10 @@ npm run dev
 ```
 
 L'applicazione sarà disponibile su `http://localhost:5000`
+
+**Primo accesso**:
+- Registra il primo utente admin tramite l'interfaccia di registrazione
+- Username e password saranno richiesti al login
 
 ## 🐳 Deploy con Docker (CONSIGLIATO)
 
@@ -377,6 +392,38 @@ Il progetto include una pipeline GitHub Actions automatica che:
 ### Badge Status
 
 [![CI/CD Pipeline](https://github.com/Jaxxz00/PCManager/actions/workflows/ci.yml/badge.svg)](https://github.com/Jaxxz00/PCManager/actions/workflows/ci.yml)
+
+## 🗄️ Database Migrations
+
+Il progetto include un sistema di migrazioni per gestire i cambiamenti dello schema database.
+
+### Migrazioni Disponibili
+
+Tutte le migrazioni SQL sono nella cartella `migrations/`:
+
+- **001_add_employee_address.sql**: Aggiunge campo `address` alla tabella `employees`
+
+### Eseguire le Migrazioni
+
+#### Metodo 1: Drizzle Kit (Automatico)
+```bash
+npm run db:push
+```
+Sincronizza automaticamente lo schema con il database.
+
+#### Metodo 2: SQL Manuale
+```bash
+mysql -u username -p database_name < migrations/001_add_employee_address.sql
+```
+
+### Verificare le Migrazioni
+```sql
+DESCRIBE employees;
+```
+
+⚠️ **Importante**: Esegui sempre un backup del database prima di applicare migrazioni in produzione!
+
+Vedi `migrations/README.md` per istruzioni dettagliate.
 
 ## 📊 Logging
 
