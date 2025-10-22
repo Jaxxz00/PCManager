@@ -7,6 +7,7 @@ describe('API Integration Tests', () => {
   let app: Express;
   let storage: JsonStorage;
   let server: any;
+  let authToken: string;
 
   beforeAll(async () => {
     app = express() as Express;
@@ -17,6 +18,31 @@ describe('API Integration Tests', () => {
 
     // Register routes
     server = await registerRoutes(app, storage);
+
+    // Create an admin user for authenticated tests
+    await request(app)
+      .post('/api/auth/register')
+      .send({
+        username: 'admin',
+        password: 'admin123',
+        email: 'admin@test.com'
+      });
+
+    // Login to get session token
+    const loginResponse = await request(app)
+      .post('/api/auth/login')
+      .send({
+        username: 'admin',
+        password: 'admin123'
+      });
+
+    // Extract sessionId from response body
+    authToken = loginResponse.body.sessionId;
+
+    // Debug: verify token is set
+    if (!authToken) {
+      console.error('Failed to get auth token. Login response:', loginResponse.body);
+    }
   });
 
   afterAll(async () => {
@@ -44,7 +70,7 @@ describe('API Integration Tests', () => {
       };
 
       const response = await request(app)
-        .post('/api/register')
+        .post('/api/auth/register')
         .send(userData);
 
       expect(response.status).toBe(201);
@@ -54,7 +80,7 @@ describe('API Integration Tests', () => {
     it('POST /api/login should authenticate user', async () => {
       // First register a user
       await request(app)
-        .post('/api/register')
+        .post('/api/auth/register')
         .send({
           username: 'logintest',
           password: 'password123',
@@ -63,7 +89,7 @@ describe('API Integration Tests', () => {
 
       // Then try to login
       const response = await request(app)
-        .post('/api/login')
+        .post('/api/auth/login')
         .send({
           username: 'logintest',
           password: 'password123'
@@ -75,7 +101,7 @@ describe('API Integration Tests', () => {
 
     it('POST /api/login should reject invalid credentials', async () => {
       const response = await request(app)
-        .post('/api/login')
+        .post('/api/auth/login')
         .send({
           username: 'nonexistent',
           password: 'wrongpassword'
@@ -96,6 +122,7 @@ describe('API Integration Tests', () => {
 
       const response = await request(app)
         .post('/api/employees')
+        .set('Authorization', `Bearer ${authToken}`)
         .send(employeeData);
 
       expect(response.status).toBe(201);
@@ -104,7 +131,9 @@ describe('API Integration Tests', () => {
     });
 
     it('GET /api/employees should return all employees', async () => {
-      const response = await request(app).get('/api/employees');
+      const response = await request(app)
+        .get('/api/employees')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
@@ -130,6 +159,7 @@ describe('API Integration Tests', () => {
 
       const response = await request(app)
         .post('/api/pcs')
+        .set('Authorization', `Bearer ${authToken}`)
         .send(pcData);
 
       expect(response.status).toBe(201);
@@ -137,7 +167,9 @@ describe('API Integration Tests', () => {
     });
 
     it('GET /api/pcs should return all PCs', async () => {
-      const response = await request(app).get('/api/pcs');
+      const response = await request(app)
+        .get('/api/pcs')
+        .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
@@ -146,16 +178,20 @@ describe('API Integration Tests', () => {
 
   describe('Rate Limiting', () => {
     it('should enforce rate limits on login endpoint', async () => {
-      // Make multiple rapid requests
-      const requests = Array(6).fill(null).map(() =>
-        request(app)
-          .post('/api/login')
-          .send({ username: 'test', password: 'test' })
-      );
+      // Make multiple rapid requests (more than the limit of 5)
+      const requests = [];
+      for (let i = 0; i < 10; i++) {
+        requests.push(
+          request(app)
+            .post('/api/auth/login')
+            .send({ username: 'test', password: 'test' })
+        );
+      }
 
       const responses = await Promise.all(requests);
       const rateLimited = responses.some(r => r.status === 429);
 
+      // At least one request should be rate limited
       expect(rateLimited).toBe(true);
     }, 10000);
   });

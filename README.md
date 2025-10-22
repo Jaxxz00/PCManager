@@ -323,6 +323,72 @@ pm2 restart pcmanager
 5. **Usa HTTPS** in produzione (Let's Encrypt)
 6. **Limita accesso SSH** con chiavi invece di password
 
+## 🧪 Testing
+
+Il progetto include un framework di testing completo con Jest e ts-jest.
+
+### Eseguire i test
+
+```bash
+# Esegui tutti i test
+npm test
+
+# Esegui i test in modalità watch
+npm run test:watch
+
+# Genera report di coverage
+npm run test:coverage
+
+# Esegui i test per CI/CD
+npm run test:ci
+```
+
+### Test Suite
+
+- **Unit Tests**: Test per funzioni e moduli individuali (es. PDF generator)
+- **Integration Tests**: Test per API endpoints con autenticazione
+- **Storage Tests**: Test per il layer di persistenza dati
+
+### Coverage
+
+I test di coverage sono configurati per escludere:
+- File di configurazione (vite.ts, index.ts)
+- File di definizione TypeScript (*.d.ts)
+
+## 🔄 CI/CD
+
+Il progetto include una pipeline GitHub Actions automatica che:
+
+### Pipeline CI
+- **Test**: Esegue tutti i test su Node.js 18.x e 20.x
+- **Type Checking**: Verifica la correttezza dei tipi TypeScript
+- **Build**: Compila l'applicazione per produzione
+- **Security Audit**: Controlla vulnerabilità nelle dipendenze
+- **Coverage**: Upload dei report su Codecov (opzionale)
+
+### Trigger
+- Push sui branch: `main`, `develop`, `claude/**`
+- Pull request verso: `main`, `develop`
+
+### Artifacts
+- Build di produzione salvati per 7 giorni
+- Report di coverage disponibili su Codecov
+
+### Badge Status
+
+[![CI/CD Pipeline](https://github.com/Jaxxz00/PCManager/actions/workflows/ci.yml/badge.svg)](https://github.com/Jaxxz00/PCManager/actions/workflows/ci.yml)
+
+## 📊 Logging
+
+Il progetto utilizza Winston per logging strutturato:
+
+- **Development**: Log colorizzati su console con livello `debug`
+- **Production**: Log in formato JSON salvati su file
+  - `logs/error-YYYY-MM-DD.log`: Solo errori
+  - `logs/combined-YYYY-MM-DD.log`: Tutti i log
+- **Rotation**: Log automaticamente ruotati e compressi dopo 14 giorni
+- **Max Size**: File log limitati a 20MB
+
 ## 📄 Licenza
 
 MIT License - Progetto sviluppato per Maori Group
