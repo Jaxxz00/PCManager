@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { setupVite, serveStatic } from "./vite";
+import logger from "./logger";
 
 const app = express();
 
@@ -34,16 +35,10 @@ app.use((req, res, next) => {
   res.on("finish", () => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
-      log(logLine);
+      logger.info(`${req.method} ${path} ${res.statusCode}`, {
+        duration: `${duration}ms`,
+        response: capturedJsonResponse ? JSON.stringify(capturedJsonResponse).slice(0, 200) : undefined
+      });
     }
   });
 
@@ -67,7 +62,7 @@ app.use((req, res, next) => {
     const message = err.message || "Internal Server Error";
 
     // Log dell'errore per debugging
-    console.error(`[ERROR] ${status}: ${message}`, {
+    logger.error(`${status}: ${message}`, {
       stack: err.stack,
       path: _req.path,
       method: _req.method
@@ -98,7 +93,7 @@ app.use((req, res, next) => {
   
   if (isWindows) {
     server.listen(port, host, () => {
-      log(`serving on http://${host}:${port}`);
+      logger.info(`Server started`, { url: `http://${host}:${port}` });
     });
   } else {
     server.listen({
@@ -106,7 +101,7 @@ app.use((req, res, next) => {
       host,
       reusePort: true,
     }, () => {
-      log(`serving on port ${port}`);
+      logger.info(`Server started`, { port, host });
     });
   }
 })();

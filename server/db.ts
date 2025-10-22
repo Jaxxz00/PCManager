@@ -1,6 +1,7 @@
 import { drizzle } from 'drizzle-orm/mysql2';
 import mysql from 'mysql2/promise';
 import * as schema from "@shared/schema";
+import logger from './logger';
 
 // Database connection state
 let connection: mysql.Connection | undefined;
@@ -28,14 +29,14 @@ async function initializeDatabase(): Promise<void> {
       try {
         connection = await mysql.createConnection(process.env.DATABASE_URL);
         db = drizzle(connection, { schema, mode: 'default' });
-        console.log('[DB] MySQL connection established');
+        logger.info('MySQL connection established');
       } catch (error) {
-        console.error('[DB] Failed to connect to MySQL:', error);
+        logger.error('Failed to connect to MySQL', { error });
         throw error;
       }
     } else {
       if (process.env.NODE_ENV !== 'production') {
-        console.log("[DB] No DATABASE_URL provided, using in-memory storage for development");
+        logger.info('No DATABASE_URL provided, using in-memory storage for development');
       }
     }
   })();

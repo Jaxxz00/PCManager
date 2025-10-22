@@ -13,6 +13,7 @@ import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import { generateManlevaPDF } from "./pdfGenerators/manlevaGenerator";
 import bcrypt from "bcrypt";
+import logger from "./logger";
 
 // Estendo il tipo Request per includere la sessione
 declare module 'express-serve-static-core' {
@@ -98,7 +99,7 @@ const createAuthenticateRequest = (storage: JsonStorage) => async (req: Request,
     
     next();
   } catch (error) {
-    console.error('Authentication error:', error);
+    logger.error('Authentication error', { error });
     res.status(500).json({ error: "Errore interno del server" });
   }
 };
@@ -271,7 +272,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
         user: userResponse
       });
     } catch (error) {
-      console.error('Login error:', error);
+      logger.error('Login error', { error });
       res.status(500).json({ error: "Errore durante l'accesso" });
     }
   });
@@ -285,7 +286,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       
       res.json({ message: "Logout effettuato con successo" });
     } catch (error) {
-      console.error('Logout error:', error);
+      logger.error('Logout error', { error });
       res.status(500).json({ error: "Errore durante il logout" });
     }
   });
@@ -299,7 +300,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       
       res.json(user);
     } catch (error) {
-      console.error('Get user error:', error);
+      logger.error('Get user error', { error });
       res.status(500).json({ error: "Errore durante il recupero utente" });
     }
   });
@@ -341,7 +342,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
         user: safeUser 
       });
     } catch (error) {
-      console.error("Error updating user profile:", error);
+      logger.error("Error updating user profile", { error });
       res.status(500).json({ error: "Errore interno del server" });
     }
   });
@@ -359,7 +360,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       const safeUsers = users.map(({ passwordHash, twoFactorSecret, backupCodes, ...safeUser }) => safeUser);
       res.json(safeUsers);
     } catch (error) {
-      console.error("Error fetching users:", error);
+      logger.error("Error fetching users", { error });
       res.status(500).json({ error: "Errore interno del server" });
     }
   });
@@ -416,7 +417,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
         user: safeUser,
       });
     } catch (error) {
-      console.error("Error creating user:", error);
+      logger.error("Error creating user", { error });
       res.status(500).json({ error: "Errore interno del server" });
     }
   });
@@ -452,7 +453,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
         user: safeUser 
       });
     } catch (error) {
-      console.error("Error updating user:", error);
+      logger.error("Error updating user", { error });
       res.status(500).json({ error: "Errore interno del server" });
     }
   });
@@ -478,7 +479,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
 
       res.json({ message: "Utente eliminato con successo" });
     } catch (error) {
-      console.error("Error deleting user:", error);
+      logger.error("Error deleting user", { error });
       res.status(500).json({ error: "Errore interno del server" });
     }
   });
@@ -508,7 +509,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       await database.update(users).set({ passwordHash, updatedAt: new Date() }).where(eq(users.id, userId)).execute();
       return res.status(200).json({ message: "Password impostata con successo" });
     } catch (error) {
-      console.error("Error setting user password:", error);
+      logger.error("Error setting user password", { error });
       res.status(500).json({ error: "Errore interno del server" });
 
     }
@@ -540,7 +541,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
         inviteToken: token,
       });
     } catch (error) {
-      console.error("Error regenerating invite:", error);
+      logger.error("Error regenerating invite", { error });
       res.status(500).json({ error: "Errore interno del server" });
     }
   });
@@ -646,7 +647,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       }
       res.status(204).send();
     } catch (error) {
-      console.error("Error deleting employee:", error);
+      logger.error("Error deleting employee", { error });
       res.status(500).json({ message: "Failed to delete employee" });
     }
   });
@@ -703,7 +704,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
         scanTimestamp: new Date().toISOString()
       });
     } catch (error) {
-      console.error("Errore ricerca QR PC:", error);
+      logger.error("Errore ricerca QR PC", { error });
       res.status(500).json({ message: "Errore interno server" });
     }
   });
@@ -732,7 +733,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       const pc = await storage.createPc(pcData);
       res.status(201).json(pc);
     } catch (error) {
-      console.error("Error creating PC:", error);
+      logger.error("Error creating PC", { error });
       res.status(500).json({ message: "Failed to create PC" });
     }
   });
@@ -772,7 +773,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       const history = await storage.getPcHistory(id);
       res.json(history);
     } catch (error) {
-      console.error("Error fetching PC history:", error);
+      logger.error("Error fetching PC history", { error });
       res.status(500).json({ message: "Failed to fetch PC history" });
     }
   });
@@ -783,7 +784,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       const history = await storage.getPcHistoryBySerial(serialNumber);
       res.json(history);
     } catch (error) {
-      console.error("Error fetching PC history by serial:", error);
+      logger.error("Error fetching PC history by serial", { error });
       res.status(500).json({ message: "Failed to fetch PC history" });
     }
   });
@@ -793,7 +794,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       const history = await storage.getAllPcHistory();
       res.json(history);
     } catch (error) {
-      console.error("Error fetching all PC history:", error);
+      logger.error("Error fetching all PC history", { error });
       res.status(500).json({ message: "Failed to fetch PC history" });
     }
   });
@@ -817,7 +818,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       const nextCode = await storage.getNextAssetCode(type);
       res.json({ code: nextCode });
     } catch (error) {
-      console.error("Error generating next asset code:", error);
+      logger.error("Error generating next asset code", { error });
       res.status(500).json({ error: "Failed to generate asset code" });
     }
   });
@@ -829,7 +830,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       const assets = await storage.getAssets(type as string | undefined);
       res.json(assets);
     } catch (error: any) {
-      console.error("Error fetching assets:", error);
+      logger.error("Error fetching assets", { error });
       res.status(500).json({ error: "Failed to fetch assets", message: error?.message || String(error) });
     }
   });
@@ -846,7 +847,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
 
       res.json(asset);
     } catch (error) {
-      console.error("Error fetching asset:", error);
+      logger.error("Error fetching asset", { error });
       res.status(500).json({ error: "Failed to fetch asset" });
     }
   });
@@ -881,7 +882,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       const newAsset = await storage.createAsset(validationResult.data);
       res.status(201).json(newAsset);
     } catch (error) {
-      console.error("Error creating asset:", error);
+      logger.error("Error creating asset", { error });
       res.status(500).json({ error: "Failed to create asset" });
     }
   });
@@ -898,7 +899,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
 
       res.json(updatedAsset);
     } catch (error) {
-      console.error("Error updating asset:", error);
+      logger.error("Error updating asset", { error });
       res.status(500).json({ error: "Failed to update asset" });
     }
   });
@@ -915,7 +916,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
 
       res.json({ success: true, message: "Asset deleted successfully" });
     } catch (error) {
-      console.error("Error deleting asset:", error);
+      logger.error("Error deleting asset", { error });
       res.status(500).json({ error: "Failed to delete asset" });
     }
   });
@@ -929,7 +930,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       const documents = await storage.getAllDocuments();
       res.json(documents);
     } catch (error: any) {
-      console.error("Error fetching documents:", error);
+      logger.error("Error fetching documents", { error });
       // Fallback: usa una cache in-process per ambienti senza persistenza
       return res.json(documentsCache);
     }
@@ -947,7 +948,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
 
       res.json({ success: true, message: "Document deleted successfully" });
     } catch (error) {
-      console.error("Error deleting document:", error);
+      logger.error("Error deleting document", { error });
       res.status(500).json({ error: "Failed to delete document" });
     }
   });
@@ -958,7 +959,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       const maintenanceRecords = await storage.getAllMaintenance();
       res.json(maintenanceRecords);
     } catch (error) {
-      console.error("Error fetching maintenance records:", error);
+      logger.error("Error fetching maintenance records", { error });
       res.status(500).json({ error: "Failed to fetch maintenance records" });
     }
   });
@@ -978,7 +979,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       const newRecord = await storage.createMaintenance(validationResult.data);
       res.status(201).json(newRecord);
     } catch (error) {
-      console.error("Error creating maintenance record:", error);
+      logger.error("Error creating maintenance record", { error });
       res.status(500).json({ error: "Failed to create maintenance record" });
     }
   });
@@ -994,7 +995,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
 
       res.json(updatedRecord);
     } catch (error) {
-      console.error("Error updating maintenance record:", error);
+      logger.error("Error updating maintenance record", { error });
       res.status(500).json({ error: "Failed to update maintenance record" });
     }
   });
@@ -1010,7 +1011,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
 
       res.status(204).send();
     } catch (error) {
-      console.error("Error deleting maintenance record:", error);
+      logger.error("Error deleting maintenance record", { error });
       res.status(500).json({ error: "Failed to delete maintenance record" });
     }
   });
@@ -1034,7 +1035,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       const created = await storage.createDocument(payload);
       return res.status(201).json(created);
     } catch (error) {
-      console.error("Error creating document:", error);
+      logger.error("Error creating document", { error });
       // Fallback: salva in cache in-process e ritorna 201
       const cached = { id: undefined, ...payload };
       documentsCache.push(cached);
@@ -1053,7 +1054,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       }
       objectStorageService.downloadObject(file, res);
     } catch (error) {
-      console.error("Error searching for public object:", error);
+      logger.error("Error searching for public object", { error });
       return res.status(500).json({ error: "Internal server error" });
     }
   });
@@ -1079,7 +1080,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       
       objectStorageService.downloadObject(objectFile, res);
     } catch (error) {
-      console.error("Error accessing object:", error);
+      logger.error("Error accessing object", { error });
       if (error instanceof ObjectNotFoundError) {
         return res.sendStatus(404);
       }
@@ -1094,7 +1095,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       const uploadURL = await objectStorageService.getObjectEntityUploadURL();
       res.json({ uploadURL });
     } catch (error) {
-      console.error("Error getting upload URL:", error);
+      logger.error("Error getting upload URL", { error });
       res.status(500).json({ error: "Failed to get upload URL" });
     }
   });
@@ -1125,7 +1126,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
         uploadedAt: new Date().toISOString()
       });
     } catch (error) {
-      console.error("Error saving document metadata:", error);
+      logger.error("Error saving document metadata", { error });
       res.status(500).json({ error: "Internal server error" });
     }
   });
@@ -1161,7 +1162,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
         }
       });
     } catch (error) {
-      console.error("Error validating invite token:", error);
+      logger.error("Error validating invite token", { error });
       res.status(500).json({ error: "Errore interno del server" });
     }
   });
@@ -1196,7 +1197,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
         message: "Password impostata con successo. Ora puoi effettuare l'accesso." 
       });
     } catch (error) {
-      console.error("Error setting password via invite:", error);
+      logger.error("Error setting password via invite", { error });
       res.status(500).json({ error: "Errore interno del server" });
     }
   });
@@ -1262,7 +1263,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       res.send(pdfBuffer);
 
     } catch (error) {
-      console.error("Error generating manleva PDF:", error);
+      logger.error("Error generating manleva PDF", { error });
       res.status(500).json({ error: "Errore nella generazione del PDF della manleva" });
     }
   });

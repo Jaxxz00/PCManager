@@ -3,6 +3,7 @@ import path from 'path';
 import { type Employee, type InsertEmployee, type Pc, type InsertPc, type PcWithEmployee, type User, type InsertUser, type Asset, type InsertAsset } from "@shared/schema";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
+import logger from './logger';
 
 interface JsonData {
   employees: Employee[];
@@ -49,7 +50,7 @@ export class JsonStorage {
       await this.cleanupExpiredInviteTokens();
     } catch (error) {
       // File doesn't exist or is corrupted, start with empty data
-      console.log('No existing data file found, starting with empty database');
+      logger.info('No existing data file found, starting with empty database');
       await this.saveData();
     }
   }
@@ -79,7 +80,7 @@ export class JsonStorage {
     try {
       await fs.writeFile(this.dataPath, JSON.stringify(this.data, null, 2));
     } catch (error) {
-      console.error('Error saving data:', error);
+      logger.error('Error saving data', { error });
     }
   }
 
@@ -400,7 +401,7 @@ export class JsonStorage {
     const removed = before - this.data.sessions.length;
     if (removed > 0) {
       await this.saveData();
-      console.log(`[Storage] Cleaned up ${removed} expired session(s)`);
+      logger.info('Cleaned up expired sessions', { removed });
     }
 
     return removed;
@@ -426,7 +427,7 @@ export class JsonStorage {
     const removed = before - this.data.inviteTokens.length;
     if (removed > 0) {
       await this.saveData();
-      console.log(`[Storage] Cleaned up ${removed} expired invite token(s)`);
+      logger.info('Cleaned up expired invite tokens', { removed });
     }
 
     return removed;
