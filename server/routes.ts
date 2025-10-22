@@ -1249,6 +1249,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       
       const pdfBuffer = await generateManlevaPDF({
         employeeName: employee.name,
+        employeeAddress: employee.address || undefined,
         employeeCompany: employee.company,
         pcModel: itemModel,
         pcSerial: itemSerial,

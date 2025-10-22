@@ -8,6 +8,7 @@ export const employees = mysqlTable("employees", {
   name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   department: varchar("department", { length: 255 }).notNull(),
+  address: text("address"),
   company: varchar("company", { length: 255 }).notNull().default("Maori Group"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({

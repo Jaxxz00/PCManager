@@ -11,17 +11,32 @@ interface ManlevaData {
 }
 
 export function generateManlevaPDF(data: ManlevaData): Promise<Buffer> {
-  const doc = new PDFDocument({ size: 'A4' });
+  const doc = new PDFDocument({
+    size: 'A4',
+    margins: { top: 60, bottom: 60, left: 60, right: 60 }
+  });
   const buffers: Buffer[] = [];
-  
+
   doc.on('data', buffers.push.bind(buffers));
-  
+
   // Margini e posizioni - A4 standard
   const leftMargin = 60;
   const rightMargin = 540;
   const pageWidth = 595; // A4 width
-  const lineHeight = 15; // Bilanciato per evitare sovrapposizioni ma contenere in 1-2 pagine
+  const pageHeight = 842; // A4 height
+  const bottomMargin = 100; // Spazio riservato per firme
+  const lineHeight = 15;
   let currentY = 80;
+
+  // Helper function per gestire overflow pagina
+  const checkPageBreak = (neededSpace: number) => {
+    if (currentY + neededSpace > pageHeight - bottomMargin) {
+      doc.addPage();
+      currentY = 60; // Reset Y position
+      return true;
+    }
+    return false;
+  };
 
   // Header - Centrato perfettamente
   doc.fontSize(18).font('Helvetica-Bold');
@@ -29,7 +44,7 @@ export function generateManlevaPDF(data: ManlevaData): Promise<Buffer> {
   const companyWidth = doc.widthOfString(companyHeader);
   doc.text(companyHeader, (pageWidth - companyWidth) / 2, currentY);
   currentY += lineHeight * 1.5;
-  
+
   doc.fontSize(16).font('Helvetica-Bold');
   const titleText = 'ASSEGNAZIONE ASSET AZIENDALE';
   const titleWidth = doc.widthOfString(titleText);
@@ -37,6 +52,7 @@ export function generateManlevaPDF(data: ManlevaData): Promise<Buffer> {
   currentY += lineHeight * 2;
 
   // Destinatario - Ben formattato
+  checkPageBreak(lineHeight * 4);
   doc.fontSize(12).font('Helvetica');
   doc.text('Egregio/Gentile Sig.', leftMargin, currentY);
   currentY += lineHeight;
@@ -53,35 +69,46 @@ export function generateManlevaPDF(data: ManlevaData): Promise<Buffer> {
 
   // Oggetto - Ben evidenziato
   currentY += lineHeight;
+  checkPageBreak(lineHeight * 2);
   doc.fontSize(12).font('Helvetica-Bold');
   doc.text('OGGETTO: Assegnazione Asset aziendale', leftMargin, currentY);
   currentY += lineHeight * 1.5;
 
   // Corpo della lettera - Ben formattato
   doc.fontSize(11).font('Helvetica');
-  
+
   // Paragrafo iniziale
   currentY += lineHeight * 0.5;
-  doc.text(`Formuliamo la presente per assegnarle l'asset aziendale, modello ${data.pcModel} SN ${data.pcSerial}.`, leftMargin, currentY, { width: rightMargin - leftMargin, align: 'left' });
-  currentY += lineHeight * 1.8; // Bilanciato
+  checkPageBreak(lineHeight * 3);
+  const paragraph1 = `Formuliamo la presente per assegnarle l'asset aziendale, modello ${data.pcModel} SN ${data.pcSerial}.`;
+  doc.text(paragraph1, leftMargin, currentY, { width: rightMargin - leftMargin, align: 'left' });
+  currentY += doc.heightOfString(paragraph1, { width: rightMargin - leftMargin }) + 10;
 
   // Paragrafo 1
-  doc.text('L\'asset deve essere utilizzato unicamente per fini aziendali/lavorativi.', leftMargin, currentY, { width: rightMargin - leftMargin, align: 'left' });
-  currentY += lineHeight * 1.8; // Bilanciato
+  checkPageBreak(lineHeight * 2);
+  const paragraph2 = 'L\'asset deve essere utilizzato unicamente per fini aziendali/lavorativi.';
+  doc.text(paragraph2, leftMargin, currentY, { width: rightMargin - leftMargin, align: 'left' });
+  currentY += doc.heightOfString(paragraph2, { width: rightMargin - leftMargin }) + 10;
 
   // Paragrafo 2
-  doc.text('L\'assegnazione dell\'asset è funzionale e strettamente correlata alle mansioni e al ruolo ricoperto; pertanto, in caso di modifica delle attività svolte, l\'Azienda si riserva la facoltà di revocare tale assegnazione.', leftMargin, currentY, { width: rightMargin - leftMargin, align: 'left' });
-  currentY += lineHeight * 1.8; // Bilanciato
+  checkPageBreak(lineHeight * 4);
+  const paragraph3 = 'L\'assegnazione dell\'asset è funzionale e strettamente correlata alle mansioni e al ruolo ricoperto; pertanto, in caso di modifica delle attività svolte, l\'Azienda si riserva la facoltà di revocare tale assegnazione.';
+  doc.text(paragraph3, leftMargin, currentY, { width: rightMargin - leftMargin, align: 'left' });
+  currentY += doc.heightOfString(paragraph3, { width: rightMargin - leftMargin }) + 10;
 
   // Paragrafo 3
-  doc.text('L\'asset deve essere utilizzato secondo i canoni di diligenza e deve essere riconsegnato, ove richiesto, nelle condizioni in cui è stato assegnato, ad eccezione della normale usura.', leftMargin, currentY, { width: rightMargin - leftMargin, align: 'left' });
-  currentY += lineHeight * 1.8; // Bilanciato
+  checkPageBreak(lineHeight * 4);
+  const paragraph4 = 'L\'asset deve essere utilizzato secondo i canoni di diligenza e deve essere riconsegnato, ove richiesto, nelle condizioni in cui è stato assegnato, ad eccezione della normale usura.';
+  doc.text(paragraph4, leftMargin, currentY, { width: rightMargin - leftMargin, align: 'left' });
+  currentY += doc.heightOfString(paragraph4, { width: rightMargin - leftMargin }) + 10;
 
   // Lista impegni
+  currentY += lineHeight;
+  checkPageBreak(lineHeight * 8);
   doc.font('Helvetica-Bold');
   doc.text('Il dipendente si impegna a:', leftMargin, currentY);
   currentY += lineHeight;
-  
+
   doc.font('Helvetica');
   const commitments = [
     '• Utilizzare l\'asset esclusivamente per attività lavorative',
@@ -92,33 +119,35 @@ export function generateManlevaPDF(data: ManlevaData): Promise<Buffer> {
   ];
 
   commitments.forEach(commitment => {
+    checkPageBreak(lineHeight * 2);
     doc.text(commitment, leftMargin + 20, currentY);
-    currentY += lineHeight * 1.3; // Bilanciato
+    currentY += lineHeight * 1.3;
   });
 
-  currentY += lineHeight * 2.5; // Bilanciato
+  currentY += lineHeight * 2;
 
-  // Data e firme - Layout bilanciato
+  // Assicurati che ci sia spazio per firme, altrimenti nuova pagina
+  if (currentY > pageHeight - 180) {
+    doc.addPage();
+    currentY = 60;
+  }
+
+  // Data e firme
   doc.fontSize(11).font('Helvetica');
   doc.text(`${data.location}, ${data.assignmentDate}`, leftMargin, currentY);
-  currentY += lineHeight * 2.5; // Bilanciato
+  currentY += lineHeight * 3;
 
-  // Sezione firme - Layout bilanciato
+  // Sezione firme - Layout a due colonne
   const signatureY = currentY;
-  
+
   // Colonna sinistra - Datore di lavoro
   doc.text('Il Datore di lavoro', leftMargin, signatureY);
-  currentY += lineHeight * 1.8; // Bilanciato
-  doc.text('_____________________________________', leftMargin, currentY);
-  currentY += lineHeight * 2.5; // Bilanciato
+  doc.text('_____________________________________', leftMargin, signatureY + lineHeight * 2);
 
   // Colonna destra - Lavoratore
   const rightColumnX = leftMargin + 250;
   doc.text('Il Lavoratore/La Lavoratrice', rightColumnX, signatureY);
-  currentY = signatureY + lineHeight * 1.8; // Bilanciato
-  doc.text('________________________________________', rightColumnX, currentY);
-
-  // Sezione ricevuta rimossa per mantenere 1-2 pagine
+  doc.text('________________________________________', rightColumnX, signatureY + lineHeight * 2);
 
   doc.end();
 

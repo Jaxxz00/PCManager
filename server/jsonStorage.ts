@@ -97,6 +97,7 @@ export class JsonStorage {
     const employee: Employee = {
       ...insertEmployee,
       id,
+      address: insertEmployee.address ?? null,
       company: insertEmployee.company || "Maori Group",
       createdAt: new Date(),
     };

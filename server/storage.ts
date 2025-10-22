@@ -203,6 +203,7 @@ export class MemStorage implements IStorage {
     const newEmployee: Employee = {
       id,
       ...employee,
+      address: employee.address ?? null,
       company: employee.company || "",
       createdAt: new Date(),
     };
