@@ -97,20 +97,45 @@ export const sessions = mysqlTable("sessions", {
   expiresAtIdx: index("sessions_expires_at_idx").on(table.expiresAt),
 }));
 
-// Tabella storico PC per tracciare cambiamenti e eventi
-export const pcHistory = mysqlTable("pc_history", {
+// Tabella storico Asset per tracciare cambiamenti e eventi (per TUTTI gli asset inclusi PC)
+export const assetHistory = mysqlTable("asset_history", {
   id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
-  pcId: varchar("pc_id", { length: 36 }).notNull().references(() => pcs.id),
-  serialNumber: varchar("serial_number", { length: 100 }).notNull(), // Duplicato per ricerche veloci
+  assetId: varchar("asset_id", { length: 36 }).notNull().references(() => assets.id, { onDelete: "cascade" }),
+  assetCode: varchar("asset_code", { length: 50 }).notNull(), // Duplicato per ricerche veloci
+  serialNumber: varchar("serial_number", { length: 100 }), // Duplicato per ricerche veloci (nullable per SIM/tastiere)
   eventType: varchar("event_type", { length: 50 }).notNull(), // created, assigned, unassigned, maintenance, status_change, specs_update, notes_update
   eventDescription: text("event_description").notNull(),
-  oldValue: text("old_value"), // Valore precedente se applicabile
-  newValue: text("new_value"), // Nuovo valore se applicabile
+  oldValue: text("old_value"), // Valore precedente se applicabile (JSON per oggetti complessi)
+  newValue: text("new_value"), // Nuovo valore se applicabile (JSON per oggetti complessi)
   performedBy: varchar("performed_by", { length: 36 }).references(() => users.id),
   performedByName: varchar("performed_by_name", { length: 200 }), // Nome utente per storico
   relatedEmployeeId: varchar("related_employee_id", { length: 36 }).references(() => employees.id),
   relatedEmployeeName: varchar("related_employee_name", { length: 200 }), // Nome dipendente per storico
   maintenanceId: varchar("maintenance_id", { length: 36 }), // Riferimento a manutenzione se applicabile
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  assetIdIdx: index("asset_history_asset_id_idx").on(table.assetId),
+  assetCodeIdx: index("asset_history_asset_code_idx").on(table.assetCode),
+  serialNumberIdx: index("asset_history_serial_number_idx").on(table.serialNumber),
+  eventTypeIdx: index("asset_history_event_type_idx").on(table.eventType),
+  createdAtIdx: index("asset_history_created_at_idx").on(table.createdAt),
+}));
+
+// LEGACY: Tabella storico PC (da deprecare - mantenuta per retrocompatibilità durante migrazione)
+export const pcHistory = mysqlTable("pc_history", {
+  id: varchar("id", { length: 36 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  pcId: varchar("pc_id", { length: 36 }).notNull().references(() => pcs.id),
+  serialNumber: varchar("serial_number", { length: 100 }).notNull(),
+  eventType: varchar("event_type", { length: 50 }).notNull(),
+  eventDescription: text("event_description").notNull(),
+  oldValue: text("old_value"),
+  newValue: text("new_value"),
+  performedBy: varchar("performed_by", { length: 36 }).references(() => users.id),
+  performedByName: varchar("performed_by_name", { length: 200 }),
+  relatedEmployeeId: varchar("related_employee_id", { length: 36 }).references(() => employees.id),
+  relatedEmployeeName: varchar("related_employee_name", { length: 200 }),
+  maintenanceId: varchar("maintenance_id", { length: 36 }),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -214,7 +239,13 @@ export const registerSchema = insertUserSchema.extend({
   path: ["confirmPassword"],
 });
 
-// Schema per storico PC
+// Schema per storico Asset
+export const insertAssetHistorySchema = createInsertSchema(assetHistory).omit({
+  id: true,
+  createdAt: true,
+});
+
+// LEGACY: Schema per storico PC (da deprecare)
 export const insertPcHistorySchema = createInsertSchema(pcHistory).omit({
   id: true,
   createdAt: true,
@@ -232,6 +263,8 @@ export type InsertPc = z.infer<typeof insertPcSchema>;
 export type Pc = typeof pcs.$inferSelect;
 export type InsertAsset = z.infer<typeof insertAssetSchema>;
 export type Asset = typeof assets.$inferSelect;
+export type AssetHistory = typeof assetHistory.$inferSelect;
+export type InsertAssetHistory = z.infer<typeof insertAssetHistorySchema>;
 export type PcHistory = typeof pcHistory.$inferSelect;
 export type InsertPcHistory = z.infer<typeof insertPcHistorySchema>;
 export type Maintenance = typeof maintenance.$inferSelect;

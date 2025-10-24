@@ -1,15 +1,16 @@
 import { promises as fs } from 'fs';
 import * as fsSync from 'fs';
 import path from 'path';
-import { type Employee, type InsertEmployee, type Pc, type InsertPc, type PcWithEmployee, type User, type InsertUser, type Asset, type InsertAsset } from "@shared/schema";
+import { type Employee, type InsertEmployee, type Pc, type InsertPc, type PcWithEmployee, type User, type InsertUser, type Asset, type InsertAsset, type AssetHistory, type InsertAssetHistory } from "@shared/schema";
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
 import logger from './logger';
 
 interface JsonData {
   employees: Employee[];
-  pcs: Pc[];
+  pcs: Pc[]; // DEPRECATED: will be removed in future version
   assets: Asset[];
+  assetHistory: AssetHistory[];
   users: User[];
   sessions: Array<{ id: string; userId: string; expiresAt: string }>;
   inviteTokens?: Array<{ token: string; userId: string; expiresAt: string; used: boolean }>;
@@ -25,8 +26,9 @@ export class JsonStorage {
     this.dataPath = path.join(process.cwd(), 'data.json');
     this.data = {
       employees: [],
-      pcs: [],
+      pcs: [], // DEPRECATED
       assets: [],
+      assetHistory: [],
       users: [],
       sessions: [],
       inviteTokens: [],
@@ -41,9 +43,12 @@ export class JsonStorage {
       const fileContent = fsSync.readFileSync(this.dataPath, 'utf-8');
       this.data = JSON.parse(fileContent);
 
-      // Ensure inviteTokens exists
+      // Ensure new fields exist for backwards compatibility
       if (!this.data.inviteTokens) {
         this.data.inviteTokens = [];
+      }
+      if (!this.data.assetHistory) {
+        this.data.assetHistory = [];
       }
 
       // Run cleanup on startup asynchronously

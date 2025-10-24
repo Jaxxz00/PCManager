@@ -42,6 +42,24 @@ mysql -u username -p database_name < migrations/001_add_employee_address.sql
 - **Motivo**: Necessario per la generazione dei PDF manleva con indirizzo dipendente
 - **Rollback**: `ALTER TABLE employees DROP COLUMN address;`
 
+### 002_migrate_pcs_to_assets.sql ⭐ IMPORTANTE
+- **Data**: 2025-10-24
+- **Descrizione**: Unifica la gestione PC con altri asset e introduce il tracking storico completo
+- **Cambiamenti**:
+  1. Crea tabella `asset_history` per tracciare TUTTI gli eventi su TUTTI gli asset
+  2. Migra i PC dalla tabella `pcs` alla tabella `assets` (con `assetType='pc'`)
+  3. Migra lo storico da `pc_history` a `asset_history`
+  4. Crea eventi storici di "created" e "assigned" per PC migrati
+  5. Marca tabelle `pcs` e `pc_history` come DEPRECATED (non rimosse)
+- **Motivo**: Sistema unificato per gestire PC, smartphone, tablet, monitor, SIM e altri asset con storico completo
+- **Benefici**:
+  - ✅ Storico completo per TUTTI gli asset (non solo PC)
+  - ✅ Tracciamento assegnazioni/riassegnazioni con SerialNumber/IMEI
+  - ✅ Sistema unificato e pulito
+  - ✅ Ricerca storico per SerialNumber, AssetCode, IMEI
+- **Note**: Le tabelle `pcs` e `pc_history` sono mantenute per retrocompatibilità durante la transizione
+- **Rollback**: Vedere file `migrations/002_rollback.sql` (da creare manualmente se necessario)
+
 ## Verifica Migrazioni Applicate
 
 Dopo aver eseguito una migrazione, verifica che sia stata applicata correttamente:
