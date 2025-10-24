@@ -4,9 +4,6 @@ import { JsonStorage } from "./jsonStorage";
 import { insertEmployeeSchema, insertPcSchema, loginSchema, registerSchema, setup2FASchema, verify2FASchema, disable2FASchema, setPasswordSchema } from "@shared/schema";
 import { generateInviteLink, generateInviteMessage } from "./emailService";
 import { z } from "zod";
-import { getDb } from "./db";
-import { users } from "@shared/schema";
-import { eq } from "drizzle-orm";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
 import rateLimit from "express-rate-limit";
@@ -499,14 +496,19 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
       }
 
       const { userId } = req.params;
-      const database = getDb();
-      const [existing] = await database.select().from(users).where(eq(users.id, userId));
+
+      // Verifica che l'utente esista
+      const existing = await storage.getUser(userId);
       if (!existing) {
         return res.status(404).json({ error: "Utente non trovato" });
       }
 
-      const passwordHash = await bcrypt.hash(parsed.data.password, 12);
-      await database.update(users).set({ passwordHash, updatedAt: new Date() }).where(eq(users.id, userId)).execute();
+      // Imposta la nuova password usando storage
+      const success = await storage.setUserPassword(userId, parsed.data.password);
+      if (!success) {
+        return res.status(500).json({ error: "Errore durante l'impostazione della password" });
+      }
+
       return res.status(200).json({ message: "Password impostata con successo" });
     } catch (error) {
       logger.error("Error setting user password", { error });
