@@ -13,6 +13,7 @@ import { connection, initializeDatabase } from "./db";
 import { 
   apiLimiter, 
   maybeLoginLimiter, 
+  qrScanLimiter,
   createAuthenticateRequest, 
   validateInput, 
   methodFilter, 
@@ -1121,6 +1122,218 @@ export async function registerRoutes(app: Express, storage: any): Promise<Server
       const cached = { id: undefined, ...payload };
       documentsCache.push(cached);
       return res.status(201).json(cached);
+    }
+  });
+
+  // Generate manleva PDF
+  app.post("/api/manleva/generate", methodFilter(['POST']), strictContentType, authenticateRequest, async (req, res) => {
+    try {
+      const { pcId, employeeId } = req.body;
+      
+      console.log("🔍 Manleva request:", { pcId, employeeId });
+      
+      if (!pcId || !employeeId) {
+        return res.status(400).json({ error: "pcId e employeeId sono obbligatori" });
+      }
+
+      // Recupera i dati dell'asset e del dipendente
+      // Prima cerca per assetCode, poi per ID
+      let asset = null;
+      let pc = null;
+      
+      // Cerca prima per assetCode in getAllAssetsIncludingPCs
+      const allAssets = await storage.getAllAssetsIncludingPCs();
+      console.log("🔍 All assets:", allAssets.length);
+      console.log("🔍 All assets details:", allAssets.map(a => ({ id: a.id, assetCode: a.assetCode, assetType: a.assetType, isPc: a.isPc })));
+      console.log("🔍 Looking for pcId:", pcId);
+      const foundItem = allAssets.find(a => a.assetCode === pcId || a.id === pcId);
+      console.log("🔍 Found item:", foundItem ? { id: foundItem.id, assetCode: foundItem.assetCode, assetType: foundItem.assetType, isPc: foundItem.isPc } : null);
+      
+      if (foundItem) {
+        if (foundItem.isPc) {
+          // È un PC dalla tabella pcs
+          pc = await storage.getPc(foundItem.id);
+        } else {
+          // È un asset dalla tabella assets (inclusi quelli con assetType: "computer")
+          asset = await storage.getAsset(foundItem.id);
+        }
+      } else {
+        // Se non trova per assetCode, prova per ID diretto
+        asset = await storage.getAsset(pcId);
+        if (!asset) {
+          pc = await storage.getPc(pcId);
+        }
+      }
+      
+      if (!asset && !pc) {
+        return res.status(404).json({ error: "Asset non trovato" });
+      }
+      
+      console.log("🔍 Looking for employee:", employeeId);
+      const employee = await storage.getEmployee(employeeId);
+      console.log("🔍 Employee found:", employee ? "YES" : "NO", employee ? { id: employee.id, name: employee.name, email: employee.email } : null);
+      
+      if (!employee) {
+        return res.status(404).json({ error: "Dipendente non trovato" });
+      }
+
+      // Genera PDF reale usando jsPDF
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF('p', 'mm', 'a4');
+      
+      // Header
+      doc.setFontSize(20);
+      doc.text('DOCUMENTO DI MANLEVA', 105, 30, { align: 'center' });
+      doc.setFontSize(12);
+      doc.text('Assegnazione Asset Aziendale', 105, 40, { align: 'center' });
+      
+      // Linea separatrice
+      doc.line(20, 50, 190, 50);
+      
+      // Contenuto
+      let yPosition = 70;
+      doc.setFontSize(12);
+      
+      // Data
+      doc.setFontSize(10);
+      doc.text('Data:', 20, yPosition);
+      doc.text(new Date().toLocaleDateString('it-IT'), 60, yPosition);
+      yPosition += 15;
+      
+      // Asset Info
+      doc.text('Asset ID:', 20, yPosition);
+      doc.text(asset ? asset.assetCode : pc.pcId || 'N/A', 60, yPosition);
+      yPosition += 15;
+      
+      doc.text('Modello:', 20, yPosition);
+      doc.text(asset ? `${asset.brand} ${asset.model}` : `${pc.brand} ${pc.model}`, 60, yPosition);
+      yPosition += 15;
+      
+      doc.text('Numero di Serie:', 20, yPosition);
+      doc.text(asset ? asset.serialNumber : pc.serialNumber || 'N/A', 60, yPosition);
+      yPosition += 20;
+      
+      // Employee Info
+      doc.text('Dipendente:', 20, yPosition);
+      doc.text(`${employee.firstName} ${employee.lastName}`, 60, yPosition);
+      yPosition += 15;
+      
+      doc.text('Email:', 20, yPosition);
+      doc.text(employee.email || 'N/A', 60, yPosition);
+      yPosition += 15;
+      
+      doc.text('Dipartimento:', 20, yPosition);
+      doc.text(employee.department || 'N/A', 60, yPosition);
+      yPosition += 30;
+      
+      // Firma
+      doc.text('Firma del Dipendente:', 20, yPosition);
+      doc.line(20, yPosition + 10, 100, yPosition + 10);
+      yPosition += 25;
+      
+      doc.text('Firma del Responsabile:', 20, yPosition);
+      doc.line(20, yPosition + 10, 100, yPosition + 10);
+      
+      // Footer
+      doc.setFontSize(8);
+      doc.text(`Generato da: ${req.session?.user?.email || 'Sistema'}`, 20, 280);
+      doc.text(`Data generazione: ${new Date().toLocaleString('it-IT')}`, 20, 285);
+      
+      // Genera il PDF come buffer
+      const pdfBuffer = doc.output('arraybuffer');
+      
+      // Imposta headers per download PDF
+      const assetId = asset ? asset.assetCode : pc.pcId;
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="manleva_${assetId}_${employee.firstName}_${employee.lastName}.pdf"`);
+      res.setHeader('Content-Length', pdfBuffer.byteLength);
+      
+      // Invia il PDF
+      res.send(Buffer.from(pdfBuffer));
+      
+    } catch (error) {
+      console.error("Error generating manleva:", error);
+      res.status(500).json({ error: "Errore nella generazione della manleva" });
+    }
+  });
+
+  // Download manleva PDF
+  app.get("/api/manleva/download/:filename", authenticateRequest, async (req, res) => {
+    try {
+      const { filename } = req.params;
+      
+      // Per ora generiamo un PDF semplice con i dati
+      // In futuro si può implementare una libreria PDF reale
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Documento di Manleva</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 40px; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .content { margin: 20px 0; }
+            .field { margin: 10px 0; }
+            .label { font-weight: bold; }
+            .signature { margin-top: 50px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>DOCUMENTO DI MANLEVA</h1>
+            <p>Assegnazione Asset Aziendale</p>
+          </div>
+          
+          <div class="content">
+            <div class="field">
+              <span class="label">Data:</span> ${new Date().toLocaleDateString('it-IT')}
+            </div>
+            <div class="field">
+              <span class="label">Asset ID:</span> ${req.query.pcId || 'N/A'}
+            </div>
+            <div class="field">
+              <span class="label">Modello:</span> ${req.query.model || 'N/A'}
+            </div>
+            <div class="field">
+              <span class="label">Numero di Serie:</span> ${req.query.serialNumber || 'N/A'}
+            </div>
+            <div class="field">
+              <span class="label">Dipendente:</span> ${req.query.employeeName || 'N/A'}
+            </div>
+            <div class="field">
+              <span class="label">Email:</span> ${req.query.employeeEmail || 'N/A'}
+            </div>
+            <div class="field">
+              <span class="label">Dipartimento:</span> ${req.query.department || 'N/A'}
+            </div>
+          </div>
+          
+          <div class="signature">
+            <p>Il dipendente dichiara di aver ricevuto l'asset in buone condizioni e si impegna a:</p>
+            <ul>
+              <li>Utilizzare l'asset esclusivamente per scopi lavorativi</li>
+              <li>Mantenere l'asset in buone condizioni</li>
+              <li>Comunicare immediatamente eventuali problemi o danni</li>
+              <li>Restituire l'asset al termine del rapporto di lavoro</li>
+            </ul>
+            
+            <div style="margin-top: 50px;">
+              <p>Firma del Dipendente: _________________________</p>
+              <p>Data: _________________________</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      res.setHeader('Content-Type', 'text/html');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(htmlContent);
+      
+    } catch (error) {
+      console.error("Error downloading manleva:", error);
+      res.status(500).json({ error: "Errore nel download della manleva" });
     }
   });
   

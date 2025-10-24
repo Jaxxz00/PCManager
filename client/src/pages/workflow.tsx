@@ -18,7 +18,7 @@ import {
   User
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import HPEliteBookLabel from "@/components/HPEliteBookLabel";
+import { HPEliteBookLabel } from "@/components/HPEliteBookLabel";
 
 // Stili per la stampa (importati dal componente HPEliteBookLabel)
 const printStyles = `
@@ -72,8 +72,30 @@ function PrintLabel({ pcId }: { pcId: string }) {
           <title>Etichetta - ${pcData.assetCode}</title>
           <style>
             @media print {
-              @page { size: 70mm 30mm; margin: 0; }
-              body { margin: 0; padding: 0; }
+              @page { 
+                size: A4; 
+                margin: 0; 
+              }
+              body { 
+                margin: 0; 
+                padding: 0; 
+                font-family: Arial, sans-serif;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+              }
+              .label-container {
+                width: 70mm !important;
+                height: 30mm !important;
+                max-width: 70mm !important;
+                max-height: 30mm !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+                overflow: hidden !important;
+              }
             }
             body { 
               margin: 0; 
@@ -89,29 +111,32 @@ function PrintLabel({ pcId }: { pcId: string }) {
             setTimeout(() => {
               const label = document.getElementById('label');
               label.innerHTML = \`
-                <div style="
+                <div class="label-container" style="
                   width: 70mm;
                   height: 30mm;
                   background-color: #e8e8e8;
-                  padding: 3mm;
+                  padding: 1mm;
                   font-family: Arial, sans-serif;
                   border: 1px solid #ccc;
-                  border-radius: 6px;
+                  border-radius: 3px;
                   display: flex;
                   flex-direction: column;
                   position: relative;
                   box-sizing: border-box;
+                  page-break-inside: avoid;
+                  break-inside: avoid;
+                  overflow: hidden;
                 ">
                   <div style="
                     display: flex;
                     justify-content: flex-end;
                     align-items: center;
-                    margin-bottom: 2mm;
+                    margin-bottom: 1mm;
                   ">
                     <div style="
-                      font-size: 13px;
+                      font-size: 10px;
                       font-weight: bold;
-                      line-height: 1.2;
+                      line-height: 1.0;
                     ">
                       Asset: ${pcData.assetCode}
                     </div>
@@ -119,7 +144,7 @@ function PrintLabel({ pcId }: { pcId: string }) {
                   
                   <div style="
                     display: flex;
-                    gap: 4mm;
+                    gap: 2mm;
                     flex: 1;
                     align-items: center;
                   ">
@@ -127,7 +152,8 @@ function PrintLabel({ pcId }: { pcId: string }) {
                       display: flex;
                       align-items: center;
                       justify-content: center;
-                      min-width: 30mm;
+                      min-width: 20mm;
+                      max-width: 20mm;
                     ">
                       <svg id="barcode"></svg>
                     </div>
@@ -137,47 +163,47 @@ function PrintLabel({ pcId }: { pcId: string }) {
                       display: flex;
                       flex-direction: column;
                       justify-content: center;
-                      gap: 1.5mm;
+                      gap: 0.5mm;
                     ">
                       <div style="
-                        font-size: 9px;
-                        line-height: 1.1;
+                        font-size: 7px;
+                        line-height: 1.0;
                         font-weight: 500;
                       ">
                         Model: ${pcData.model}
                       </div>
                       
                       <div style="
-                        font-size: 9px;
-                        line-height: 1.1;
+                        font-size: 7px;
+                        line-height: 1.0;
                       ">
                         S/N: ${pcData.serialNumber}
                       </div>
                       
                       <div style="
-                        font-size: 7px;
-                        line-height: 1.1;
+                        font-size: 5px;
+                        line-height: 1.0;
                         display: flex;
                         align-items: center;
-                        gap: 3px;
+                        gap: 2px;
                       ">
                         <div style="
-                          font-size: 8px;
+                          font-size: 6px;
                           font-weight: bold;
                           display: flex;
                           align-items: center;
-                          gap: 2px;
+                          gap: 1px;
                         ">
                           <span>SD</span>
                           <div style="
-                            width: 10px;
-                            height: 12px;
-                            border: 1.2px solid black;
-                            border-radius: 1.5px;
+                            width: 8px;
+                            height: 10px;
+                            border: 1px solid black;
+                            border-radius: 1px;
                             display: flex;
                             align-items: center;
                             justify-content: center;
-                            font-size: 5px;
+                            font-size: 4px;
                             font-weight: bold;
                             background-color: white;
                           ">
@@ -203,8 +229,8 @@ function PrintLabel({ pcId }: { pcId: string }) {
               if (window.JsBarcode) {
                 JsBarcode('#barcode', '${pcData.assetCode}', {
                   format: 'CODE128',
-                  width: 1.2,
-                  height: 50,
+                  width: 0.6,
+                  height: 20,
                   displayValue: false,
                   margin: 0
                 });
@@ -465,6 +491,12 @@ export default function Workflow() {
       
       // Se è un PC usa pcId, altrimenti usa assetCode
       const itemIdentifier = workflowData.selectedPc.pcId || workflowData.selectedPc.assetCode || workflowData.selectedPc.id;
+      
+      console.log("🔍 Frontend sending:", {
+        selectedPc: workflowData.selectedPc,
+        itemIdentifier,
+        employeeId: workflowData.selectedEmployee.id
+      });
       
       const requestBody = {
         pcId: itemIdentifier,
@@ -833,126 +865,6 @@ export default function Workflow() {
     }
   };
 
-  // Funzione per generare HTML dell'etichetta piccola per PC
-  const generateLabelHTML = (pc: any) => {
-    // Debug: mostra i dati del PC
-    console.log('PC data for label:', pc);
-    console.log('PC ID:', pc?.pcId);
-    console.log('PC Brand:', pc?.brand);
-    console.log('PC Model:', pc?.model);
-    console.log('PC Serial:', pc?.serialNumber);
-    
-    const assetId = pc?.pcId || 'PC-001';
-    const brand = pc?.brand || 'Dell';
-    const model = pc?.model || 'OptiPlex';
-    const serialNumber = pc?.serialNumber || 'SN123456';
-    
-    return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <style>
-          @page { 
-            size: 70mm 36mm; 
-            margin: 0; 
-          }
-          body { 
-            font-family: Arial, sans-serif; 
-            margin: 0; 
-            padding: 0; 
-            font-size: 6px;
-            background: white;
-            width: 70mm;
-            height: 36mm;
-          }
-          .label { 
-            width: 70mm; 
-            height: 36mm; 
-            border: 1px solid #000; 
-            border-radius: 0px; 
-            padding: 1mm; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: space-between;
-            background: white;
-            box-sizing: border-box;
-          }
-          .asset-id { 
-            font-weight: bold; 
-            font-size: 8px; 
-            margin-bottom: 1px; 
-            color: #000;
-            line-height: 1.0;
-          }
-          .info-line { 
-            margin: 0px; 
-            font-size: 6px; 
-            color: #000;
-            line-height: 1.0;
-          }
-          .service-desk { 
-            display: flex; 
-            align-items: center; 
-            margin-top: 1px; 
-            font-size: 4px;
-          }
-          .service-desk-icon { 
-            width: 6px; 
-            height: 4px; 
-            margin-right: 1px; 
-            background: black; 
-            position: relative; 
-          }
-          .service-desk-icon::after { 
-            content: ''; 
-            position: absolute; 
-            right: -1px; 
-            top: 1px; 
-            width: 1px; 
-            height: 2px; 
-            background: black; 
-          }
-          .barcode { 
-            margin-top: 1px; 
-            height: 8px; 
-            background: #000;
-            position: relative;
-            border: 0px;
-          }
-          .barcode::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: repeating-linear-gradient(
-              90deg,
-              transparent 0px,
-              transparent 1px,
-              #fff 1px,
-              #fff 2px
-            );
-            background-size: 2px 8px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="label">
-          <div class="asset-id">Asset: ${assetId}</div>
-          <div class="info-line">Model: ${brand} ${model}</div>
-          <div class="info-line">S/N: ${serialNumber}</div>
-          <div class="service-desk">
-            <span>SD</span>
-            <div class="service-desk-icon"></div>
-            <span>: www.maori.it</span>
-          </div>
-          <div class="barcode"></div>
-        </div>
-      </body>
-      </html>
-    `;
-  };
 
   return (
     <div className="space-y-6">

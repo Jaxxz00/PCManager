@@ -29,6 +29,15 @@ export const maybeLoginLimiter = process.env.NODE_ENV === 'development'
   ? (_req: Request, _res: Response, next: NextFunction) => next()
   : loginLimiter;
 
+// Rate limiter per QR scan - più permissivo per uso mobile
+export const qrScanLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minuto
+  max: 20, // Max 20 scansioni per IP ogni minuto
+  message: { error: "Troppe scansioni QR. Riprova tra un minuto." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Middleware di autenticazione ottimizzato
 export const createAuthenticateRequest = (storage: any) => 
   async (req: Request, res: Response, next: NextFunction) => {

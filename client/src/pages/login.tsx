@@ -28,6 +28,13 @@ export default function Login() {
   const [usingBackupCode, setUsingBackupCode] = useState(false);
   const { toast } = useToast();
 
+  // Funzione per forzare il logout
+  const forceLogout = () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.reload();
+  };
+
   // Setup del form con validazione condizionale
   const form = useForm<LoginData>({
     resolver: zodResolver(
@@ -326,6 +333,14 @@ export default function Login() {
           {!requires2FA && (
             <div className="text-center pt-6 border-t border-slate-100">
               <p className="text-xs text-slate-400">Accesso riservato al personale autorizzato</p>
+              <Button 
+                onClick={forceLogout}
+                variant="outline" 
+                size="sm" 
+                className="mt-4 text-xs"
+              >
+                🔄 Forza Logout
+              </Button>
             </div>
           )}
         </div>
