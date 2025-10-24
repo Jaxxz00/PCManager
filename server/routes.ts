@@ -1266,11 +1266,15 @@ app.patch("/api/pcs/:id", methodFilter(['PATCH']), strictContentType, authentica
       // Header
       doc.setFontSize(20);
       doc.text('DOCUMENTO DI MANLEVA', 105, 30, { align: 'center' });
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text(employee.company || 'Maori Group', 105, 40, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
       doc.setFontSize(12);
-      doc.text('Assegnazione Asset Aziendale', 105, 40, { align: 'center' });
-      
+      doc.text('Assegnazione Asset Aziendale', 105, 48, { align: 'center' });
+
       // Linea separatrice
-      doc.line(20, 50, 190, 50);
+      doc.line(20, 56, 190, 56);
       
       // Contenuto
       let yPosition = 70;
@@ -1299,11 +1303,15 @@ app.patch("/api/pcs/:id", methodFilter(['PATCH']), strictContentType, authentica
       doc.text('Dipendente:', 20, yPosition);
       doc.text(`${employee.firstName} ${employee.lastName}`, 60, yPosition);
       yPosition += 15;
-      
+
+      doc.text('Azienda:', 20, yPosition);
+      doc.text(employee.company || 'Maori Group', 60, yPosition);
+      yPosition += 15;
+
       doc.text('Email:', 20, yPosition);
       doc.text(employee.email || 'N/A', 60, yPosition);
       yPosition += 15;
-      
+
       doc.text('Dipartimento:', 20, yPosition);
       doc.text(employee.department || 'N/A', 60, yPosition);
       yPosition += 30;

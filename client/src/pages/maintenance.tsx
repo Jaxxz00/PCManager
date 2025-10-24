@@ -150,7 +150,7 @@ export default function Maintenance() {
         description: data.description,
         technician: data.technician,
         scheduledDate: data.scheduledDate || undefined,
-        estimatedCost: data.estimatedCost ? parseFloat(data.estimatedCost) : undefined,
+        estimatedCost: data.estimatedCost ? Math.round(parseFloat(data.estimatedCost) * 100) : undefined,
         notes: data.notes || undefined,
       });
     },
@@ -206,10 +206,11 @@ export default function Maintenance() {
     const pending = maintenanceRecords.filter(r => r.status === 'pending').length;
     const inProgress = maintenanceRecords.filter(r => r.status === 'in_progress').length;
     const completed = maintenanceRecords.filter(r => r.status === 'completed').length;
-    const totalCost = maintenanceRecords
+    const totalCostCents = maintenanceRecords
       .filter(r => r.actualCost || r.estimatedCost)
       .reduce((sum, r) => sum + (r.actualCost || r.estimatedCost || 0), 0);
-    
+    const totalCost = (totalCostCents / 100).toFixed(2);
+
     return { total, pending, inProgress, completed, totalCost };
   }, [maintenanceRecords]);
 
@@ -388,7 +389,8 @@ export default function Maintenance() {
         pdf.setFont("helvetica", "bold");
         pdf.text("Costo:", 105, yExtra);
         pdf.setFont("helvetica", "normal");
-        const cost = record.actualCost || record.estimatedCost;
+        const costCents = record.actualCost || record.estimatedCost;
+        const cost = ((costCents || 0) / 100).toFixed(2);
         pdf.text(`€${cost} ${record.actualCost ? '(eff.)' : '(stim.)'}`, 120, yExtra);
       }
       yExtra += 10;
@@ -457,7 +459,7 @@ export default function Maintenance() {
         record.priority,
         record.status,
         record.technician,
-        record.actualCost || record.estimatedCost || '0',
+        ((record.actualCost || record.estimatedCost || 0) / 100).toFixed(2),
         record.scheduledDate ? format(new Date(record.scheduledDate), "dd/MM/yyyy") : '',
         record.description
       ])
@@ -825,7 +827,7 @@ export default function Maintenance() {
               <CardTitle className="text-lg font-medium flex items-center justify-between">
                 <span>Interventi di Manutenzione ({filteredRecords.length})</span>
                 <span className="text-sm font-normal text-muted-foreground">
-                  Costo totale filtrati: €{filteredRecords.reduce((sum, r) => sum + (r.actualCost || r.estimatedCost || 0), 0)}
+                  Costo totale filtrati: €{(filteredRecords.reduce((sum, r) => sum + (r.actualCost || r.estimatedCost || 0), 0) / 100).toFixed(2)}
                 </span>
               </CardTitle>
             </CardHeader>
@@ -891,14 +893,14 @@ export default function Maintenance() {
                       <TableCell className="text-sm">
                         <div>
                           {record.actualCost && (
-                            <p className="font-medium text-green-600">€{record.actualCost}</p>
+                            <p className="font-medium text-green-600">€{(record.actualCost / 100).toFixed(2)}</p>
                           )}
                           {record.estimatedCost && !record.actualCost && (
-                            <p className="text-muted-foreground">Est. €{record.estimatedCost}</p>
+                            <p className="text-muted-foreground">Est. €{(record.estimatedCost / 100).toFixed(2)}</p>
                           )}
                           {record.estimatedCost && record.actualCost && (
                             <p className="text-xs text-muted-foreground">
-                              Est. €{record.estimatedCost}
+                              Est. €{(record.estimatedCost / 100).toFixed(2)}
                             </p>
                           )}
                         </div>
@@ -1051,12 +1053,12 @@ export default function Maintenance() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <h4 className="font-medium text-sm text-muted-foreground">Costo Stimato</h4>
-                  <p className="font-medium">€{viewingRecord.estimatedCost || '0'}</p>
+                  <p className="font-medium">€{viewingRecord.estimatedCost ? (viewingRecord.estimatedCost / 100).toFixed(2) : '0.00'}</p>
                 </div>
                 {viewingRecord.actualCost && (
                   <div>
                     <h4 className="font-medium text-sm text-muted-foreground">Costo Effettivo</h4>
-                    <p className="font-medium text-green-600">€{viewingRecord.actualCost}</p>
+                    <p className="font-medium text-green-600">€{(viewingRecord.actualCost / 100).toFixed(2)}</p>
                   </div>
                 )}
               </div>
