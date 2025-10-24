@@ -419,6 +419,15 @@ export class JsonStorage {
     const history: AssetHistory = {
       ...historyData,
       id,
+      serialNumber: historyData.serialNumber ?? null,
+      oldValue: historyData.oldValue ?? null,
+      newValue: historyData.newValue ?? null,
+      performedBy: historyData.performedBy ?? null,
+      performedByName: historyData.performedByName ?? null,
+      relatedEmployeeId: historyData.relatedEmployeeId ?? null,
+      relatedEmployeeName: historyData.relatedEmployeeName ?? null,
+      maintenanceId: historyData.maintenanceId ?? null,
+      notes: historyData.notes ?? null,
       createdAt: new Date(),
     };
     this.data.assetHistory.push(history);
@@ -429,24 +438,40 @@ export class JsonStorage {
   async getAssetHistory(assetId: string): Promise<AssetHistory[]> {
     return this.data.assetHistory
       .filter(h => h.assetId === assetId)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      .sort((a, b) => {
+        const dateA = new Date(a.createdAt || 0).getTime();
+        const dateB = new Date(b.createdAt || 0).getTime();
+        return dateB - dateA;
+      });
   }
 
   async getAssetHistoryByCode(assetCode: string): Promise<AssetHistory[]> {
     return this.data.assetHistory
       .filter(h => h.assetCode === assetCode)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      .sort((a, b) => {
+        const dateA = new Date(a.createdAt || 0).getTime();
+        const dateB = new Date(b.createdAt || 0).getTime();
+        return dateB - dateA;
+      });
   }
 
   async getAssetHistoryBySerial(serialNumber: string): Promise<AssetHistory[]> {
     return this.data.assetHistory
       .filter(h => h.serialNumber === serialNumber)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      .sort((a, b) => {
+        const dateA = new Date(a.createdAt || 0).getTime();
+        const dateB = new Date(b.createdAt || 0).getTime();
+        return dateB - dateA;
+      });
   }
 
   async getAllAssetHistory(): Promise<AssetHistory[]> {
     return this.data.assetHistory
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      .sort((a, b) => {
+        const dateA = new Date(a.createdAt || 0).getTime();
+        const dateB = new Date(b.createdAt || 0).getTime();
+        return dateB - dateA;
+      });
   }
 
   // Helper method to log asset events
