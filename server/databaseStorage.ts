@@ -900,7 +900,52 @@ export class DatabaseStorage {
   }
 
   async getMaintenance(id: string): Promise<any> {
-    throw new Error("Maintenance not supported in database storage");
+    try {
+      const db = await this.getDb();
+      const result = await db
+        .select({
+          id: maintenance.id,
+          assetId: maintenance.assetId,
+          type: maintenance.type,
+          priority: maintenance.priority,
+          status: maintenance.status,
+          description: maintenance.description,
+          technician: maintenance.technician,
+          scheduledDate: maintenance.scheduledDate,
+          completedDate: maintenance.completedDate,
+          estimatedCost: maintenance.estimatedCost,
+          actualCost: maintenance.actualCost,
+          notes: maintenance.notes,
+          createdAt: maintenance.createdAt,
+          updatedAt: maintenance.updatedAt,
+          asset: {
+            id: assets.id,
+            assetCode: assets.assetCode,
+            assetType: assets.assetType,
+            brand: assets.brand,
+            model: assets.model,
+            serialNumber: assets.serialNumber,
+            status: assets.status,
+            employeeId: assets.employeeId,
+          }
+        })
+        .from(maintenance)
+        .leftJoin(assets, eq(maintenance.assetId, assets.id))
+        .where(eq(maintenance.id, id))
+        .limit(1);
+
+      if (!result || result.length === 0) {
+        return undefined;
+      }
+
+      return {
+        ...result[0],
+        pc: result[0].asset, // Alias per compatibilità
+      };
+    } catch (error) {
+      console.error('Error getting maintenance:', error);
+      return undefined;
+    }
   }
 
   async getAllMaintenance(): Promise<any[]> {
@@ -946,10 +991,10 @@ export class DatabaseStorage {
     }
   }
 
-  async createMaintenance(maintenance: any): Promise<any> {
+  async createMaintenance(maintenanceData: any): Promise<any> {
     const id = randomUUID();
-    const newMaintenance = { id, ...maintenance, createdAt: new Date() };
-    
+    const newMaintenance = { id, ...maintenanceData, createdAt: new Date() };
+
     try {
       const db = await this.getDb();
       await db.insert(maintenance).values(newMaintenance as any);
@@ -960,10 +1005,10 @@ export class DatabaseStorage {
     }
   }
 
-  async updateMaintenance(id: string, maintenance: any): Promise<any> {
+  async updateMaintenance(id: string, maintenanceData: any): Promise<any> {
     try {
       const db = await this.getDb();
-      await db.update(maintenance).set(maintenance as any).where(eq(maintenance.id, id));
+      await db.update(maintenance).set(maintenanceData as any).where(eq(maintenance.id, id));
       return this.getMaintenance(id);
     } catch (error) {
       console.error('Error updating maintenance:', error);

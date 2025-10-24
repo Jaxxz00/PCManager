@@ -100,7 +100,7 @@ export default function Maintenance() {
   });
 
   const { data: assets = [] } = useQuery<Asset[]>({
-    queryKey: ["/api/assets"]
+    queryKey: ["/api/assets/all-including-pcs"]
   });
 
   // Delete maintenance mutation
