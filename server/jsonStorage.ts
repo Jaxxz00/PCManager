@@ -1,4 +1,5 @@
 import { promises as fs } from 'fs';
+import * as fsSync from 'fs';
 import path from 'path';
 import { type Employee, type InsertEmployee, type Pc, type InsertPc, type PcWithEmployee, type User, type InsertUser, type Asset, type InsertAsset } from "@shared/schema";
 import { randomUUID } from "crypto";
@@ -35,9 +36,9 @@ export class JsonStorage {
     this.startCleanupScheduler();
   }
 
-  private async loadData() {
+  private loadData() {
     try {
-      const fileContent = await fs.readFile(this.dataPath, 'utf-8');
+      const fileContent = fsSync.readFileSync(this.dataPath, 'utf-8');
       this.data = JSON.parse(fileContent);
 
       // Ensure inviteTokens exists
@@ -45,13 +46,14 @@ export class JsonStorage {
         this.data.inviteTokens = [];
       }
 
-      // Run cleanup on startup
-      await this.cleanupExpiredSessions();
-      await this.cleanupExpiredInviteTokens();
+      // Run cleanup on startup asynchronously
+      this.cleanupExpiredSessions();
+      this.cleanupExpiredInviteTokens();
     } catch (error) {
       // File doesn't exist or is corrupted, start with empty data
       logger.info('No existing data file found, starting with empty database');
-      await this.saveData();
+      // Save data asynchronously
+      this.saveData();
     }
   }
 

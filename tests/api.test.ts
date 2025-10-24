@@ -19,20 +19,22 @@ describe('API Integration Tests', () => {
     // Register routes
     server = await registerRoutes(app, storage);
 
-    // Create an admin user for authenticated tests
-    await request(app)
-      .post('/api/auth/register')
-      .send({
-        username: 'admin',
-        password: 'admin123',
-        email: 'admin@test.com'
-      });
+    // Create an admin user directly through storage (registration is disabled)
+    await storage.createUser({
+      username: 'admin@test.com',
+      email: 'admin@test.com',
+      firstName: 'Admin',
+      lastName: 'User',
+      password: 'admin123',
+      role: 'admin',
+      isActive: true
+    });
 
     // Login to get session token
     const loginResponse = await request(app)
       .post('/api/auth/login')
       .send({
-        username: 'admin',
+        email: 'admin@test.com',
         password: 'admin123'
       });
 
@@ -46,7 +48,12 @@ describe('API Integration Tests', () => {
   });
 
   afterAll(async () => {
-    // Cleanup
+    // Stop storage cleanup scheduler
+    if (storage && storage.stopCleanupScheduler) {
+      storage.stopCleanupScheduler();
+    }
+
+    // Cleanup server
     if (server && server.close) {
       await new Promise<void>((resolve) => server.close(resolve));
     }
@@ -62,7 +69,7 @@ describe('API Integration Tests', () => {
   });
 
   describe('Authentication', () => {
-    it('POST /api/register should create a new user', async () => {
+    it('POST /api/register should be disabled for security', async () => {
       const userData = {
         username: 'testuser',
         password: 'testpassword123',
@@ -73,37 +80,41 @@ describe('API Integration Tests', () => {
         .post('/api/auth/register')
         .send(userData);
 
-      expect(response.status).toBe(201);
-      expect(response.body).toHaveProperty('message');
+      expect(response.status).toBe(403);
+      expect(response.body).toHaveProperty('error');
+      expect(response.body.code).toBe('REGISTRATION_DISABLED');
     });
 
     it('POST /api/login should authenticate user', async () => {
-      // First register a user
-      await request(app)
-        .post('/api/auth/register')
-        .send({
-          username: 'logintest',
-          password: 'password123',
-          email: 'login@test.com'
-        });
+      // Create a test user directly through storage
+      await storage.createUser({
+        username: 'login@test.com',
+        email: 'login@test.com',
+        firstName: 'Test',
+        lastName: 'User',
+        password: 'password123',
+        role: 'user',
+        isActive: true
+      });
 
-      // Then try to login
+      // Try to login with email
       const response = await request(app)
         .post('/api/auth/login')
         .send({
-          username: 'logintest',
+          email: 'login@test.com',
           password: 'password123'
         });
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('user');
+      expect(response.body).toHaveProperty('sessionId');
     });
 
     it('POST /api/login should reject invalid credentials', async () => {
       const response = await request(app)
         .post('/api/auth/login')
         .send({
-          username: 'nonexistent',
+          email: 'nonexistent@test.com',
           password: 'wrongpassword'
         });
 
