@@ -235,6 +235,24 @@ export class JsonStorage {
     };
     this.data.assets.push(asset);
     await this.saveData();
+
+    // Log creation event in history
+    const assetTypeLabel = insertAsset.assetType.toUpperCase();
+    await this.logAssetEvent(
+      id,
+      assetCode,
+      asset.serialNumber,
+      'created',
+      `${assetTypeLabel} creato: ${asset.brand || ''} ${asset.model || ''}`.trim(),
+      undefined,
+      {
+        assetType: asset.assetType,
+        brand: asset.brand,
+        model: asset.model,
+        serialNumber: asset.serialNumber,
+      }
+    );
+
     return asset;
   }
 
@@ -242,18 +260,135 @@ export class JsonStorage {
     const index = this.data.assets.findIndex(asset => asset.id === id);
     if (index === -1) return undefined;
 
+    const oldAsset = { ...this.data.assets[index] };
+
     this.data.assets[index] = {
       ...this.data.assets[index],
       ...updateData,
       updatedAt: new Date(),
     };
     await this.saveData();
-    return this.data.assets[index];
+
+    const updatedAsset = this.data.assets[index];
+
+    // Log different types of changes
+    if (updateData.employeeId !== undefined) {
+      if (updateData.employeeId && !oldAsset.employeeId) {
+        // Assignment
+        const employee = await this.getEmployee(updateData.employeeId);
+        await this.logAssetEvent(
+          id,
+          updatedAsset.assetCode,
+          updatedAsset.serialNumber,
+          'assigned',
+          employee ? `Asset assegnato a ${employee.name}` : 'Asset assegnato',
+          { employeeId: null, status: oldAsset.status },
+          { employeeId: updateData.employeeId, status: updatedAsset.status },
+          {
+            relatedEmployeeId: updateData.employeeId,
+            relatedEmployeeName: employee?.name,
+          }
+        );
+      } else if (!updateData.employeeId && oldAsset.employeeId) {
+        // Unassignment
+        const employee = await this.getEmployee(oldAsset.employeeId);
+        await this.logAssetEvent(
+          id,
+          updatedAsset.assetCode,
+          updatedAsset.serialNumber,
+          'unassigned',
+          employee ? `Asset rimosso da ${employee.name}` : 'Asset disassegnato',
+          { employeeId: oldAsset.employeeId, status: oldAsset.status },
+          { employeeId: null, status: updatedAsset.status },
+          {
+            relatedEmployeeId: oldAsset.employeeId,
+            relatedEmployeeName: employee?.name,
+          }
+        );
+      } else if (updateData.employeeId && oldAsset.employeeId && updateData.employeeId !== oldAsset.employeeId) {
+        // Reassignment
+        const oldEmployee = await this.getEmployee(oldAsset.employeeId);
+        const newEmployee = await this.getEmployee(updateData.employeeId);
+        await this.logAssetEvent(
+          id,
+          updatedAsset.assetCode,
+          updatedAsset.serialNumber,
+          'assigned',
+          `Asset riassegnato da ${oldEmployee?.name || 'N/A'} a ${newEmployee?.name || 'N/A'}`,
+          { employeeId: oldAsset.employeeId },
+          { employeeId: updateData.employeeId },
+          {
+            relatedEmployeeId: updateData.employeeId,
+            relatedEmployeeName: newEmployee?.name,
+          }
+        );
+      }
+    }
+
+    // Log status change
+    if (updateData.status && updateData.status !== oldAsset.status) {
+      await this.logAssetEvent(
+        id,
+        updatedAsset.assetCode,
+        updatedAsset.serialNumber,
+        'status_change',
+        `Status cambiato da "${oldAsset.status}" a "${updateData.status}"`,
+        { status: oldAsset.status },
+        { status: updateData.status }
+      );
+    }
+
+    // Log specs update
+    if (updateData.specs && JSON.stringify(updateData.specs) !== JSON.stringify(oldAsset.specs)) {
+      await this.logAssetEvent(
+        id,
+        updatedAsset.assetCode,
+        updatedAsset.serialNumber,
+        'specs_update',
+        'Specifiche tecniche aggiornate',
+        oldAsset.specs,
+        updateData.specs
+      );
+    }
+
+    // Log notes update
+    if (updateData.notes && updateData.notes !== oldAsset.notes) {
+      await this.logAssetEvent(
+        id,
+        updatedAsset.assetCode,
+        updatedAsset.serialNumber,
+        'notes_update',
+        'Note aggiornate',
+        { notes: oldAsset.notes },
+        { notes: updateData.notes }
+      );
+    }
+
+    return updatedAsset;
   }
 
   async deleteAsset(id: string): Promise<boolean> {
     const index = this.data.assets.findIndex(asset => asset.id === id);
     if (index === -1) return false;
+
+    const asset = this.data.assets[index];
+
+    // Log deletion event before removing
+    await this.logAssetEvent(
+      id,
+      asset.assetCode,
+      asset.serialNumber,
+      'deleted',
+      `Asset eliminato: ${asset.brand || ''} ${asset.model || ''}`.trim(),
+      {
+        assetType: asset.assetType,
+        brand: asset.brand,
+        model: asset.model,
+        serialNumber: asset.serialNumber,
+        status: asset.status,
+      },
+      undefined
+    );
 
     this.data.assets.splice(index, 1);
     await this.saveData();
@@ -276,6 +411,72 @@ export class JsonStorage {
     const nextValue = existingAssets.length + 1;
     const paddedNumber = String(nextValue).padStart(3, '0');
     return `${prefix}-${paddedNumber}`;
+  }
+
+  // Asset History methods
+  async createAssetHistory(historyData: InsertAssetHistory): Promise<AssetHistory> {
+    const id = randomUUID();
+    const history: AssetHistory = {
+      ...historyData,
+      id,
+      createdAt: new Date(),
+    };
+    this.data.assetHistory.push(history);
+    await this.saveData();
+    return history;
+  }
+
+  async getAssetHistory(assetId: string): Promise<AssetHistory[]> {
+    return this.data.assetHistory
+      .filter(h => h.assetId === assetId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async getAssetHistoryByCode(assetCode: string): Promise<AssetHistory[]> {
+    return this.data.assetHistory
+      .filter(h => h.assetCode === assetCode)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async getAssetHistoryBySerial(serialNumber: string): Promise<AssetHistory[]> {
+    return this.data.assetHistory
+      .filter(h => h.serialNumber === serialNumber)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async getAllAssetHistory(): Promise<AssetHistory[]> {
+    return this.data.assetHistory
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  // Helper method to log asset events
+  private async logAssetEvent(
+    assetId: string,
+    assetCode: string,
+    serialNumber: string | null,
+    eventType: string,
+    eventDescription: string,
+    oldValue?: any,
+    newValue?: any,
+    options?: {
+      performedBy?: string;
+      performedByName?: string;
+      relatedEmployeeId?: string;
+      relatedEmployeeName?: string;
+      maintenanceId?: string;
+      notes?: string;
+    }
+  ): Promise<void> {
+    await this.createAssetHistory({
+      assetId,
+      assetCode,
+      serialNumber: serialNumber || undefined,
+      eventType,
+      eventDescription,
+      oldValue: oldValue ? JSON.stringify(oldValue) : undefined,
+      newValue: newValue ? JSON.stringify(newValue) : undefined,
+      ...options,
+    });
   }
 
   // User methods
