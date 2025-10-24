@@ -64,11 +64,11 @@ export default function Dashboard() {
     ).length;
     
     const warrantyExpiring = assets.filter((asset) => 
-      isWarrantyExpiring(asset.warrantyExpiry || null)
+      isWarrantyExpiring(asset.warrantyExpiry ? asset.warrantyExpiry.toString() : null)
     );
     
     const recentAssets = assets.filter((asset) => 
-      isRecentlyAdded(asset.createdAt || null)
+      isRecentlyAdded(asset.createdAt ? asset.createdAt.toString() : null)
     );
 
     return {

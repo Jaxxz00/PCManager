@@ -41,9 +41,12 @@ export default function Topbar() {
 
   return (
     <>
-      <header className="bg-white border-b border-border h-24 flex items-center justify-between px-8 shadow-sm">
-        {/* Search Globale - ora apre dropdown */}
-        <div className="flex-1 mr-4 relative">
+      <header className="h-12 flex items-center justify-between px-8">
+        {/* Spazio vuoto a sinistra */}
+        <div className="flex-1"></div>
+        
+        {/* Search Globale - centrata */}
+        <div className="flex-1 max-w-lg relative">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 z-10" />
             <Input
@@ -65,15 +68,18 @@ export default function Topbar() {
           />
         </div>
 
-      {/* Actions */}
-      <div className="flex items-center space-x-4">
-        {/* Notifications */}
-        <NotificationBell />
+        {/* Spazio vuoto a destra */}
+        <div className="flex-1"></div>
 
-        {/* User Menu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="flex items-center gap-2 px-3">
+        {/* Actions */}
+        <div className="flex items-center space-x-4">
+          {/* Notifications */}
+          <NotificationBell />
+
+          {/* User Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="flex items-center gap-2 px-3">
               <div className="p-1 bg-blue-100 rounded-full">
                 <User className="h-4 w-4 text-blue-600" />
               </div>

@@ -191,8 +191,8 @@ export const insertPcSchema = z.object({
 export const insertAssetSchema = z.object({
   assetCode: z.string().optional().transform((v) => (v && v.trim().length > 0 ? v : undefined)),
   assetType: z.string().min(1),
-  brand: z.string().min(1),
-  model: z.string().min(1),
+  brand: z.string().optional(),
+  model: z.string().optional(),
   serialNumber: z.string().min(1),
   purchaseDate: z.string().optional().transform((str) => str ? new Date(str) : undefined),
   warrantyExpiry: z.string().optional().transform((str) => str ? new Date(str) : undefined),
@@ -200,6 +200,15 @@ export const insertAssetSchema = z.object({
   employeeId: z.string().optional().transform((val) => val === '' ? undefined : val),
   specs: z.record(z.any()).optional(),
   notes: z.string().optional(),
+}).refine((data) => {
+  // Per tutti i tipi tranne SIM, brand e model sono obbligatori
+  if (data.assetType !== "sim") {
+    return data.brand && data.brand.length > 0 && data.model && data.model.length > 0;
+  }
+  return true;
+}, {
+  message: "Marca e modello sono obbligatori per questo tipo di asset",
+  path: ["brand"]
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({

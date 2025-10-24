@@ -7,6 +7,7 @@ import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import helmet from "helmet";
 import bcrypt from "bcrypt";
+import multer from "multer";
 import { connection, initializeDatabase } from "./db";
 
 // Import middleware ottimizzati
@@ -76,6 +77,50 @@ export async function registerRoutes(app: Express, storage: any): Promise<Server
   
   // Rate limiting per API
   app.use('/api/', apiLimiter);
+  
+  // Configurazione multer per upload file (prima del middleware strictContentType)
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: process.env.NODE_ENV === 'production' ? 5 * 1024 * 1024 : 10 * 1024 * 1024, // 5MB in produzione, 10MB in sviluppo
+    },
+    fileFilter: (req, file, cb) => {
+      // Accetta solo PDF per i documenti
+      if (file.mimetype === 'application/pdf') {
+        cb(null, true);
+      } else {
+        cb(new Error('Solo file PDF sono accettati'));
+      }
+    }
+  });
+
+  // Upload document with file (prima del middleware strictContentType)
+  app.post("/api/documents/upload", authenticateRequest, upload.single('file'), async (req, res) => {
+    try {
+      // Gestisce il file caricato con multer
+      const file = (req as any).file;
+      const body = req.body || {};
+      
+      const payload = {
+        title: body.title || "Documento Caricato",
+        type: body.type || "manleva_firmata",
+        description: body.description || null,
+        fileName: file ? file.originalname : (body.fileName || "documento_firmato.pdf"),
+        fileSize: file ? file.size : (body.fileSize || 0),
+        fileBuffer: file ? file.buffer : null, // Salva il buffer del file
+        pcId: body.pcId || null,
+        employeeId: body.employeeId || null,
+        tags: body.tags || "upload, firmata",
+        uploadedAt: new Date(),
+      };
+
+      const created = await storage.createDocument(payload);
+      return res.status(201).json(created);
+    } catch (error) {
+      console.error("Error uploading document:", error);
+      return res.status(500).json({ error: "Errore nel caricamento del documento" });
+    }
+  });
   
   // Middleware per validazione Content-Type
   app.use('/api/', strictContentType);
@@ -825,6 +870,42 @@ export async function registerRoutes(app: Express, storage: any): Promise<Server
     }
   });
 
+  // PATCH endpoint per aggiornamenti parziali (usato per riconsegna)
+app.patch("/api/pcs/:id", methodFilter(['PATCH']), strictContentType, authenticateRequest, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+    
+    console.log("🔍 PATCH PC request:", { id, updateData });
+    
+    // Debug: controlla tutti i PC nel database (semplificato)
+    console.log("🔍 Skipping PC list debug to avoid stack overflow");
+    
+    // Verifica se il PC esiste prima di aggiornarlo
+    const existingPc = await storage.getPc(id);
+    if (!existingPc) {
+      console.log("❌ PC not found:", id);
+      // Non mostrare gli ID se c'è stato un errore nel recupero
+      return res.status(404).json({ message: "PC not found" });
+    }
+    
+    console.log("✅ PC found:", existingPc);
+    
+    // Aggiorna il PC con i dati forniti
+    const pc = await storage.updatePc(id, updateData);
+    if (!pc) {
+      console.log("❌ Failed to update PC:", id);
+      return res.status(500).json({ message: "Failed to update PC" });
+    }
+    
+    console.log("✅ PC updated successfully:", pc);
+    res.json(pc);
+  } catch (error) {
+    console.error("Error updating PC:", error);
+    res.status(500).json({ message: "Failed to update PC" });
+  }
+});
+
   app.delete("/api/pcs/:id", methodFilter(['DELETE']), authenticateRequest, async (req, res) => {
     try {
       const deleted = await storage.deletePc(req.params.id);
@@ -1125,6 +1206,7 @@ export async function registerRoutes(app: Express, storage: any): Promise<Server
     }
   });
 
+
   // Generate manleva PDF
   app.post("/api/manleva/generate", methodFilter(['POST']), strictContentType, authenticateRequest, async (req, res) => {
     try {
@@ -1144,9 +1226,9 @@ export async function registerRoutes(app: Express, storage: any): Promise<Server
       // Cerca prima per assetCode in getAllAssetsIncludingPCs
       const allAssets = await storage.getAllAssetsIncludingPCs();
       console.log("🔍 All assets:", allAssets.length);
-      console.log("🔍 All assets details:", allAssets.map(a => ({ id: a.id, assetCode: a.assetCode, assetType: a.assetType, isPc: a.isPc })));
+      console.log("🔍 All assets details:", allAssets.map((a: any) => ({ id: a.id, assetCode: a.assetCode, assetType: a.assetType, isPc: a.isPc })));
       console.log("🔍 Looking for pcId:", pcId);
-      const foundItem = allAssets.find(a => a.assetCode === pcId || a.id === pcId);
+      const foundItem = allAssets.find((a: any) => a.assetCode === pcId || a.id === pcId);
       console.log("🔍 Found item:", foundItem ? { id: foundItem.id, assetCode: foundItem.assetCode, assetType: foundItem.assetType, isPc: foundItem.isPc } : null);
       
       if (foundItem) {
@@ -1254,6 +1336,163 @@ export async function registerRoutes(app: Express, storage: any): Promise<Server
     } catch (error) {
       console.error("Error generating manleva:", error);
       res.status(500).json({ error: "Errore nella generazione della manleva" });
+    }
+  });
+
+  // Generate return document PDF
+  app.post("/api/return/generate", methodFilter(['POST']), strictContentType, authenticateRequest, async (req, res) => {
+    try {
+      const { assetId, employeeId } = req.body;
+      
+      console.log("🔍 Return document request:", { assetId, employeeId });
+      
+      if (!assetId || !employeeId) {
+        return res.status(400).json({ error: "assetId e employeeId sono obbligatori" });
+      }
+
+      // Recupera i dati dell'asset e del dipendente
+      let asset = null;
+      let pc = null;
+      
+      // Cerca prima per assetCode in getAllAssetsIncludingPCs
+      const allAssets = await storage.getAllAssetsIncludingPCs();
+      const foundItem = allAssets.find((a: any) => a.assetCode === assetId || a.id === assetId);
+      
+      if (foundItem) {
+        if (foundItem.isPc) {
+          pc = await storage.getPc(foundItem.id);
+        } else {
+          asset = await storage.getAsset(foundItem.id);
+        }
+      } else {
+        asset = await storage.getAsset(assetId);
+        if (!asset) {
+          pc = await storage.getPc(assetId);
+        }
+      }
+      
+      if (!asset && !pc) {
+        return res.status(404).json({ error: "Asset non trovato" });
+      }
+      
+      const employee = await storage.getEmployee(employeeId);
+      if (!employee) {
+        return res.status(404).json({ error: "Dipendente non trovato" });
+      }
+
+      // Genera PDF reale usando jsPDF
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF('p', 'mm', 'a4');
+      
+      // Header
+      doc.setFontSize(20);
+      doc.text('DOCUMENTO DI RICONSEGNA ASSET', 105, 30, { align: 'center' });
+      doc.setFontSize(12);
+      doc.text('Maori Group - Asset Manager', 105, 40, { align: 'center' });
+      
+      // Linea separatrice
+      doc.line(20, 50, 190, 50);
+      
+      // Contenuto
+      let yPosition = 70;
+      doc.setFontSize(12);
+      
+      // Data
+      doc.setFontSize(10);
+      doc.text('Data Riconsegna:', 20, yPosition);
+      doc.text(new Date().toLocaleDateString('it-IT'), 80, yPosition);
+      yPosition += 15;
+      
+      // Asset Info
+      const itemData = asset || pc;
+      doc.text('Codice Asset:', 20, yPosition);
+      doc.text(itemData.assetCode || itemData.id, 80, yPosition);
+      yPosition += 15;
+      
+      doc.text('Tipo:', 20, yPosition);
+      doc.text(itemData.assetType || 'Computer', 80, yPosition);
+      yPosition += 15;
+      
+      if (itemData.brand && itemData.model) {
+        doc.text('Brand/Modello:', 20, yPosition);
+        doc.text(`${itemData.brand} ${itemData.model}`, 80, yPosition);
+        yPosition += 15;
+      }
+      
+      doc.text('Numero Seriale:', 20, yPosition);
+      doc.text(itemData.serialNumber || 'N/A', 80, yPosition);
+      yPosition += 20;
+      
+      // Employee Info
+      doc.text('Collaboratore:', 20, yPosition);
+      doc.text(employee.name, 80, yPosition);
+      yPosition += 15;
+      
+      doc.text('Email:', 20, yPosition);
+      doc.text(employee.email, 80, yPosition);
+      yPosition += 15;
+      
+      doc.text('Dipartimento:', 20, yPosition);
+      doc.text(employee.department || 'N/A', 80, yPosition);
+      yPosition += 30;
+      
+      // Dichiarazione
+      doc.setFontSize(11);
+      doc.text('DICHIARAZIONE DI RICONSEGNA', 20, yPosition);
+      yPosition += 10;
+      
+      doc.setFontSize(10);
+      const declarationText = `Il sottoscritto ${employee.name} dichiara di riconsegnare l'asset sopra descritto in buone condizioni e di aver rimosso tutti i dati personali e le applicazioni installate.`;
+      const splitText = doc.splitTextToSize(declarationText, 170);
+      doc.text(splitText, 20, yPosition);
+      yPosition += splitText.length * 5 + 10;
+      
+      doc.text('Motivazione riconsegna:', 20, yPosition);
+      yPosition += 10;
+      doc.text('□ Fine assegnazione', 30, yPosition);
+      yPosition += 8;
+      doc.text('□ Cambio di ruolo', 30, yPosition);
+      yPosition += 8;
+      doc.text('□ Dimissioni', 30, yPosition);
+      yPosition += 8;
+      doc.text('□ Altro: _________________', 30, yPosition);
+      yPosition += 20;
+      
+      // Firma
+      doc.setFontSize(11);
+      doc.text('FIRME', 20, yPosition);
+      yPosition += 15;
+      
+      doc.setFontSize(10);
+      doc.text('Collaboratore:', 20, yPosition);
+      doc.line(20, yPosition + 10, 100, yPosition + 10);
+      doc.text(employee.name, 20, yPosition + 20);
+      doc.text('Data: _______________', 20, yPosition + 30);
+      
+      doc.text('Responsabile IT:', 110, yPosition);
+      doc.line(110, yPosition + 10, 190, yPosition + 10);
+      doc.text('_________________', 110, yPosition + 20);
+      doc.text('Data: _______________', 110, yPosition + 30);
+      
+      // Footer
+      doc.setFontSize(8);
+      doc.text(`Generato da: ${req.session?.user?.email || 'Sistema'}`, 20, 280);
+      doc.text(`Data generazione: ${new Date().toLocaleString('it-IT')}`, 20, 285);
+      
+      // Genera il PDF come buffer
+      const pdfBuffer = doc.output('arraybuffer');
+      
+      // Imposta headers per download PDF
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="riconsegna_${itemData.assetCode || itemData.id}_${employee.name}.pdf"`);
+      res.setHeader('Content-Length', pdfBuffer.byteLength);
+      
+      // Invia il PDF
+      res.send(Buffer.from(pdfBuffer));
+      
+    } catch (error) {
+      console.error("Error generating return document:", error);
+      res.status(500).json({ error: "Errore nella generazione del documento di riconsegna" });
     }
   });
 

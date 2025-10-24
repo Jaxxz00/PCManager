@@ -2,7 +2,7 @@ import { type Employee, type InsertEmployee, type Pc, type InsertPc, type PcWith
 import { randomUUID } from "crypto";
 import bcrypt from "bcrypt";
 import { getDb, hasDb } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 export class DatabaseStorage {
   private db: any;
@@ -808,23 +808,95 @@ export class DatabaseStorage {
   }
 
   async getAllDocuments(): Promise<any[]> {
-    throw new Error("Documents not supported in database storage");
+    const db = await this.getDb();
+    const { documents } = await import("@shared/schema");
+    
+    try {
+      const result = await db.select().from(documents).orderBy(desc(documents.createdAt));
+      return result;
+    } catch (error) {
+      console.error("Error fetching documents:", error);
+      return [];
+    }
   }
 
   async getDocumentById(id: string): Promise<any> {
-    throw new Error("Documents not supported in database storage");
+    const db = await this.getDb();
+    const { documents } = await import("@shared/schema");
+    
+    try {
+      const result = await db.select().from(documents).where(eq(documents.id, id)).limit(1);
+      return result[0] || null;
+    } catch (error) {
+      console.error("Error fetching document:", error);
+      return null;
+    }
   }
 
   async createDocument(document: any): Promise<any> {
-    throw new Error("Documents not supported in database storage");
+    const db = await this.getDb();
+    const { documents } = await import("@shared/schema");
+    
+    try {
+      const newDocument = {
+        id: crypto.randomUUID(),
+        title: document.title,
+        type: document.type,
+        description: document.description,
+        fileName: document.fileName,
+        fileSize: document.fileSize,
+        pcId: document.pcId,
+        employeeId: document.employeeId,
+        tags: document.tags,
+        uploadedAt: document.uploadedAt || new Date(),
+        createdAt: new Date(),
+      };
+
+      await db.insert(documents).values(newDocument);
+      return newDocument;
+    } catch (error) {
+      console.error("Error creating document:", error);
+      throw error;
+    }
   }
 
   async updateDocument(id: string, document: any): Promise<any> {
-    throw new Error("Documents not supported in database storage");
+    const db = await this.getDb();
+    const { documents } = await import("@shared/schema");
+    
+    try {
+      const updateData = {
+        title: document.title,
+        type: document.type,
+        description: document.description,
+        fileName: document.fileName,
+        fileSize: document.fileSize,
+        pcId: document.pcId,
+        employeeId: document.employeeId,
+        tags: document.tags,
+      };
+
+      await db.update(documents).set(updateData).where(eq(documents.id, id));
+      
+      const updated = await db.select().from(documents).where(eq(documents.id, id)).limit(1);
+      return updated[0];
+    } catch (error) {
+      console.error("Error updating document:", error);
+      throw error;
+    }
   }
 
   async deleteDocument(id: string): Promise<boolean> {
-    throw new Error("Documents not supported in database storage");
+    const db = await this.getDb();
+    const { documents } = await import("@shared/schema");
+    
+    try {
+      await db.delete(documents).where(eq(documents.id, id));
+      return true;
+    } catch (error) {
+      console.error("Error deleting document:", error);
+      return false;
+    }
   }
 
   async getMaintenance(id: string): Promise<any> {

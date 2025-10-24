@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { 
   GitBranch, 
@@ -304,6 +305,8 @@ export default function Workflow() {
   const queryClient = useQueryClient();
   const [isGeneratingManleva, setIsGeneratingManleva] = useState(false);
   const [manlevaGenerated, setManlevaGenerated] = useState(false);
+  const [documentUploaded, setDocumentUploaded] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const { data: allAssets = [], isLoading: assetsLoading } = useQuery<any[]>({
     queryKey: ["/api/assets/all-including-pcs"],
@@ -436,11 +439,11 @@ export default function Workflow() {
 
   const handleNextStep = () => {
     if (workflowData.step < 6) {
-      // Se stai andando al passo 6 (assegnazione), controlla se la manleva è stata generata
-      if (workflowData.step === 5 && !manlevaGenerated) {
+      // Se stai andando al passo 6 (assegnazione), controlla se la manleva è stata generata e caricata
+      if (workflowData.step === 5 && (!manlevaGenerated || !documentUploaded)) {
         toast({
           title: "Attenzione",
-          description: "Devi generare la manleva prima di completare l'assegnazione",
+          description: "Devi generare la manleva e caricare il documento firmato prima di completare l'assegnazione",
           variant: "destructive"
         });
         return;
@@ -470,6 +473,7 @@ export default function Workflow() {
       completed: false
     });
     setManlevaGenerated(false);
+    setDocumentUploaded(false);
   };
 
   const handleGenerateManlevaDocument = async () => {
@@ -526,7 +530,7 @@ export default function Workflow() {
       
       // Usa assetCode o pcId per il nome del file
       const itemId = workflowData.selectedPc.assetCode || workflowData.selectedPc.pcId || workflowData.selectedPc.id;
-      const fileName = `manleva_${itemId}_${workflowData.selectedEmployee.name.replace(/\s/g, '_')}.pdf`;
+      const fileName = `manleva_da_firmare_${itemId}_${workflowData.selectedEmployee.name.replace(/\s/g, '_')}.pdf`;
       a.download = fileName;
       document.body.appendChild(a);
       a.click();
@@ -557,7 +561,7 @@ export default function Workflow() {
 
       toast({
         title: "Successo",
-        description: "Documento manleva generato e scaricato correttamente",
+        description: "Documento manleva generato e scaricato per la firma a mano",
       });
 
       setManlevaGenerated(true);
@@ -570,6 +574,61 @@ export default function Workflow() {
       });
     } finally {
       setIsGeneratingManleva(false);
+    }
+  };
+
+  const handleUploadSignedDocument = async (file: File) => {
+    if (!workflowData.selectedPc || !workflowData.selectedEmployee) {
+      toast({
+        title: "Errore",
+        description: "Asset e collaboratore devono essere selezionati per caricare il documento firmato",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('title', `Manleva Firmata ${workflowData.selectedPc.assetCode || workflowData.selectedPc.pcId} - ${workflowData.selectedEmployee.name}`);
+      formData.append('type', 'manleva_firmata');
+      formData.append('description', `Documento di manleva firmato per ${workflowData.selectedEmployee.name}`);
+      formData.append('employeeId', workflowData.selectedEmployee.id);
+      formData.append('tags', `manleva, firmata, upload, itemId:${workflowData.selectedPc.assetCode || workflowData.selectedPc.pcId}`);
+
+      const response = await fetch('/api/documents/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('sessionId')}`,
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Errore nel caricamento del documento');
+      }
+
+      const result = await response.json();
+      setDocumentUploaded(true);
+      
+      toast({
+        title: "Successo",
+        description: "Documento firmato caricato correttamente",
+      });
+
+      // Invalida la cache dei documenti
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+
+    } catch (error) {
+      toast({
+        title: "Errore",
+        description: "Errore nel caricamento del documento firmato",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -818,11 +877,48 @@ export default function Workflow() {
                 {isGeneratingManleva ? "Generando..." : "Genera Documento Manleva"}
               </Button>
               {manlevaGenerated ? (
-                <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <p className="text-sm text-green-800">
-                    Documento generato e acquisito
-                  </p>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <p className="text-sm text-green-800">
+                      Documento generato e scaricato per la firma
+                    </p>
+                  </div>
+                  
+                  {/* Upload del documento firmato */}
+                  <div className="p-4 bg-blue-50 rounded-lg">
+                    <h4 className="font-semibold mb-2">Carica Documento Firmato</h4>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Dopo aver firmato il documento, caricalo qui per completare l'assegnazione.
+                    </p>
+                    <Input
+                      type="file"
+                      accept=".pdf"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          handleUploadSignedDocument(file);
+                        }
+                      }}
+                      disabled={isUploading}
+                      className="mb-3"
+                    />
+                    {documentUploaded ? (
+                      <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        <p className="text-sm text-green-800">
+                          Documento firmato caricato correttamente
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 p-3 bg-yellow-50 rounded-lg">
+                        <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                        <p className="text-sm text-yellow-800">
+                          Carica il documento firmato per procedere
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <div className="flex items-center gap-2 p-3 bg-yellow-50 rounded-lg">
@@ -874,10 +970,6 @@ export default function Workflow() {
           <h1 className="text-3xl font-bold text-foreground">Workflow Assegnazione PC</h1>
           <p className="text-muted-foreground">Processo guidato per l'assegnazione di PC aziendali</p>
         </div>
-        <Badge variant="outline" className="flex items-center gap-2">
-          <GitBranch className="h-4 w-4" />
-          Processo Attivo
-        </Badge>
       </div>
 
       {/* Progress Steps */}

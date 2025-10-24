@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express, { type Request, type Response, type NextFunction } from "express";
 import helmet from "helmet";
+import multer from "multer";
 import fs from "fs";
 import path from "path";
 import { registerRoutes } from "./routes";
@@ -40,6 +41,25 @@ app.use(express.urlencoded({
   extended: false, 
   limit: process.env.NODE_ENV === 'production' ? '1mb' : '10mb' 
 }));
+
+// Configurazione multer per upload file
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: process.env.NODE_ENV === 'production' ? 5 * 1024 * 1024 : 10 * 1024 * 1024, // 5MB in produzione, 10MB in sviluppo
+  },
+  fileFilter: (req, file, cb) => {
+    // Accetta solo PDF per i documenti
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Solo file PDF sono accettati'));
+    }
+  }
+});
+
+// Middleware multer configurato ma non applicato globalmente
+// Verrà applicato direttamente nell'endpoint
 
 // Middleware di logging ottimizzato
 app.use((req, res, next) => {

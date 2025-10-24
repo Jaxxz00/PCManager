@@ -25,13 +25,13 @@ const assetTypes = [
   { value: "tablet", label: "Tablet", icon: Tablet },
 ] as const;
 
-// Schema form per asset
+// Schema form per asset con validazione condizionale
 const assetFormSchema = z.object({
   // assetCode generato automaticamente lato server
   assetCode: z.string().optional(),
   assetType: z.string().min(1, "Tipo asset richiesto"),
-  brand: z.string().min(1, "Marca richiesta"),
-  model: z.string().min(1, "Modello richiesto"),
+  brand: z.string().optional(),
+  model: z.string().optional(),
   serialNumber: z.string().min(1, "Seriale richiesto"),
   purchaseDate: z.string().optional(),
   warrantyExpiry: z.string().optional(),
@@ -42,6 +42,15 @@ const assetFormSchema = z.object({
   carrier: z.string().optional(),
   phoneNumber: z.string().optional(),
   holder: z.string().optional(),
+}).refine((data) => {
+  // Per tutti i tipi tranne SIM, brand e model sono obbligatori
+  if (data.assetType !== "sim") {
+    return data.brand && data.brand.length > 0 && data.model && data.model.length > 0;
+  }
+  return true;
+}, {
+  message: "Marca e modello sono obbligatori per questo tipo di asset",
+  path: ["brand"]
 });
 
 type AssetFormData = z.infer<typeof assetFormSchema>;

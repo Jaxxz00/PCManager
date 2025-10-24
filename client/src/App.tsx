@@ -18,6 +18,7 @@ const Workflow = lazy(() => import("@/pages/workflow"));
 const Assets = lazy(() => import("@/pages/assets"));
 const AssignedDevices = lazy(() => import("@/pages/assigned-devices"));
 const Labels = lazy(() => import("@/pages/labels"));
+const ReturnWorkflow = lazy(() => import("@/pages/return-workflow"));
 
 import LoginPage from "@/pages/login";
 import SetPasswordPage from "@/pages/set-password";
@@ -233,6 +234,13 @@ function Router() {
               </AuthenticatedLayout>
             )}
           </Route>
+          <Route path="/return-workflow">
+            {() => (
+              <AuthenticatedLayout>
+                <ReturnWorkflow />
+              </AuthenticatedLayout>
+            )}
+          </Route>
           <Route path="/assigned-devices">
             {() => (
               <AuthenticatedLayout>
@@ -282,9 +290,20 @@ function Router() {
 function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Topbar />
+      {/* Sidebar separata */}
+      <div className="flex-shrink-0">
+        <Sidebar />
+      </div>
+      
+      {/* Separatore visivo */}
+      <div className="w-px bg-gray-300 flex-shrink-0"></div>
+      
+      {/* Contenuto principale con margine ridotto */}
+      <div className="flex-1 flex flex-col overflow-hidden ml-1">
+        {/* Topbar separata */}
+        <div className="bg-white border-b border-gray-200 shadow-sm mt-2">
+          <Topbar />
+        </div>
         <main className="flex-1 overflow-auto p-8 bg-background">
           <div className="max-w-7xl mx-auto">
             {children}
