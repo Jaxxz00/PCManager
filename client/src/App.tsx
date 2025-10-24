@@ -76,13 +76,13 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     queryKey: ['/api/auth/me'],
     queryFn: async () => {
       if (!sessionId) return null;
-      
+
       const response = await fetch('/api/auth/me', {
         headers: {
           'Authorization': `Bearer ${sessionId}`,
         },
       });
-      
+
       if (!response.ok) {
         if (response.status === 401) {
           // Sessione scaduta o non valida
@@ -93,12 +93,21 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         throw new Error('Failed to fetch user');
       }
-      
+
       return response.json();
     },
     retry: false,
     enabled: !!sessionId,
   });
+
+  // Prefetch delle query comuni quando l'utente è autenticato
+  useEffect(() => {
+    if (user && sessionId) {
+      import('@/lib/queryClient').then(({ prefetchCommonQueries }) => {
+        prefetchCommonQueries();
+      });
+    }
+  }, [user, sessionId]);
 
   const logout = async () => {
     try {

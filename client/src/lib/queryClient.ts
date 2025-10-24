@@ -99,7 +99,8 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minuti invece di Infinity per aggiornamenti più frequenti
+      staleTime: 5 * 60 * 1000, // 5 minuti - i dati sono considerati freschi
+      gcTime: 10 * 60 * 1000, // 10 minuti - i dati rimangono in cache
       retry: (failureCount, error: any) => {
         // Non riprovare per errori 401, 403, 404
         if (error?.message?.includes('401') || error?.message?.includes('403') || error?.message?.includes('404')) {
@@ -114,3 +115,17 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+// Prefetch delle query più comuni per migliorare le performance
+export function prefetchCommonQueries() {
+  // Prefetch in background delle query usate frequentemente
+  queryClient.prefetchQuery({
+    queryKey: ["/api/assets/all-including-pcs"],
+    staleTime: 5 * 60 * 1000,
+  });
+
+  queryClient.prefetchQuery({
+    queryKey: ["/api/employees"],
+    staleTime: 5 * 60 * 1000,
+  });
+}

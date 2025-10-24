@@ -158,7 +158,12 @@ export const maintenance = mysqlTable("maintenance", {
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => ({
+  assetIdIdx: index("maintenance_asset_id_idx").on(table.assetId),
+  statusIdx: index("maintenance_status_idx").on(table.status),
+  priorityIdx: index("maintenance_priority_idx").on(table.priority),
+  scheduledDateIdx: index("maintenance_scheduled_date_idx").on(table.scheduledDate),
+}));
 
 // Tabella sequenze codici asset per auto-generazione
 export const assetCodeSequences = mysqlTable("asset_code_sequences", {
