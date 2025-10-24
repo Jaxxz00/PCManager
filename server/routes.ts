@@ -909,7 +909,7 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
     try {
       const { id } = req.params;
       const deleted = await storage.deleteAsset(id);
-      
+
       if (!deleted) {
         return res.status(404).json({ error: "Asset not found" });
       }
@@ -918,6 +918,61 @@ export async function registerRoutes(app: Express, storage: JsonStorage): Promis
     } catch (error) {
       logger.error("Error deleting asset", { error });
       res.status(500).json({ error: "Failed to delete asset" });
+    }
+  });
+
+  // Asset History routes
+  // Get history for specific asset by ID
+  app.get("/api/assets/:id/history", methodFilter(['GET']), authenticateRequest, async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      // Verifica che l'asset esista
+      const asset = await storage.getAsset(id);
+      if (!asset) {
+        return res.status(404).json({ error: "Asset not found" });
+      }
+
+      const history = await storage.getAssetHistory(id);
+      res.json(history);
+    } catch (error) {
+      logger.error("Error fetching asset history", { error });
+      res.status(500).json({ error: "Failed to fetch asset history" });
+    }
+  });
+
+  // Get history by asset code
+  app.get("/api/assets/history/code/:code", methodFilter(['GET']), authenticateRequest, async (req, res) => {
+    try {
+      const { code } = req.params;
+      const history = await storage.getAssetHistoryByCode(code);
+      res.json(history);
+    } catch (error) {
+      logger.error("Error fetching asset history by code", { error });
+      res.status(500).json({ error: "Failed to fetch asset history" });
+    }
+  });
+
+  // Get history by serial number (useful for tracking devices by IMEI/SN)
+  app.get("/api/assets/history/serial/:serial", methodFilter(['GET']), authenticateRequest, async (req, res) => {
+    try {
+      const { serial } = req.params;
+      const history = await storage.getAssetHistoryBySerial(serial);
+      res.json(history);
+    } catch (error) {
+      logger.error("Error fetching asset history by serial", { error });
+      res.status(500).json({ error: "Failed to fetch asset history" });
+    }
+  });
+
+  // Get all asset history (admin only - useful for audit)
+  app.get("/api/assets/history", methodFilter(['GET']), authenticateRequest, async (req, res) => {
+    try {
+      const history = await storage.getAllAssetHistory();
+      res.json(history);
+    } catch (error) {
+      logger.error("Error fetching all asset history", { error });
+      res.status(500).json({ error: "Failed to fetch asset history" });
     }
   });
 
