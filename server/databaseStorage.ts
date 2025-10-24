@@ -906,8 +906,40 @@ export class DatabaseStorage {
   async getAllMaintenance(): Promise<any[]> {
     try {
       const db = await this.getDb();
-      const result = await db.select().from(maintenance);
-      return (result as any) || [];
+      const result = await db
+        .select({
+          id: maintenance.id,
+          assetId: maintenance.assetId,
+          type: maintenance.type,
+          priority: maintenance.priority,
+          status: maintenance.status,
+          description: maintenance.description,
+          technician: maintenance.technician,
+          scheduledDate: maintenance.scheduledDate,
+          completedDate: maintenance.completedDate,
+          estimatedCost: maintenance.estimatedCost,
+          actualCost: maintenance.actualCost,
+          notes: maintenance.notes,
+          createdAt: maintenance.createdAt,
+          updatedAt: maintenance.updatedAt,
+          asset: {
+            id: assets.id,
+            assetCode: assets.assetCode,
+            assetType: assets.assetType,
+            brand: assets.brand,
+            model: assets.model,
+            serialNumber: assets.serialNumber,
+            status: assets.status,
+            employeeId: assets.employeeId,
+          }
+        })
+        .from(maintenance)
+        .leftJoin(assets, eq(maintenance.assetId, assets.id));
+
+      return result.map((row: any) => ({
+        ...row,
+        pc: row.asset, // Alias per compatibilità con il codice esistente
+      })) || [];
     } catch (error) {
       console.error('Error getting maintenance:', error);
       return [];
