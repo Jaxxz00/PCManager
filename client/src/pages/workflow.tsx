@@ -522,7 +522,7 @@ export default function Workflow() {
                   Il collaboratore deve firmare il documento di manleva per la presa in carico dell'asset aziendale.
                 </p>
                 <div className="space-y-2 text-sm">
-                  <p><strong>PC:</strong> {workflowData.selectedPc?.pcId} - {workflowData.selectedPc?.brand} {workflowData.selectedPc?.model}</p>
+                  <p><strong>Asset:</strong> {workflowData.selectedPc?.assetCode || workflowData.selectedPc?.pcId} - {workflowData.selectedPc?.brand} {workflowData.selectedPc?.model}</p>
                   <p><strong>Collaboratore:</strong> {workflowData.selectedEmployee?.name}</p>
                   <p><strong>Data:</strong> {new Date().toLocaleDateString('it-IT')}</p>
                 </div>

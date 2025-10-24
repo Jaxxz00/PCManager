@@ -17,7 +17,7 @@ export const AssetLabel: React.FC<LabelData> = ({
   const barcodeRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
-    if (barcodeRef.current) {
+    if (barcodeRef.current && assetId && assetId.trim() !== '') {
       try {
         JsBarcode(barcodeRef.current, assetId, {
           format: 'CODE128',

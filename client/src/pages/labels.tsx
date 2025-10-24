@@ -52,6 +52,7 @@ export default function Labels() {
   });
 
   // Combina assets e PCs per la visualizzazione
+  // Filtra solo quelli con assetCode/pcId validi per la generazione di etichette
   const allItems = [
     ...assets.map(asset => ({
       id: asset.id,
@@ -73,7 +74,7 @@ export default function Labels() {
       assetType: 'computer',
       status: pc.status,
     }))
-  ];
+  ].filter(item => item.assetCode && item.assetCode.trim() !== '');
 
   // Filtra gli elementi
   const filteredItems = allItems.filter(item => {
